@@ -28,9 +28,12 @@ public sealed class DashboardViewModel : INotifyPropertyChanged
     public string RamUsed { get => _ramUsed; private set => Set(ref _ramUsed, value, nameof(RamUsed)); }
 
     public ObservableCollection<string> Disks { get; } = new();
-    public ObservableCollection<string> Fans { get; } = new();
+    public ObservableCollection<FanRowViewModel> Fans { get; } = new();
 
-    public void Update(KeyMetrics m)
+    /// <summary>Asetetaan MainViewModelista; välittää nimenmuutokset tallennettavaksi.</summary>
+    public Action<string, string>? RenameFan { get; set; }
+
+    public void Update(KeyMetrics m, IReadOnlyDictionary<string, string> fanLabels)
     {
         CpuLoad = Fmt(m.CpuLoadPercent, "%");
         CpuTemp = Fmt(m.CpuPackageTempC, "°C");
@@ -52,7 +55,50 @@ public sealed class DashboardViewModel : INotifyPropertyChanged
 
         SyncRows(Disks, m.Disks.Select(d =>
             $"{d.Name}   {Fmt(d.TemperatureC, "°C")}   {Fmt(d.ActivityPercent, "%")}"));
-        SyncRows(Fans, m.Fans.Select(f => $"{f.Name}   {Fmt(f.Rpm, "RPM")}"));
+        SyncFans(m.Fans, fanLabels);
+    }
+
+    /// <summary>Päivittää tuuletinrivit paikallaan tunnisteen mukaan; ei ylikirjoita kesken muokkauksen.</summary>
+    private void SyncFans(IReadOnlyList<FanMetrics> fans, IReadOnlyDictionary<string, string> labels)
+    {
+        while (Fans.Count > fans.Count)
+        {
+            Fans.RemoveAt(Fans.Count - 1);
+        }
+
+        for (int i = 0; i < fans.Count; i++)
+        {
+            FanMetrics fan = fans[i];
+            string name = labels.TryGetValue(fan.Identifier, out string? label) && label.Length > 0
+                ? label
+                : fan.Name;
+            string rpm = Fmt(fan.Rpm, "RPM");
+
+            if (i >= Fans.Count || Fans[i].Identifier != fan.Identifier)
+            {
+                var row = new FanRowViewModel(fan.Identifier, name, (id, n) => RenameFan?.Invoke(id, n))
+                {
+                    Rpm = rpm,
+                };
+                if (i >= Fans.Count)
+                {
+                    Fans.Add(row);
+                }
+                else
+                {
+                    Fans[i] = row;
+                }
+            }
+            else
+            {
+                if (!Fans[i].IsEditing)
+                {
+                    Fans[i].DisplayName = name;
+                }
+
+                Fans[i].Rpm = rpm;
+            }
+        }
     }
 
     private static string Fmt(float? value, string unit) =>

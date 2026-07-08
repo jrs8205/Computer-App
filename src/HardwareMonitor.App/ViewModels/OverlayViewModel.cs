@@ -61,8 +61,9 @@ public sealed class OverlayViewModel : INotifyPropertyChanged
         }
     }
 
-    public void Update(KeyMetrics m, OverlaySettings s)
+    public void Update(KeyMetrics m, AppSettings settings)
     {
+        OverlaySettings s = settings.Overlay;
         FontSize = s.FontSize;
         BackgroundOpacity = s.Opacity;
 
@@ -110,7 +111,9 @@ public sealed class OverlayViewModel : INotifyPropertyChanged
             {
                 if (fan.Rpm is { } rpm and > 0)
                 {
-                    sb.AppendLine($"{fan.Name}  {rpm:0} RPM");
+                    string name = settings.FanLabels.TryGetValue(fan.Identifier, out string? label)
+                                  && label.Length > 0 ? label : fan.Name;
+                    sb.AppendLine($"{name}  {rpm:0} RPM");
                 }
             }
         }

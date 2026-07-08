@@ -193,11 +193,49 @@
                         <Border Style="{StaticResource Card}">
                             <StackPanel>
                                 <TextBlock Style="{StaticResource CardTitle}" Text="Tuulettimet" />
+                                <TextBlock Text="Kaksoisklikkaa nimeä antaaksesi oman nimen"
+                                           Foreground="#616161" FontSize="11" Margin="0,0,0,6" />
                                 <ItemsControl ItemsSource="{Binding Fans}">
                                     <ItemsControl.ItemTemplate>
                                         <DataTemplate>
-                                            <TextBlock Text="{Binding}" Foreground="#E0E0E0"
-                                                       FontFamily="Consolas" Margin="0,2" />
+                                            <Grid Margin="0,2">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*" />
+                                                    <ColumnDefinition Width="Auto" />
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock Text="{Binding DisplayName}" Foreground="#E0E0E0"
+                                                           FontFamily="Consolas"
+                                                           ToolTip="Kaksoisklikkaa nimetäksesi"
+                                                           MouseLeftButtonDown="FanName_MouseLeftButtonDown">
+                                                    <TextBlock.Style>
+                                                        <Style TargetType="TextBlock">
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding IsEditing}" Value="True">
+                                                                    <Setter Property="Visibility" Value="Collapsed" />
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </TextBlock.Style>
+                                                </TextBlock>
+                                                <TextBox Text="{Binding EditText, UpdateSourceTrigger=PropertyChanged}"
+                                                         Background="#1E1E1E" Foreground="White" FontFamily="Consolas"
+                                                         BorderBrush="#4FC3F7"
+                                                         KeyDown="FanName_KeyDown" LostFocus="FanName_LostFocus"
+                                                         IsVisibleChanged="FanName_IsVisibleChanged">
+                                                    <TextBox.Style>
+                                                        <Style TargetType="TextBox">
+                                                            <Setter Property="Visibility" Value="Collapsed" />
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding IsEditing}" Value="True">
+                                                                    <Setter Property="Visibility" Value="Visible" />
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </TextBox.Style>
+                                                </TextBox>
+                                                <TextBlock Grid.Column="1" Text="{Binding Rpm}" Foreground="#A5D6A7"
+                                                           FontFamily="Consolas" Margin="16,0,0,0" />
+                                            </Grid>
                                         </DataTemplate>
                                     </ItemsControl.ItemTemplate>
                                 </ItemsControl>

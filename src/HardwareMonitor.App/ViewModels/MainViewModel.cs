@@ -30,8 +30,24 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
     public MainViewModel()
     {
         _settings = _settingsService.Load();
+        Dashboard.RenameFan = RenameFan;
         _timer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
         _timer.Tick += (_, _) => Refresh();
+    }
+
+    /// <summary>Tallentaa tuulettimen oman nimen; tyhjä nimi palauttaa oletuksen.</summary>
+    public void RenameFan(string identifier, string newName)
+    {
+        if (string.IsNullOrWhiteSpace(newName))
+        {
+            _settings.FanLabels.Remove(identifier);
+        }
+        else
+        {
+            _settings.FanLabels[identifier] = newName;
+        }
+
+        OnOverlaySettingChanged(nameof(Dashboard));
     }
 
     public ObservableCollection<HardwareViewModel> Hardware { get; } = new();
@@ -207,8 +223,8 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
             IReadOnlyList<HardwareGroup> groups = _sensorService.Read();
 
             KeyMetrics metrics = KeyMetricsService.Extract(groups);
-            Dashboard.Update(metrics);
-            Overlay.Update(metrics, _settings.Overlay);
+            Dashboard.Update(metrics, _settings.FanLabels);
+            Overlay.Update(metrics, _settings);
 
             if (Hardware.Count == 0)
             {
