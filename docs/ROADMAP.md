@@ -104,3 +104,5 @@ pilvisynkronointi. **Ensimmäinen versio vain lukee, näyttää, lokittaa ja ana
 - Overlay exclusive fullscreen -pelien päälle (vaatisi DirectX-injektion)
 - Monen näytön valinta overlayn sijainnille
 - Raja-arvojen värikoodaus overlayhin ja Dashboardiin (Vaihe 4:n yhteydessä)
+- Tuulettimien nimeäminen käyttäjän omilla nimillä (esim. "Fan #2" → "AIO-pumppu"),
+  koska LibreHardwareMonitor ei tunne tämän emolevyn kanavajärjestystä nimeltä

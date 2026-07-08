@@ -84,10 +84,13 @@ public sealed class OverlayViewModel : INotifyPropertyChanged
 
         if (s.ShowRam)
         {
-            string usedGb = m.RamUsedGb is { } gb
-                ? gb.ToString("0.0", CultureInfo.CurrentCulture) + " GB"
+            // Kokonaismäärä = käytetty + vapaa (LibreHardwareMonitor ei anna sitä suoraan).
+            string ram = m.RamUsedGb is { } used
+                ? m.RamAvailableGb is { } avail
+                    ? $"{used.ToString("0.0", CultureInfo.CurrentCulture)}/{(used + avail).ToString("0", CultureInfo.CurrentCulture)} GB"
+                    : $"{used.ToString("0.0", CultureInfo.CurrentCulture)} GB"
                 : "—";
-            sb.AppendLine($"RAM  {Pct(m.RamLoadPercent)}  {usedGb}");
+            sb.AppendLine($"RAM  {Pct(m.RamLoadPercent)}  {ram}");
         }
 
         if (s.ShowDisks)

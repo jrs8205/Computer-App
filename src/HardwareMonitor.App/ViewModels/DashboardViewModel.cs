@@ -44,7 +44,11 @@ public sealed class DashboardViewModel : INotifyPropertyChanged
             : "—";
         GpuPower = Fmt(m.GpuPowerW, "W");
         RamLoad = Fmt(m.RamLoadPercent, "%");
-        RamUsed = m.RamUsedGb is { } gb ? $"{gb.ToString("0.0", CultureInfo.CurrentCulture)} GB" : "—";
+        RamUsed = m.RamUsedGb is { } usedGb
+            ? m.RamAvailableGb is { } availGb
+                ? $"{usedGb.ToString("0.0", CultureInfo.CurrentCulture)} / {(usedGb + availGb).ToString("0.0", CultureInfo.CurrentCulture)} GB"
+                : $"{usedGb.ToString("0.0", CultureInfo.CurrentCulture)} GB"
+            : "—";
 
         SyncRows(Disks, m.Disks.Select(d =>
             $"{d.Name}   {Fmt(d.TemperatureC, "°C")}   {Fmt(d.ActivityPercent, "%")}"));
