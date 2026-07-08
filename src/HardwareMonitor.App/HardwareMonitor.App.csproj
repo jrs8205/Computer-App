@@ -10,10 +10,16 @@
     <AssemblyName>HardwareMonitor</AssemblyName>
     <RootNamespace>HardwareMonitor.App</RootNamespace>
     <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationIcon>Assets\app.ico</ApplicationIcon>
   </PropertyGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\HardwareMonitor.Core\HardwareMonitor.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- app.ico Resource-itemina, jotta tray-kuvake voi ladata sen pack-URIsta. -->
+    <Resource Include="Assets\app.ico" />
   </ItemGroup>
 
 </Project>

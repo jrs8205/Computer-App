@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
+  <!-- Hardware Monitor -sovellusikoni (master-vektori).
+       Sama design piirretään GDI+:lla tools/generate-icon.ps1:ssä app.ico:ksi. -->
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#2A2A2E"/>
+      <stop offset="1" stop-color="#161618"/>
+    </linearGradient>
+  </defs>
+  <rect x="8" y="8" width="240" height="240" rx="52" fill="url(#bg)"/>
+  <!-- Mittarikaari -->
+  <path d="M 50 150 A 78 78 0 0 1 206 150" fill="none"
+        stroke="#4FC3F7" stroke-width="18" stroke-linecap="round"/>
+  <!-- Neula ~70 % asennossa -->
+  <line x1="128" y1="150" x2="180" y2="98" stroke="#E8F5E9"
+        stroke-width="11" stroke-linecap="round"/>
+  <circle cx="128" cy="150" r="13" fill="#4FC3F7"/>
+  <!-- Sykeviiva -->
+  <polyline points="48,206 88,206 104,184 122,224 138,206 208,206" fill="none"
+            stroke="#A5D6A7" stroke-width="11"
+            stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
