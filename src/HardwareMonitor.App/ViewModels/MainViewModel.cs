@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Windows.Threading;
 using HardwareMonitor.Core.Logging;
+using HardwareMonitor.Core.Metrics;
 using HardwareMonitor.Core.Sensors;
 
 namespace HardwareMonitor.App.ViewModels;
@@ -30,6 +31,8 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
     }
 
     public ObservableCollection<HardwareViewModel> Hardware { get; } = new();
+
+    public DashboardViewModel Dashboard { get; } = new();
 
     public string Status
     {
@@ -70,6 +73,9 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
         try
         {
             IReadOnlyList<HardwareGroup> groups = _sensorService.Read();
+
+            KeyMetrics metrics = KeyMetricsService.Extract(groups);
+            Dashboard.Update(metrics);
 
             if (Hardware.Count == 0)
             {

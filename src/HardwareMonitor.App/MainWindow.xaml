@@ -17,6 +17,31 @@
                        Margin="0,3" />
         </HierarchicalDataTemplate>
 
+        <!-- Dashboard-korttien tyylit -->
+        <Style x:Key="Card" TargetType="Border">
+            <Setter Property="Background" Value="#252526" />
+            <Setter Property="CornerRadius" Value="8" />
+            <Setter Property="Padding" Value="16" />
+            <Setter Property="Margin" Value="8" />
+            <Setter Property="MinWidth" Value="220" />
+        </Style>
+        <Style x:Key="CardTitle" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="15" />
+            <Setter Property="FontWeight" Value="Bold" />
+            <Setter Property="Foreground" Value="#4FC3F7" />
+            <Setter Property="Margin" Value="0,0,0,8" />
+        </Style>
+        <Style x:Key="CardLabel" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="#9E9E9E" />
+            <Setter Property="Margin" Value="0,2" />
+        </Style>
+        <Style x:Key="CardValue" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="#A5D6A7" />
+            <Setter Property="FontFamily" Value="Consolas" />
+            <Setter Property="HorizontalAlignment" Value="Right" />
+            <Setter Property="Margin" Value="24,2,0,2" />
+        </Style>
+
         <!-- Yksittäinen sensori: nimi | arvo | tyyppi -->
         <DataTemplate DataType="{x:Type vm:SensorViewModel}">
             <Grid Margin="0,1">
@@ -53,19 +78,127 @@
             </StackPanel>
         </Border>
 
-        <!-- Sensoripuu -->
-        <TreeView ItemsSource="{Binding Hardware}"
-                  Background="#1E1E1E"
-                  BorderThickness="0"
-                  Foreground="White"
-                  FontFamily="Consolas"
-                  FontSize="13"
-                  Padding="12">
-            <TreeView.ItemContainerStyle>
-                <Style TargetType="TreeViewItem">
-                    <Setter Property="IsExpanded" Value="True" />
-                </Style>
-            </TreeView.ItemContainerStyle>
-        </TreeView>
+        <!-- Sisältö: Dashboard-kortit + raakasensoripuu välilehtinä -->
+        <TabControl Background="#1E1E1E" BorderThickness="0">
+            <TabItem Header="Dashboard">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <WrapPanel Margin="8" DataContext="{Binding Dashboard}">
+
+                        <Border Style="{StaticResource Card}">
+                            <StackPanel>
+                                <TextBlock Style="{StaticResource CardTitle}" Text="CPU" />
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition /><RowDefinition /><RowDefinition /><RowDefinition />
+                                    </Grid.RowDefinitions>
+                                    <TextBlock Grid.Row="0" Style="{StaticResource CardLabel}" Text="Käyttö" />
+                                    <TextBlock Grid.Row="0" Grid.Column="1" Style="{StaticResource CardValue}" Text="{Binding CpuLoad}" />
+                                    <TextBlock Grid.Row="1" Style="{StaticResource CardLabel}" Text="Lämpötila" />
+                                    <TextBlock Grid.Row="1" Grid.Column="1" Style="{StaticResource CardValue}" Text="{Binding CpuTemp}" />
+                                    <TextBlock Grid.Row="2" Style="{StaticResource CardLabel}" Text="Kello (max)" />
+                                    <TextBlock Grid.Row="2" Grid.Column="1" Style="{StaticResource CardValue}" Text="{Binding CpuClock}" />
+                                    <TextBlock Grid.Row="3" Style="{StaticResource CardLabel}" Text="Teho" />
+                                    <TextBlock Grid.Row="3" Grid.Column="1" Style="{StaticResource CardValue}" Text="{Binding CpuPower}" />
+                                </Grid>
+                            </StackPanel>
+                        </Border>
+
+                        <Border Style="{StaticResource Card}">
+                            <StackPanel>
+                                <TextBlock Style="{StaticResource CardTitle}" Text="GPU" />
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition /><RowDefinition /><RowDefinition /><RowDefinition /><RowDefinition />
+                                    </Grid.RowDefinitions>
+                                    <TextBlock Grid.Row="0" Style="{StaticResource CardLabel}" Text="Käyttö" />
+                                    <TextBlock Grid.Row="0" Grid.Column="1" Style="{StaticResource CardValue}" Text="{Binding GpuLoad}" />
+                                    <TextBlock Grid.Row="1" Style="{StaticResource CardLabel}" Text="Lämpötila" />
+                                    <TextBlock Grid.Row="1" Grid.Column="1" Style="{StaticResource CardValue}" Text="{Binding GpuTemp}" />
+                                    <TextBlock Grid.Row="2" Style="{StaticResource CardLabel}" Text="Hotspot" />
+                                    <TextBlock Grid.Row="2" Grid.Column="1" Style="{StaticResource CardValue}" Text="{Binding GpuHotspot}" />
+                                    <TextBlock Grid.Row="3" Style="{StaticResource CardLabel}" Text="VRAM" />
+                                    <TextBlock Grid.Row="3" Grid.Column="1" Style="{StaticResource CardValue}" Text="{Binding GpuVram}" />
+                                    <TextBlock Grid.Row="4" Style="{StaticResource CardLabel}" Text="Teho" />
+                                    <TextBlock Grid.Row="4" Grid.Column="1" Style="{StaticResource CardValue}" Text="{Binding GpuPower}" />
+                                </Grid>
+                            </StackPanel>
+                        </Border>
+
+                        <Border Style="{StaticResource Card}">
+                            <StackPanel>
+                                <TextBlock Style="{StaticResource CardTitle}" Text="RAM" />
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition /><RowDefinition />
+                                    </Grid.RowDefinitions>
+                                    <TextBlock Grid.Row="0" Style="{StaticResource CardLabel}" Text="Käyttö" />
+                                    <TextBlock Grid.Row="0" Grid.Column="1" Style="{StaticResource CardValue}" Text="{Binding RamLoad}" />
+                                    <TextBlock Grid.Row="1" Style="{StaticResource CardLabel}" Text="Käytössä" />
+                                    <TextBlock Grid.Row="1" Grid.Column="1" Style="{StaticResource CardValue}" Text="{Binding RamUsed}" />
+                                </Grid>
+                            </StackPanel>
+                        </Border>
+
+                        <Border Style="{StaticResource Card}">
+                            <StackPanel>
+                                <TextBlock Style="{StaticResource CardTitle}" Text="Levyt" />
+                                <ItemsControl ItemsSource="{Binding Disks}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Text="{Binding}" Foreground="#E0E0E0"
+                                                       FontFamily="Consolas" Margin="0,2" />
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </StackPanel>
+                        </Border>
+
+                        <Border Style="{StaticResource Card}">
+                            <StackPanel>
+                                <TextBlock Style="{StaticResource CardTitle}" Text="Tuulettimet" />
+                                <ItemsControl ItemsSource="{Binding Fans}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Text="{Binding}" Foreground="#E0E0E0"
+                                                       FontFamily="Consolas" Margin="0,2" />
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </StackPanel>
+                        </Border>
+
+                    </WrapPanel>
+                </ScrollViewer>
+            </TabItem>
+
+            <TabItem Header="Kaikki sensorit">
+                <!-- Sensoripuu -->
+                <TreeView ItemsSource="{Binding Hardware}"
+                          Background="#1E1E1E"
+                          BorderThickness="0"
+                          Foreground="White"
+                          FontFamily="Consolas"
+                          FontSize="13"
+                          Padding="12">
+                    <TreeView.ItemContainerStyle>
+                        <Style TargetType="TreeViewItem">
+                            <Setter Property="IsExpanded" Value="True" />
+                        </Style>
+                    </TreeView.ItemContainerStyle>
+                </TreeView>
+            </TabItem>
+        </TabControl>
     </DockPanel>
 </Window>
