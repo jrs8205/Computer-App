@@ -14,6 +14,8 @@
       Lisenssi: MPL-2.0.
     -->
     <PackageReference Include="LibreHardwareMonitorLib" Version="0.9.6" />
+    <!-- SQLite sensorihistorialle ja tapahtumalokille (määrittelyn luku 21). -->
+    <PackageReference Include="Microsoft.Data.Sqlite" Version="8.0.11" />
   </ItemGroup>
 
 </Project>
