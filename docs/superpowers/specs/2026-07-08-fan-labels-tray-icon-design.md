@@ -73,6 +73,31 @@ Päivätty: 8.7.2026. Hyväksytty käyttäjän kanssa. Toteutetaan ennen Vaihe 3
 - Käsintestaus ruutukaappauksin: nimen muokkaus kortissa → näkyy overlayssa;
   pienennä/sulje → tray; palautus ja Lopeta; ikoni tehtäväpalkissa ja trayssa.
 
+## 4. Overlay ei saa kadota pienennettäessä (bugikorjaus)
+
+Nykyinen `OverlayWindow` on kytketty pääikkunaan `Owner`-suhteella, jolloin WPF
+pienentää/piilottaa sen pääikkunan mukana. Korjaus: **poistetaan Owner-kytkös** —
+overlay elää itsenäisesti, pysyy näkyvissä kun pääikkuna menee trayhin, ja
+suljetaan eksplisiittisesti pääikkunan `Closed`-käsittelijässä (tämä ketju on
+jo olemassa). Päivitystimer (DispatcherTimer) jatkaa normaalisti ikkunan
+ollessa piilossa.
+
+## 5. Automaattikäynnistys Windowsin mukana
+
+- Asetus-CheckBox **"Käynnistä Windowsin mukana"** yläpalkkiin.
+- Toteutus **Task Schedulerilla** (`schtasks`), EI Run-rekisteriavaimella:
+  sensorit vaativat admin-oikeudet, ja vain ajastettu tehtävä asetuksella
+  "suorita korkeimmilla oikeuksilla" (`/RL HIGHEST`) käynnistyy kirjautuessa
+  adminina ilman UAC-kyselyä.
+- Tehtävän nimi `HardwareMonitor`, laukaisin `ONLOGON`, kohde nykyinen exe-polku.
+- CheckBoxin tila luetaan käynnistyksessä tehtävän olemassaolosta
+  (`schtasks /Query`) — ei erillistä settings-kenttää, joka voisi erkaantua
+  todellisuudesta.
+- Luonti/poisto vaatii, että sovellus itse on käynnissä adminina; jos komento
+  epäonnistuu (ei adminia), kirjataan debug-lokiin ja checkbox palautetaan.
+- Huom: tehtävä osoittaa nykyiseen build-polkuun (bin\Debug). Riittää
+  kehitysvaiheessa; asennettu sijainti tulee myöhemmin (Vaihe 8 -paketointi).
+
 ## Rajaus (YAGNI)
 
 - Ei levyjen/muiden sensorien nimeämistä vielä (helppo laajentaa samalla mallilla).

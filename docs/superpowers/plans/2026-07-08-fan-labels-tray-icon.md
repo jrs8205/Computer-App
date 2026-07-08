@@ -596,5 +596,120 @@ Write-Host "app.ico generoitu: $($out.Length) tavua, koot: $($sizes -join ', ')"
     }
 ```
 
-- [ ] **Step 5: Buildaa, aja testit, todenna käsin** (pienennä → tray; X → tray; tuplaklikkaus palauttaa; Lopeta sulkee; ikoni näkyy). Ruutukaappaus.
-- [ ] **Step 6: ROADMAP-päivitys + commit** `git add src/HardwareMonitor.App docs/ROADMAP.md && git commit -m "Tray-pienennys ja tray-valikko (Näytä/Overlay/Lopeta)"`
+- [ ] **Step 5: Overlay-bugikorjaus** — `ApplyOverlaySettings`-metodissa poistetaan
+  Owner-kytkös, jotta overlay ei katoa pääikkunan mukana trayhin:
+
+```csharp
+            // ENNEN:  _overlay = new OverlayWindow(_viewModel.Overlay) { Owner = this };
+            _overlay = new OverlayWindow(_viewModel.Overlay);
+```
+
+- [ ] **Step 6: Buildaa, aja testit, todenna käsin** (pienennä → tray JA overlay jää näkyviin;
+  X → tray; tuplaklikkaus palauttaa; Lopeta sulkee myös overlayn; ikoni näkyy). Ruutukaappaus.
+- [ ] **Step 7: ROADMAP-päivitys + commit** `git add src/HardwareMonitor.App docs/ROADMAP.md && git commit -m "Tray-pienennys ja tray-valikko (Näytä/Overlay/Lopeta)"`
+
+---
+
+### Task 5: Automaattikäynnistys Windowsin mukana (Task Scheduler)
+
+**Files:**
+- Create: `src/HardwareMonitor.App/Services/AutostartService.cs`
+- Modify: `src/HardwareMonitor.App/ViewModels/MainViewModel.cs` (AutoStart-property)
+- Modify: `src/HardwareMonitor.App/MainWindow.xaml` (CheckBox "Käynnistä Windowsin mukana")
+
+**Interfaces:**
+- Produces: `AutostartService { static bool IsEnabled(); static bool SetEnabled(bool on, string? log) }`
+  — schtasks-pohjainen; `MainViewModel.AutoStart : bool` (getteri kysyy IsEnabled kerran
+  käynnistyksessä, setteri kutsuu SetEnabled ja palauttaa arvon jos epäonnistuu).
+
+- [ ] **Step 1: AutostartService**:
+
+```csharp
+using System.Diagnostics;
+
+namespace HardwareMonitor.App.Services;
+
+/// <summary>
+/// Automaattikäynnistys Windowsin mukana Task Schedulerilla. Ajastettu tehtävä
+/// /RL HIGHEST käynnistää sovelluksen kirjautuessa admin-oikeuksin ilman
+/// UAC-kyselyä — Run-rekisteriavain ei siihen pysty, ja ilman adminia
+/// CPU-lämpösensorit jäisivät pimeiksi. Luonti/poisto vaatii, että tämä
+/// sovellus on itse käynnissä adminina.
+/// </summary>
+public static class AutostartService
+{
+    private const string TaskName = "HardwareMonitor";
+
+    public static bool IsEnabled() =>
+        RunSchtasks($"/Query /TN \"{TaskName}\"") == 0;
+
+    /// <summary>Palauttaa true jos operaatio onnistui.</summary>
+    public static bool SetEnabled(bool on)
+    {
+        if (!on)
+        {
+            return RunSchtasks($"/Delete /F /TN \"{TaskName}\"") == 0;
+        }
+
+        string exe = Environment.ProcessPath ?? throw new InvalidOperationException("Exe-polkua ei saatu");
+        return RunSchtasks($"/Create /F /RL HIGHEST /SC ONLOGON /TN \"{TaskName}\" /TR \"\\\"{exe}\\\"\"") == 0;
+    }
+
+    private static int RunSchtasks(string arguments)
+    {
+        using var process = Process.Start(new ProcessStartInfo
+        {
+            FileName = "schtasks.exe",
+            Arguments = arguments,
+            UseShellExecute = false,
+            CreateNoWindow = true,
+        });
+        process!.WaitForExit();
+        return process.ExitCode;
+    }
+}
+```
+
+- [ ] **Step 2: MainViewModel.AutoStart** — tila luetaan kerran käynnistyksessä,
+  epäonnistunut muutos perutaan ja kirjataan lokiin:
+
+```csharp
+    private bool _autoStart;
+
+    // Konstruktoriin: _autoStart = AutostartService.IsEnabled();
+
+    public bool AutoStart
+    {
+        get => _autoStart;
+        set
+        {
+            if (_autoStart == value)
+            {
+                return;
+            }
+
+            if (AutostartService.SetEnabled(value))
+            {
+                _autoStart = value;
+            }
+            else
+            {
+                _logger.Log("VIRHE: automaattikäynnistyksen muutos epäonnistui (vaatii admin-oikeudet).");
+            }
+
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(AutoStart)));
+        }
+    }
+```
+
+  Using: `HardwareMonitor.App.Services;`
+
+- [ ] **Step 3: XAML** — yläpalkin WrapPaneliin:
+
+```xml
+                    <CheckBox Content="Käynnistä Windowsin mukana" IsChecked="{Binding AutoStart}"
+                              Foreground="White" Margin="16,0,0,0" VerticalAlignment="Center" />
+```
+
+- [ ] **Step 4: Buildaa, todenna** (ruksi päälle → `schtasks /Query /TN HardwareMonitor` löytää tehtävän /RL HIGHEST; ruksi pois → tehtävä poistuu).
+- [ ] **Step 5: Commit** `git add src/HardwareMonitor.App && git commit -m "Automaattikäynnistys Windowsin mukana Task Schedulerilla"`
