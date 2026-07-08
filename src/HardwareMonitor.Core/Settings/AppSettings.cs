@@ -24,12 +24,23 @@ public sealed class OverlaySettings
     public bool ShowFans { get; set; }
 }
 
+/// <summary>Lokituksen asetukset (määrittelyn luku 29).</summary>
+public sealed class LoggingSettings
+{
+    /// <summary>Montako 1 s -lukemaa kootaan yhteen kantariviin.</summary>
+    public int SensorIntervalSeconds { get; set; } = 5;
+
+    public int KeepHistoryDays { get; set; } = 30;
+}
+
 /// <summary>
 /// Sovelluksen kaikki asetukset. Laajenee Vaihe 4:ssä raja-arvoilla (specin luku 29).
 /// </summary>
 public sealed class AppSettings
 {
     public OverlaySettings Overlay { get; set; } = new();
+
+    public LoggingSettings Logging { get; set; } = new();
 
     /// <summary>Käyttäjän omat nimet tuulettimille: sensorin Identifier -> nimi.</summary>
     public Dictionary<string, string> FanLabels { get; set; } = new();
