@@ -29,6 +29,32 @@ public sealed class OverlaySettings
     public bool ShowFans { get; set; }
 }
 
+/// <summary>Varoitus- ja kriittisrajat (määrittelyn luvut 16 ja 29).</summary>
+public sealed class ThresholdSettings
+{
+    public float CpuWarningTemp { get; set; } = 85;
+    public float CpuCriticalTemp { get; set; } = 95;
+    public float GpuWarningTemp { get; set; } = 85;
+    public float GpuCriticalTemp { get; set; } = 95;
+    public float GpuHotspotWarningTemp { get; set; } = 95;
+    public float GpuHotspotCriticalTemp { get; set; } = 105;
+    public float NvmeWarningTemp { get; set; } = 70;
+    public float NvmeCriticalTemp { get; set; } = 82;
+    public float RamWarningPercent { get; set; } = 85;
+    public float RamCriticalPercent { get; set; } = 95;
+
+    /// <summary>Pysähtynyt tuuletin on kriittinen vasta kun CPU on vähintään näin kuuma.</summary>
+    public float FanStopCpuTemp { get; set; } = 80;
+
+    /// <summary>Yhtäjaksoinen ylitys sekunneissa ennen WARNING-tapahtumaa (piikki vs. kesto).</summary>
+    public int WarningSustainSeconds { get; set; } = 30;
+
+    public int CriticalSustainSeconds { get; set; } = 10;
+
+    /// <summary>Sama sääntö+taso ei kirjaudu uudelleen tätä useammin (luku 26).</summary>
+    public int EventCooldownMinutes { get; set; } = 5;
+}
+
 /// <summary>Lokituksen asetukset (määrittelyn luku 29).</summary>
 public sealed class LoggingSettings
 {
@@ -46,6 +72,8 @@ public sealed class AppSettings
     public OverlaySettings Overlay { get; set; } = new();
 
     public LoggingSettings Logging { get; set; } = new();
+
+    public ThresholdSettings Thresholds { get; set; } = new();
 
     /// <summary>Käyttäjän omat nimet tuulettimille: sensorin Identifier -> nimi.</summary>
     public Dictionary<string, string> FanLabels { get; set; } = new();

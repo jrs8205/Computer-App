@@ -68,6 +68,24 @@ public sealed class SettingsServiceTests : IDisposable
     }
 
     [Fact]
+    public void Thresholds_OletuksetJaTallennus()
+    {
+        var service = new SettingsService(_dir);
+
+        AppSettings defaults = service.Load();
+        Assert.Equal(85, defaults.Thresholds.CpuWarningTemp);
+        Assert.Equal(105, defaults.Thresholds.GpuHotspotCriticalTemp);
+        Assert.Equal(70, defaults.Thresholds.NvmeWarningTemp);
+        Assert.Equal(30, defaults.Thresholds.WarningSustainSeconds);
+        Assert.Equal(5, defaults.Thresholds.EventCooldownMinutes);
+
+        defaults.Thresholds.CpuWarningTemp = 80;
+        service.Save(defaults);
+
+        Assert.Equal(80, new SettingsService(_dir).Load().Thresholds.CpuWarningTemp);
+    }
+
+    [Fact]
     public void Load_VioittunutTiedosto_PalauttaaOletuksetEikaHeitaPoikkeusta()
     {
         Directory.CreateDirectory(_dir);
