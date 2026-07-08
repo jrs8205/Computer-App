@@ -15,7 +15,15 @@ ja mitä tehdään seuraavaksi, jotta työtä on helppo jatkaa esimerkiksi illal
 
 **Ensimmäinen onnistumisen mittari (luku 33):** ohjelma löytää CPU:n, GPU:n, levyt,
 lämpötilat, kellot, kuormat ja tuulettimet niin hyvin kuin laitteisto sallii.
-→ Testaa kotikoneella: `.\run.ps1 -AsAdmin`
+
+✅ **Testattu kotikoneella 8.7.2026** (i9-9900K, RTX 2060, ASUS Z390-F, Win 11):
+kaikki löytyi — CPU-lämmöt/kellot/kuormat, GPU + hotspot + VRAM, NVMe/SATA-lämmöt
+ja SMART, Nuvoton-tuulettimet RPM, Vcore, VRM/Chipset-lämmöt.
+
+**Tärkeä havainto testistä:** Windows 11:n haavoittuvien ajurien estolista blokkaa
+WinRing0:n (LibreHardwareMonitorLib 0.9.4) → CPU/emolevysensorit tyhjiä myös adminina.
+Korjaus: kirjasto päivitetty **0.9.6**:een + asennettu **PawnIO-ajuri** (pawnio.eu).
+Molemmat tarvitaan. Katso README "Vaatimukset".
 
 ## ⏭️ Vaihe 2 — Sensorien ryhmittely ja Dashboard (seuraavaksi)
 
@@ -64,7 +72,7 @@ Ideana siirtyä raakalistasta selkeään näkymään (määrittelyn luvut 24–2
 |---|---|
 | Kieli | C# |
 | UI | WPF (net8.0-windows) |
-| Sensorit | LibreHardwareMonitorLib |
+| Sensorit | LibreHardwareMonitorLib 0.9.6 + PawnIO-ajuri |
 | Event Log | System.Diagnostics.Eventing.Reader |
 | Tietokanta | SQLite (tulossa vaiheessa 3) |
 | Graafit | LiveCharts2 (tulossa vaiheessa 8) |

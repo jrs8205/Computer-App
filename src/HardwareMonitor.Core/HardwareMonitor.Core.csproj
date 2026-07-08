@@ -13,7 +13,7 @@
       lämpötilatietoja valmiiksi. Tämä on ohjelman sensoripohjan ydin.
       Lisenssi: MPL-2.0.
     -->
-    <PackageReference Include="LibreHardwareMonitorLib" Version="0.9.4" />
+    <PackageReference Include="LibreHardwareMonitorLib" Version="0.9.6" />
   </ItemGroup>
 
 </Project>

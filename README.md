@@ -29,6 +29,14 @@ Tämä versio vain **lukee, näyttää ja lokittaa** — se ei muuta koneen aset
 - **Windows 10 / 11** (WPF on Windows-only)
 - **.NET 8 SDK** — lataa: <https://dotnet.microsoft.com/download/dotnet/8.0>
   - Tarkista asennus: `dotnet --version` (pitäisi näyttää 8.x)
+- **PawnIO-ajuri** (CPU-lämmöt, kellot ja emolevyn sensorit Windows 11:llä) —
+  lataa: <https://pawnio.eu/> → `PawnIO_setup.exe`
+  - Tarkista asennus: `sc.exe query PawnIO` (STATE: RUNNING)
+  - Miksi: Windows 11:n haavoittuvien ajurien estolista estää vanhan
+    WinRing0-ajurin, jota LibreHardwareMonitorLib ≤ 0.9.4 käytti. Versio 0.9.5+
+    käyttää PawnIO:ta — Microsoftin hyväksymää, allekirjoitettua ajuria, jonka
+    LibreHardwareMonitor on itsekin ottanut käyttöön. Ilman PawnIO:ta CPU-lämmöt
+    jäävät tyhjiksi ("—") myös admin-oikeuksilla.
 
 ---
 
