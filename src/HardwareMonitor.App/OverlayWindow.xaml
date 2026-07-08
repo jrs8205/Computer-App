@@ -1,0 +1,23 @@
+<Window x:Class="HardwareMonitor.App.OverlayWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="HardwareMonitor Overlay"
+        WindowStyle="None"
+        AllowsTransparency="True"
+        Background="Transparent"
+        Topmost="True"
+        ShowInTaskbar="False"
+        ShowActivated="False"
+        ResizeMode="NoResize"
+        SizeToContent="WidthAndHeight"
+        IsHitTestVisible="False">
+
+    <Border CornerRadius="10" Padding="14,10" Background="#1E1E1E"
+            Opacity="{Binding BackgroundOpacity}">
+        <TextBlock Text="{Binding Text}"
+                   FontFamily="Consolas"
+                   FontSize="{Binding FontSize}"
+                   Foreground="#E8F5E9"
+                   LineHeight="22" />
+    </Border>
+</Window>
