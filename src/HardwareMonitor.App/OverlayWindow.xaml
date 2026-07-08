@@ -13,7 +13,7 @@
         IsHitTestVisible="False">
 
     <Border x:Name="Panel" CornerRadius="10" Padding="14,10" Background="#1E1E1E"
-            BorderThickness="2" BorderBrush="Transparent"
+            BorderThickness="2" BorderBrush="{Binding BorderBrush}"
             Opacity="{Binding BackgroundOpacity}">
         <TextBlock Text="{Binding Text}"
                    FontFamily="Consolas"

@@ -79,11 +79,21 @@ Specissä `docs/superpowers/specs/2026-07-08-sqlite-logging-design.md`:
 - [x] Retention 30 vrk (`Logging.KeepHistoryDays`), siivous käynnistyksessä
 - [x] Statusrivillä istunnon lokirivien määrä
 
-## ⏭️ Vaihe 4 — Raja-arvot ja varoitukset
+## ✅ Vaihe 4 — Raja-arvot ja varoitukset (VALMIS 8.7.2026)
 
-- [ ] Oletusrajat (luku 16) + JSON-asetukset (luku 29)
-- [ ] Kesto huomioon (piikki vs. pitkäkestoinen ongelma)
-- [ ] Varoitus/kriittinen-tilat UI:hin
+Specissä `docs/superpowers/specs/2026-07-08-thresholds-design.md`:
+
+- [x] Oletusrajat (luku 16) `Thresholds`-asetusosioon (luvun 29 nimet);
+      muokkaus settings.jsonista, asetussivu tulee Vaihe 8:ssa
+- [x] Kesto huomioon: väritila UI:hin heti, tapahtuma vasta yhtäjaksoisen
+      ylityksen jälkeen (WARNING 30 s, CRITICAL 10 s); palautuessa INFO
+      kestolla ja huippuarvolla; cooldown 5 min (luku 26)
+- [x] Varoitus/kriittinen-tilat UI:hin: korttiarvot ja levyrivit värjätään
+      (vihreä/oranssi/punainen), overlayn reunus pahimman tilan mukaan
+- [x] Tuuletinsääntö: istunnossa pyörinyt tuuletin 0 RPM + CPU ≥ 80 °C → CRITICAL
+- [x] Tapahtumat events-tauluun (EventLogService) ja debug-lokiin
+- [x] Todennettu päästä päähän lasketulla rajalla (WARNING-tapahtuma,
+      oranssi korttiarvo ja overlay-reunus)
 
 ## ⏭️ Vaihe 5 — Windows Event Log
 

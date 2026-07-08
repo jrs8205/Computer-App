@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Globalization;
+using HardwareMonitor.Core.Analysis;
 using HardwareMonitor.Core.Metrics;
 
 namespace HardwareMonitor.App.ViewModels;
@@ -27,8 +28,29 @@ public sealed class DashboardViewModel : INotifyPropertyChanged
     public string RamLoad { get => _ramLoad; private set => Set(ref _ramLoad, value, nameof(RamLoad)); }
     public string RamUsed { get => _ramUsed; private set => Set(ref _ramUsed, value, nameof(RamUsed)); }
 
-    public ObservableCollection<string> Disks { get; } = new();
+    private ThresholdState _cpuTempState, _gpuTempState, _gpuHotspotState, _ramLoadState;
+
+    public ThresholdState CpuTempState { get => _cpuTempState; private set => SetState(ref _cpuTempState, value, nameof(CpuTempState)); }
+    public ThresholdState GpuTempState { get => _gpuTempState; private set => SetState(ref _gpuTempState, value, nameof(GpuTempState)); }
+    public ThresholdState GpuHotspotState { get => _gpuHotspotState; private set => SetState(ref _gpuHotspotState, value, nameof(GpuHotspotState)); }
+    public ThresholdState RamLoadState { get => _ramLoadState; private set => SetState(ref _ramLoadState, value, nameof(RamLoadState)); }
+
+    public ObservableCollection<DiskRowViewModel> Disks { get; } = new();
     public ObservableCollection<FanRowViewModel> Fans { get; } = new();
+
+    /// <summary>Vie raja-arvovalvonnan välittömät tilat kortteihin (kutsu Updaten jälkeen).</summary>
+    public void ApplyStates(MetricStates states)
+    {
+        CpuTempState = states.CpuTemp;
+        GpuTempState = states.GpuTemp;
+        GpuHotspotState = states.GpuHotspot;
+        RamLoadState = states.RamLoad;
+
+        for (int i = 0; i < Disks.Count; i++)
+        {
+            Disks[i].State = i < states.Disks.Count ? states.Disks[i] : ThresholdState.Normal;
+        }
+    }
 
     /// <summary>Asetetaan MainViewModelista; välittää nimenmuutokset tallennettavaksi.</summary>
     public Action<string, string>? RenameFan { get; set; }
@@ -53,9 +75,30 @@ public sealed class DashboardViewModel : INotifyPropertyChanged
                 : $"{usedGb.ToString("0.0", CultureInfo.CurrentCulture)} GB"
             : "—";
 
-        SyncRows(Disks, m.Disks.Select(d =>
-            $"{d.Name}   {Fmt(d.TemperatureC, "°C")}   {Fmt(d.ActivityPercent, "%")}"));
+        SyncDisks(m.Disks);
         SyncFans(m.Fans, fanLabels);
+    }
+
+    /// <summary>Päivittää levyrivit paikallaan (järjestys = KeyMetrics.Disks).</summary>
+    private void SyncDisks(IReadOnlyList<DiskMetrics> disks)
+    {
+        while (Disks.Count > disks.Count)
+        {
+            Disks.RemoveAt(Disks.Count - 1);
+        }
+
+        for (int i = 0; i < disks.Count; i++)
+        {
+            string text = $"{disks[i].Name}   {Fmt(disks[i].TemperatureC, "°C")}   {Fmt(disks[i].ActivityPercent, "%")}";
+            if (i >= Disks.Count)
+            {
+                Disks.Add(new DiskRowViewModel { Text = text });
+            }
+            else
+            {
+                Disks[i].Text = text;
+            }
+        }
     }
 
     /// <summary>Päivittää tuuletinrivit paikallaan tunnisteen mukaan; ei ylikirjoita kesken muokkauksen.</summary>
@@ -104,29 +147,18 @@ public sealed class DashboardViewModel : INotifyPropertyChanged
     private static string Fmt(float? value, string unit) =>
         value is { } v ? $"{v.ToString("0", CultureInfo.CurrentCulture)} {unit}" : "—";
 
-    /// <summary>Päivittää listan rivit paikallaan, jotta UI ei vilku joka sekunti.</summary>
-    private static void SyncRows(ObservableCollection<string> target, IEnumerable<string> rows)
+    private void Set(ref string field, string value, string name)
     {
-        var list = rows.ToList();
-        while (target.Count > list.Count)
+        if (field == value)
         {
-            target.RemoveAt(target.Count - 1);
+            return;
         }
 
-        for (int i = 0; i < list.Count; i++)
-        {
-            if (i >= target.Count)
-            {
-                target.Add(list[i]);
-            }
-            else if (target[i] != list[i])
-            {
-                target[i] = list[i];
-            }
-        }
+        field = value;
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
     }
 
-    private void Set(ref string field, string value, string name)
+    private void SetState(ref ThresholdState field, ThresholdState value, string name)
     {
         if (field == value)
         {

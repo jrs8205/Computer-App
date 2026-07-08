@@ -2,7 +2,6 @@ using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Interop;
-using System.Windows.Media;
 using HardwareMonitor.App.ViewModels;
 using HardwareMonitor.Core.Settings;
 using Microsoft.Win32;
@@ -21,6 +20,7 @@ public partial class OverlayWindow : Window
     private const int WsExToolWindow = 0x00000080;
     private const int WsExNoActivate = 0x08000000;
 
+    private readonly OverlayViewModel _viewModel;
     private OverlaySettings _settings = new();
     private bool _moveMode;
 
@@ -30,6 +30,7 @@ public partial class OverlayWindow : Window
     public OverlayWindow(OverlayViewModel viewModel)
     {
         InitializeComponent();
+        _viewModel = viewModel;
         DataContext = viewModel;
 
         // Salpalukko: ikkuna saa kasvaa muttei kutistua kesken istunnon,
@@ -53,9 +54,7 @@ public partial class OverlayWindow : Window
         _moveMode = enabled;
         IsHitTestVisible = enabled;
         Cursor = enabled ? Cursors.SizeAll : Cursors.Arrow;
-        Panel.BorderBrush = enabled
-            ? new SolidColorBrush(Color.FromRgb(0x4F, 0xC3, 0xF7))
-            : Brushes.Transparent;
+        _viewModel.SetMoveModeVisual(enabled);
 
         var handle = new WindowInteropHelper(this).Handle;
         if (handle == 0)

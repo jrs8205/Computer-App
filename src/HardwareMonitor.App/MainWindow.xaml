@@ -1,6 +1,7 @@
 <Window x:Class="HardwareMonitor.App.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:app="clr-namespace:HardwareMonitor.App"
         xmlns:vm="clr-namespace:HardwareMonitor.App.ViewModels"
         Title="Windows 11 Hardware Monitor — sensoritestaus (PoC)"
         Height="760" Width="960"
@@ -16,6 +17,9 @@
                        Foreground="#4FC3F7"
                        Margin="0,3" />
         </HierarchicalDataTemplate>
+
+        <!-- Raja-arvotila -> väri (vihreä/oranssi/punainen) -->
+        <app:ThresholdStateToBrushConverter x:Key="StateBrush" />
 
         <!-- Dashboard-korttien tyylit -->
         <Style x:Key="Card" TargetType="Border">
@@ -132,7 +136,8 @@
                                     <TextBlock Grid.Row="0" Style="{StaticResource CardLabel}" Text="Käyttö" />
                                     <TextBlock Grid.Row="0" Grid.Column="1" Style="{StaticResource CardValue}" Text="{Binding CpuLoad}" />
                                     <TextBlock Grid.Row="1" Style="{StaticResource CardLabel}" Text="Lämpötila" />
-                                    <TextBlock Grid.Row="1" Grid.Column="1" Style="{StaticResource CardValue}" Text="{Binding CpuTemp}" />
+                                    <TextBlock Grid.Row="1" Grid.Column="1" Style="{StaticResource CardValue}" Text="{Binding CpuTemp}"
+                                               Foreground="{Binding CpuTempState, Converter={StaticResource StateBrush}}" />
                                     <TextBlock Grid.Row="2" Style="{StaticResource CardLabel}" Text="Kello (max)" />
                                     <TextBlock Grid.Row="2" Grid.Column="1" Style="{StaticResource CardValue}" Text="{Binding CpuClock}" />
                                     <TextBlock Grid.Row="3" Style="{StaticResource CardLabel}" Text="Teho" />
@@ -155,9 +160,11 @@
                                     <TextBlock Grid.Row="0" Style="{StaticResource CardLabel}" Text="Käyttö" />
                                     <TextBlock Grid.Row="0" Grid.Column="1" Style="{StaticResource CardValue}" Text="{Binding GpuLoad}" />
                                     <TextBlock Grid.Row="1" Style="{StaticResource CardLabel}" Text="Lämpötila" />
-                                    <TextBlock Grid.Row="1" Grid.Column="1" Style="{StaticResource CardValue}" Text="{Binding GpuTemp}" />
+                                    <TextBlock Grid.Row="1" Grid.Column="1" Style="{StaticResource CardValue}" Text="{Binding GpuTemp}"
+                                               Foreground="{Binding GpuTempState, Converter={StaticResource StateBrush}}" />
                                     <TextBlock Grid.Row="2" Style="{StaticResource CardLabel}" Text="Hotspot" />
-                                    <TextBlock Grid.Row="2" Grid.Column="1" Style="{StaticResource CardValue}" Text="{Binding GpuHotspot}" />
+                                    <TextBlock Grid.Row="2" Grid.Column="1" Style="{StaticResource CardValue}" Text="{Binding GpuHotspot}"
+                                               Foreground="{Binding GpuHotspotState, Converter={StaticResource StateBrush}}" />
                                     <TextBlock Grid.Row="3" Style="{StaticResource CardLabel}" Text="VRAM" />
                                     <TextBlock Grid.Row="3" Grid.Column="1" Style="{StaticResource CardValue}" Text="{Binding GpuVram}" />
                                     <TextBlock Grid.Row="4" Style="{StaticResource CardLabel}" Text="Teho" />
@@ -178,7 +185,8 @@
                                         <RowDefinition /><RowDefinition />
                                     </Grid.RowDefinitions>
                                     <TextBlock Grid.Row="0" Style="{StaticResource CardLabel}" Text="Käyttö" />
-                                    <TextBlock Grid.Row="0" Grid.Column="1" Style="{StaticResource CardValue}" Text="{Binding RamLoad}" />
+                                    <TextBlock Grid.Row="0" Grid.Column="1" Style="{StaticResource CardValue}" Text="{Binding RamLoad}"
+                                               Foreground="{Binding RamLoadState, Converter={StaticResource StateBrush}}" />
                                     <TextBlock Grid.Row="1" Style="{StaticResource CardLabel}" Text="Käytössä" />
                                     <TextBlock Grid.Row="1" Grid.Column="1" Style="{StaticResource CardValue}" Text="{Binding RamUsed}" />
                                 </Grid>
@@ -191,7 +199,8 @@
                                 <ItemsControl ItemsSource="{Binding Disks}">
                                     <ItemsControl.ItemTemplate>
                                         <DataTemplate>
-                                            <TextBlock Text="{Binding}" Foreground="#E0E0E0"
+                                            <TextBlock Text="{Binding Text}"
+                                                       Foreground="{Binding State, Converter={StaticResource StateBrush}}"
                                                        FontFamily="Consolas" Margin="0,2" />
                                         </DataTemplate>
                                     </ItemsControl.ItemTemplate>

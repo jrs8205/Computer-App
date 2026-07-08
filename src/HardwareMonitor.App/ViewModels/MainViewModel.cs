@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Windows.Threading;
 using HardwareMonitor.App.Services;
+using HardwareMonitor.Core.Analysis;
 using HardwareMonitor.Core.Logging;
 using HardwareMonitor.Core.Metrics;
 using HardwareMonitor.Core.Sensors;
@@ -26,6 +27,7 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
     private readonly SettingsService _settingsService = new();
     private readonly AppSettings _settings;
     private readonly SampleAggregator _aggregator;
+    private readonly ThresholdMonitor _thresholdMonitor;
     private HistoryDb? _historyDb;
     private EventLogService? _events;
     private int _rowsLogged;
@@ -37,6 +39,7 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
     {
         _settings = _settingsService.Load();
         _aggregator = new SampleAggregator(_settings.Logging.SensorIntervalSeconds);
+        _thresholdMonitor = new ThresholdMonitor(_settings.Thresholds);
         _autoStart = AutostartService.IsEnabled();
         Dashboard.RenameFan = RenameFan;
         _timer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
@@ -302,6 +305,27 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
             KeyMetrics metrics = KeyMetricsService.Extract(groups);
             Dashboard.Update(metrics, _settings.FanLabels);
             Overlay.Update(metrics, _settings);
+
+            ThresholdResult thresholds = _thresholdMonitor.Update(metrics, DateTimeOffset.Now, _settings.FanLabels);
+            Dashboard.ApplyStates(thresholds.States);
+            Overlay.SetWorstState(thresholds.States.Worst);
+
+            foreach (ThresholdEvent alert in thresholds.Events)
+            {
+                _logger.Log($"[{alert.Level}] {alert.Message}");
+                switch (alert.Level)
+                {
+                    case "CRITICAL":
+                        _events?.Critical(alert.Component, alert.Message, alert.Sensor, alert.Value, alert.Threshold);
+                        break;
+                    case "WARNING":
+                        _events?.Warning(alert.Component, alert.Message, alert.Sensor, alert.Value, alert.Threshold);
+                        break;
+                    default:
+                        _events?.Info(alert.Component, alert.Message, alert.Sensor, alert.Value, alert.Threshold);
+                        break;
+                }
+            }
 
             if (Hardware.Count == 0)
             {

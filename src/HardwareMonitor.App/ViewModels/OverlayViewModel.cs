@@ -1,6 +1,8 @@
 using System.ComponentModel;
 using System.Globalization;
 using System.Text;
+using System.Windows.Media;
+using HardwareMonitor.Core.Analysis;
 using HardwareMonitor.Core.Metrics;
 using HardwareMonitor.Core.Settings;
 
@@ -59,6 +61,62 @@ public sealed class OverlayViewModel : INotifyPropertyChanged
             _backgroundOpacity = value;
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(BackgroundOpacity)));
         }
+    }
+
+    private static readonly Brush WarningBorder = Frozen(new SolidColorBrush(Color.FromRgb(0xFF, 0xB7, 0x4D)));
+    private static readonly Brush CriticalBorder = Frozen(new SolidColorBrush(Color.FromRgb(0xEF, 0x53, 0x50)));
+    private static readonly Brush MoveModeBorder = Frozen(new SolidColorBrush(Color.FromRgb(0x4F, 0xC3, 0xF7)));
+
+    private Brush _borderBrush = Brushes.Transparent;
+    private ThresholdState _worstState;
+    private bool _moveModeVisual;
+
+    /// <summary>Paneelin reunus: näkyvissä vain kun jokin mittari hälyttää.</summary>
+    public Brush BorderBrush
+    {
+        get => _borderBrush;
+        private set
+        {
+            if (ReferenceEquals(_borderBrush, value))
+            {
+                return;
+            }
+
+            _borderBrush = value;
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(BorderBrush)));
+        }
+    }
+
+    public void SetWorstState(ThresholdState state)
+    {
+        _worstState = state;
+        UpdateBorder();
+    }
+
+    /// <summary>
+    /// Siirtotilan syaani reunus kulkee saman sidonnan kautta kuin hälytysvärit —
+    /// paikallinen arvo Border-elementissä tuhoaisi sidonnan pysyvästi (WPF).
+    /// </summary>
+    public void SetMoveModeVisual(bool enabled)
+    {
+        _moveModeVisual = enabled;
+        UpdateBorder();
+    }
+
+    private void UpdateBorder() =>
+        BorderBrush = _moveModeVisual
+            ? MoveModeBorder
+            : _worstState switch
+            {
+                ThresholdState.Critical => CriticalBorder,
+                ThresholdState.Warning => WarningBorder,
+                _ => Brushes.Transparent,
+            };
+
+    private static Brush Frozen(SolidColorBrush brush)
+    {
+        brush.Freeze();
+        return brush;
     }
 
     public void Update(KeyMetrics m, AppSettings settings)
