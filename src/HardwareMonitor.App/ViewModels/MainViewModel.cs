@@ -6,6 +6,7 @@ using HardwareMonitor.Core.Logging;
 using HardwareMonitor.Core.Metrics;
 using HardwareMonitor.Core.Sensors;
 using HardwareMonitor.Core.Settings;
+using HardwareMonitor.Core.Storage;
 
 namespace HardwareMonitor.App.ViewModels;
 
@@ -24,6 +25,10 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
     private readonly Dictionary<string, SensorViewModel> _sensorIndex = new();
     private readonly SettingsService _settingsService = new();
     private readonly AppSettings _settings;
+    private readonly SampleAggregator _aggregator;
+    private HistoryDb? _historyDb;
+    private EventLogService? _events;
+    private int _rowsLogged;
 
     private string _status = "Käynnistetään sensorit…";
     private int _tickCount;
@@ -31,6 +36,7 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
     public MainViewModel()
     {
         _settings = _settingsService.Load();
+        _aggregator = new SampleAggregator(_settings.Logging.SensorIntervalSeconds);
         _autoStart = AutostartService.IsEnabled();
         Dashboard.RenameFan = RenameFan;
         _timer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
@@ -252,6 +258,21 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
         {
             _sensorService.Start();
             _logger.Log($"SensorService käynnistetty. Loki: {_logger.LogPath}");
+
+            try
+            {
+                _historyDb = new HistoryDb();
+                _historyDb.PurgeOlderThan(DateTimeOffset.Now.AddDays(-_settings.Logging.KeepHistoryDays));
+                _events = new EventLogService(_historyDb);
+                _events.Info("App", "Sovellus käynnistyi");
+                _logger.Log($"Historia-kanta: {_historyDb.DbPath}");
+            }
+            catch (Exception ex)
+            {
+                _historyDb = null;
+                _logger.Log($"VIRHE historia-kannan avauksessa: {ex.Message} — jatketaan ilman lokitusta.");
+            }
+
             Refresh();
             _timer.Start();
         }
@@ -281,10 +302,28 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
                 UpdateValues(groups);
             }
 
+            AggregatedSample? aggregate = _aggregator.Add(metrics, DateTimeOffset.Now);
+            if (aggregate is not null && _historyDb is { } db)
+            {
+                Task.Run(() =>
+                {
+                    try
+                    {
+                        db.InsertSample(aggregate);
+                        Interlocked.Increment(ref _rowsLogged);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.Log($"VIRHE historian kirjoituksessa: {ex.Message}");
+                    }
+                });
+            }
+
             _tickCount++;
             Status =
                 $"Päivitetty {DateTime.Now:HH:mm:ss}  —  " +
-                $"{_sensorIndex.Count} sensoria, {Hardware.Count} laitetta  (päivitys #{_tickCount})";
+                $"{_sensorIndex.Count} sensoria, {Hardware.Count} laitetta  " +
+                $"(päivitys #{_tickCount}, lokirivejä: {Volatile.Read(ref _rowsLogged)})";
 
             LogSnapshot(groups);
         }
@@ -420,6 +459,17 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
     public void Dispose()
     {
         _timer.Stop();
+
+        try
+        {
+            _events?.Info("App", "Sovellus suljettiin siististi");
+        }
+        catch
+        {
+            // Sammutus ei saa kaatua lokitukseen.
+        }
+
+        _historyDb?.Dispose();
         _sensorService.Dispose();
     }
 

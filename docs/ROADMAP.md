@@ -64,11 +64,20 @@ Specissä `docs/superpowers/specs/2026-07-08-fan-labels-tray-icon-design.md`:
 - [x] Automaattikäynnistys Windowsin mukana (Task Scheduler /RL HIGHEST —
       käynnistyy adminina ilman UAC-kyselyä)
 
-## ⏭️ Vaihe 3 — Lokitus (SQLite)
+## ✅ Vaihe 3 — Lokitus (SQLite) (VALMIS 8.7.2026)
 
-- [ ] SQLite-tietokanta sensorihistorialle (luku 21)
-- [ ] Sensoririvit 5 s välein (luku 14)
-- [ ] Tapahtumaloki JSONL/SQLite (luku 15)
+Specissä `docs/superpowers/specs/2026-07-08-sqlite-logging-design.md`:
+
+- [x] SQLite-kanta `%LOCALAPPDATA%\HardwareMonitor\data\history.db` (WAL,
+      Microsoft.Data.Sqlite — Coren ensimmäinen NuGet-riippuvuus)
+- [x] **Koosterivit 5 s välein**: min/avg/max 1 s -lukemista (`SampleAggregator`) —
+      sekunnin piikit eivät katoa, kanta pysyy viidesosassa. Väli asetuksissa
+      (`Logging.SensorIntervalSeconds`)
+- [x] Taulut: samples + disk_samples + fan_samples (cascade) + events
+- [x] Tapahtumaloki (`EventLogService`, luku 15 kentät) — nyt sovelluksen
+      elinkaari; Vaihe 4 lisää raja-arvotapahtumat samaan tauluun
+- [x] Retention 30 vrk (`Logging.KeepHistoryDays`), siivous käynnistyksessä
+- [x] Statusrivillä istunnon lokirivien määrä
 
 ## ⏭️ Vaihe 4 — Raja-arvot ja varoitukset
 
@@ -101,7 +110,14 @@ Specissä `docs/superpowers/specs/2026-07-08-fan-labels-tray-icon-design.md`:
 
 ## ⏭️ Vaihe 8 — Viimeistely
 
-- [ ] Tray icon, autostart, ilmoitukset, asetussivu, graafit (LiveCharts2)
+- [ ] Ilmoitukset, asetussivu, graafit (LiveCharts2) — tray icon ja autostart
+      tehtiin jo Vaihe 2.6:ssa
+- [ ] **Kielituki fi/en**: UI-tekstit resx-resursseihin, kielivalinta asetuksiin
+      (nyt kaikki tekstit kovakoodattua suomea)
+- [ ] **Julkaisukuntoon**: LICENSE-tiedosto (oma koodi esim. MIT; LibreHardwareMonitorLib
+      on MPL-2.0 — mainittava READMEssä), englanninkielinen README-osio, repo julkiseksi
+- [ ] Paketointi/asennin (self-contained julkaisu, autostart-polun päivitys
+      asennettuun sijaintiin)
 
 ---
 
