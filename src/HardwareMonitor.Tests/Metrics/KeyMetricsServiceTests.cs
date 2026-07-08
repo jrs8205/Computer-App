@@ -78,4 +78,88 @@ public class KeyMetricsServiceTests
         Assert.Equal(12.2f, m.RamUsedGb);
         Assert.Equal(51.7f, m.RamAvailableGb);
     }
+
+    [Fact]
+    public void Extract_PoimiiGpuArvotHotspotinKanssa()
+    {
+        var gpu = Group("NVIDIA GeForce RTX 2060", "GpuNvidia", new[]
+        {
+            Reading("gpu", "GpuNvidia", "GPU Core", "Load", 33f),
+            Reading("gpu", "GpuNvidia", "GPU Core", "Temperature", 49f),
+            Reading("gpu", "GpuNvidia", "GPU Hot Spot", "Temperature", 62f),
+            Reading("gpu", "GpuNvidia", "GPU Memory Used", "SmallData", 975f),
+            Reading("gpu", "GpuNvidia", "GPU Memory Total", "SmallData", 6144f),
+            Reading("gpu", "GpuNvidia", "GPU Package", "Power", 17.7f),
+        });
+
+        KeyMetrics m = KeyMetricsService.Extract(new[] { gpu });
+
+        Assert.Equal(33f, m.GpuLoadPercent);
+        Assert.Equal(49f, m.GpuTempC);
+        Assert.Equal(62f, m.GpuHotspotTempC);
+        Assert.Equal(975f, m.GpuMemoryUsedMb);
+        Assert.Equal(6144f, m.GpuMemoryTotalMb);
+        Assert.Equal(17.7f, m.GpuPowerW);
+    }
+
+    [Fact]
+    public void Extract_GpuIlmanHotspotia_HotspotOnNull()
+    {
+        var gpu = Group("Intel UHD", "GpuIntel", new[]
+        {
+            Reading("gpu", "GpuIntel", "GPU Core", "Temperature", 40f),
+        });
+
+        KeyMetrics m = KeyMetricsService.Extract(new[] { gpu });
+
+        Assert.Equal(40f, m.GpuTempC);
+        Assert.Null(m.GpuHotspotTempC);
+    }
+
+    [Fact]
+    public void Extract_UseaLevy_KaikkiListassaJaAktiivisuusOnReadWriteMaksimi()
+    {
+        var ssd1 = Group("Samsung SSD 860 EVO 1TB", "Storage", new[]
+        {
+            Reading("ssd1", "Storage", "Temperature", "Temperature", 28f),
+            Reading("ssd1", "Storage", "Read Activity", "Load", 5f),
+            Reading("ssd1", "Storage", "Write Activity", "Load", 12f),
+            Reading("ssd1", "Storage", "Total Activity", "Load", 100f),
+        });
+        var ssd2 = Group("Samsung SSD 970 EVO Plus 1TB", "Storage", new[]
+        {
+            Reading("ssd2", "Storage", "Temperature", "Temperature", 62f),
+        });
+
+        KeyMetrics m = KeyMetricsService.Extract(new[] { ssd1, ssd2 });
+
+        Assert.Equal(2, m.Disks.Count);
+        Assert.Equal("Samsung SSD 860 EVO 1TB", m.Disks[0].Name);
+        Assert.Equal(28f, m.Disks[0].TemperatureC);
+        Assert.Equal(12f, m.Disks[0].ActivityPercent); // max(read, write), EI "Total Activity"
+        Assert.Equal(62f, m.Disks[1].TemperatureC);
+        Assert.Null(m.Disks[1].ActivityPercent);
+    }
+
+    [Fact]
+    public void Extract_KeraaTuulettimetMyosAlalaitteista()
+    {
+        var superIo = Group("Nuvoton NCT6798D", "SuperIO", new[]
+        {
+            Reading("io", "SuperIO", "Fan #1", "Fan", 579f),
+            Reading("io", "SuperIO", "Fan #2", "Fan", 1942f),
+        });
+        var motherboard = Group("ASUS Z390-F", "Motherboard",
+            Array.Empty<SensorReading>(), new[] { superIo });
+        var gpu = Group("RTX 2060", "GpuNvidia", new[]
+        {
+            Reading("gpu", "GpuNvidia", "GPU Fan 1", "Fan", 0f),
+        });
+
+        KeyMetrics m = KeyMetricsService.Extract(new[] { motherboard, gpu });
+
+        Assert.Equal(3, m.Fans.Count);
+        Assert.Contains(m.Fans, f => f.Name == "Fan #2" && f.Rpm == 1942f);
+        Assert.Contains(m.Fans, f => f.Name == "GPU Fan 1" && f.Rpm == 0f);
+    }
 }
