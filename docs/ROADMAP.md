@@ -50,6 +50,20 @@ Specissä `docs/superpowers/specs/2026-07-08-overlay-design.md`:
 Rajattu tietoisesti ulos (jatkokehitysideat alla): FPS-mittaus, exclusive
 fullscreen -pelituki, monen näytön valinta, raja-arvojen värikoodaus.
 
+## ✅ Vaihe 2.6 — Nimilaput, tray, ikoni, autostart (VALMIS 8.7.2026)
+
+Specissä `docs/superpowers/specs/2026-07-08-fan-labels-tray-icon-design.md`:
+
+- [x] Tuulettimien nimilaput: kaksoisklikkaus Tuulettimet-kortissa, tallennus
+      sensorin pysyvällä tunnisteella settings.jsoniin, näkyy myös overlayssa
+- [x] Tray-pienennys: pienennä/sulje → ilmaisinalue, mittaus jatkuu taustalla;
+      tray-valikko Näytä / Overlay / Lopeta
+- [x] Korjaus: overlay ei enää katoa pääikkunan mukana (Owner-kytkös poistettu)
+- [x] Vektori-ikoni (Assets/icon.svg + tools/generate-icon.ps1 → app.ico):
+      mittarikaari + sykeviiva, exe + tray
+- [x] Automaattikäynnistys Windowsin mukana (Task Scheduler /RL HIGHEST —
+      käynnistyy adminina ilman UAC-kyselyä)
+
 ## ⏭️ Vaihe 3 — Lokitus (SQLite)
 
 - [ ] SQLite-tietokanta sensorihistorialle (luku 21)

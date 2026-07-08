@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Windows.Threading;
+using HardwareMonitor.App.Services;
 using HardwareMonitor.Core.Logging;
 using HardwareMonitor.Core.Metrics;
 using HardwareMonitor.Core.Sensors;
@@ -30,9 +31,39 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
     public MainViewModel()
     {
         _settings = _settingsService.Load();
+        _autoStart = AutostartService.IsEnabled();
         Dashboard.RenameFan = RenameFan;
         _timer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
         _timer.Tick += (_, _) => Refresh();
+    }
+
+    private bool _autoStart;
+
+    /// <summary>
+    /// Käynnistä Windowsin mukana. Tila luetaan Task Schedulerista (ei
+    /// settings.jsonista), jotta checkbox ei erkane todellisuudesta.
+    /// </summary>
+    public bool AutoStart
+    {
+        get => _autoStart;
+        set
+        {
+            if (_autoStart == value)
+            {
+                return;
+            }
+
+            if (AutostartService.SetEnabled(value))
+            {
+                _autoStart = value;
+            }
+            else
+            {
+                _logger.Log("VIRHE: automaattikäynnistyksen muutos epäonnistui (vaatii admin-oikeudet).");
+            }
+
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(AutoStart)));
+        }
     }
 
     /// <summary>Tallentaa tuulettimen oman nimen; tyhjä nimi palauttaa oletuksen.</summary>
