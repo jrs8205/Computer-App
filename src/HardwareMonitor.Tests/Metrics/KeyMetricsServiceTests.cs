@@ -142,6 +142,22 @@ public class KeyMetricsServiceTests
     }
 
     [Fact]
+    public void Extract_NvmeIlmanPaasensoria_KayttaaEnsimmaistaNumeroitua()
+    {
+        // Admin-tilassa NVMe-levyn sensorit voivat olla "Temperature #1", "#2" jne.
+        // ilman pelkkää "Temperature"-nimistä pääsensoria.
+        var nvme = Group("Samsung SSD 970 EVO Plus 1TB", "Storage", new[]
+        {
+            Reading("nvme", "Storage", "Temperature #1", "Temperature", 61.85f),
+            Reading("nvme", "Storage", "Temperature #2", "Temperature", 82.85f),
+        });
+
+        KeyMetrics m = KeyMetricsService.Extract(new[] { nvme });
+
+        Assert.Equal(61.85f, m.Disks[0].TemperatureC);
+    }
+
+    [Fact]
     public void Extract_KeraaTuulettimetMyosAlalaitteista()
     {
         var superIo = Group("Nuvoton NCT6798D", "SuperIO", new[]

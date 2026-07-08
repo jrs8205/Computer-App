@@ -97,13 +97,20 @@ public static class KeyMetricsService
                     break;
 
                 case "Storage":
-                    float? diskTemp = null, readActivity = null, writeActivity = null;
+                    float? diskTemp = null, diskTempFallback = null,
+                           readActivity = null, writeActivity = null;
                     foreach (SensorReading s in group.Sensors)
                     {
                         switch (s.SensorType)
                         {
                             case "Temperature" when s.SensorName == "Temperature":
                                 diskTemp = s.Value;
+                                break;
+                            // NVMe-levyillä ei aina ole pääsensoria, vaan vain
+                            // "Temperature #1", "#2" jne. — ensimmäinen on levyn
+                            // yleislämpö, loput ovat ohjaimen sisäisiä pisteitä.
+                            case "Temperature" when s.SensorName.StartsWith("Temperature", StringComparison.Ordinal):
+                                diskTempFallback ??= s.Value;
                                 break;
                             case "Load" when s.SensorName == "Read Activity":
                                 readActivity = s.Value;
@@ -113,6 +120,8 @@ public static class KeyMetricsService
                                 break;
                         }
                     }
+
+                    diskTemp ??= diskTempFallback;
 
                     // "Total Activity" näyttää joillain levyillä aina 100 % — käytetään
                     // read/write-maksimia, joka kuvaa todellista aktiivisuutta.
