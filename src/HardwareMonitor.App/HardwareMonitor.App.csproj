@@ -6,12 +6,20 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <UseWPF>true</UseWPF>
+    <!-- WinForms vain NotifyIcon-tray-kuvaketta varten (ei NuGet-riippuvuutta). -->
+    <UseWindowsForms>true</UseWindowsForms>
     <LangVersion>latest</LangVersion>
     <AssemblyName>HardwareMonitor</AssemblyName>
     <RootNamespace>HardwareMonitor.App</RootNamespace>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <ApplicationIcon>Assets\app.ico</ApplicationIcon>
   </PropertyGroup>
+
+  <ItemGroup>
+    <!-- WinForms-tyypit vain täysin kvalifioituina (NotifyIcon); globaali using
+         törmäisi WPF:n Application/KeyEventArgs-tyyppeihin. -->
+    <Using Remove="System.Windows.Forms" />
+  </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\HardwareMonitor.Core\HardwareMonitor.Core.csproj" />

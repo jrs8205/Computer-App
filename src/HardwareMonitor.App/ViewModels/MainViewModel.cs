@@ -167,6 +167,21 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
         }
     }
 
+    public bool MinimizeToTray
+    {
+        get => _settings.MinimizeToTray;
+        set
+        {
+            if (_settings.MinimizeToTray == value)
+            {
+                return;
+            }
+
+            _settings.MinimizeToTray = value;
+            OnOverlaySettingChanged(nameof(MinimizeToTray));
+        }
+    }
+
     public bool OverlayShowFans
     {
         get => _settings.Overlay.ShowFans;

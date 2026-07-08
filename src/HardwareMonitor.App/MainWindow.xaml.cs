@@ -9,11 +9,14 @@ public partial class MainWindow : Window
 {
     private readonly MainViewModel _viewModel = new();
     private OverlayWindow? _overlay;
+    private System.Windows.Forms.NotifyIcon? _trayIcon;
+    private bool _reallyExiting;
 
     public MainWindow()
     {
         InitializeComponent();
         DataContext = _viewModel;
+        CreateTrayIcon();
 
         Loaded += (_, _) =>
         {
@@ -22,11 +25,70 @@ public partial class MainWindow : Window
             ApplyOverlaySettings();
         };
 
+        // Pienennys -> trayhin (ikkuna piiloon), kun asetus on päällä.
+        StateChanged += (_, _) =>
+        {
+            if (WindowState == WindowState.Minimized && _viewModel.MinimizeToTray)
+            {
+                Hide();
+            }
+        };
+
+        // X -> trayhin, kun asetus on päällä; oikea lopetus tray-valikon kautta.
+        Closing += (_, e) =>
+        {
+            if (_viewModel.MinimizeToTray && !_reallyExiting)
+            {
+                e.Cancel = true;
+                Hide();
+            }
+        };
+
         Closed += (_, _) =>
         {
+            _trayIcon?.Dispose();
             _overlay?.Close();
             _viewModel.Dispose();
         };
+    }
+
+    /// <summary>Tray-kuvake valikkoineen: Näytä / Overlay / Lopeta.</summary>
+    private void CreateTrayIcon()
+    {
+        var iconStream = System.Windows.Application
+            .GetResourceStream(new Uri("pack://application:,,,/Assets/app.ico"))!.Stream;
+        _trayIcon = new System.Windows.Forms.NotifyIcon
+        {
+            Icon = new System.Drawing.Icon(iconStream),
+            Text = "Hardware Monitor",
+            Visible = true,
+        };
+        _trayIcon.DoubleClick += (_, _) => RestoreFromTray();
+
+        var menu = new System.Windows.Forms.ContextMenuStrip();
+        menu.Items.Add("Näytä", null, (_, _) => RestoreFromTray());
+        var overlayItem = new System.Windows.Forms.ToolStripMenuItem("Overlay")
+        {
+            CheckOnClick = true,
+            Checked = _viewModel.OverlayEnabled,
+        };
+        overlayItem.CheckedChanged += (_, _) => _viewModel.OverlayEnabled = overlayItem.Checked;
+        menu.Items.Add(overlayItem);
+        menu.Items.Add(new System.Windows.Forms.ToolStripSeparator());
+        menu.Items.Add("Lopeta", null, (_, _) =>
+        {
+            _reallyExiting = true;
+            Close();
+        });
+        menu.Opening += (_, _) => overlayItem.Checked = _viewModel.OverlayEnabled;
+        _trayIcon.ContextMenuStrip = menu;
+    }
+
+    private void RestoreFromTray()
+    {
+        Show();
+        WindowState = WindowState.Normal;
+        Activate();
     }
 
     private void FanName_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
@@ -81,7 +143,9 @@ public partial class MainWindow : Window
         {
             if (_overlay is null)
             {
-                _overlay = new OverlayWindow(_viewModel.Overlay) { Owner = this };
+                // EI Owner-kytköstä: omistettu ikkuna piiloutuisi pääikkunan
+                // mukana trayhin. Overlay suljetaan erikseen Closed-käsittelijässä.
+                _overlay = new OverlayWindow(_viewModel.Overlay);
                 _overlay.Show();
             }
 
