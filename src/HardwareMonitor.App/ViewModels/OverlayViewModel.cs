@@ -113,7 +113,7 @@ public sealed class OverlayViewModel : INotifyPropertyChanged
                 {
                     string name = settings.FanLabels.TryGetValue(fan.Identifier, out string? label)
                                   && label.Length > 0 ? label : fan.Name;
-                    sb.AppendLine($"{name}  {rpm:0} RPM");
+                    sb.AppendLine($"{name}  {rpm,4:0} RPM");
                 }
             }
         }
@@ -121,11 +121,13 @@ public sealed class OverlayViewModel : INotifyPropertyChanged
         Text = sb.ToString().TrimEnd();
     }
 
-    private static string Pct(float? v) => v is { } x ? $"{x:0} %" : "—";
+    // Kiinteät kenttäleveydet + tasalevyinen fontti = rivien leveys ei väpätä
+    // arvojen eläessä (esim. "9 %" vs "11 %").
+    private static string Pct(float? v) => v is { } x ? $"{x,3:0} %" : "  —";
 
-    private static string Temp(float? v) => v is { } x ? $"{x:0} °C" : "—";
+    private static string Temp(float? v) => v is { } x ? $"{x,3:0} °C" : "  —";
 
-    private static string Num(float? v, string unit) => v is { } x ? $"{x:0} {unit}" : "—";
+    private static string Num(float? v, string unit) => v is { } x ? $"{x,4:0} {unit}" : "   —";
 
     /// <summary>Lyhentää pitkät levynimet overlayn kompakteille riveille.</summary>
     private static string Shorten(string name) =>

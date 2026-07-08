@@ -1,6 +1,8 @@
 using System.Runtime.InteropServices;
 using System.Windows;
+using System.Windows.Input;
 using System.Windows.Interop;
+using System.Windows.Media;
 using HardwareMonitor.App.ViewModels;
 using HardwareMonitor.Core.Settings;
 using Microsoft.Win32;
@@ -20,21 +22,74 @@ public partial class OverlayWindow : Window
     private const int WsExNoActivate = 0x08000000;
 
     private OverlaySettings _settings = new();
+    private bool _moveMode;
+
+    /// <summary>Laukeaa kun käyttäjä on raahannut overlayn uuteen paikkaan.</summary>
+    public event Action<double, double>? PositionChangedByUser;
 
     public OverlayWindow(OverlayViewModel viewModel)
     {
         InitializeComponent();
         DataContext = viewModel;
 
-        SizeChanged += (_, _) => Reposition();
+        // Salpalukko: ikkuna saa kasvaa muttei kutistua kesken istunnon,
+        // jottei koko väpätä arvojen eläessä. Nollataan asetusmuutoksissa.
+        SizeChanged += (_, _) =>
+        {
+            MinWidth = Math.Max(MinWidth, ActualWidth);
+            MinHeight = Math.Max(MinHeight, ActualHeight);
+            Reposition();
+        };
         SystemEvents.DisplaySettingsChanged += OnDisplaySettingsChanged;
         Closed += (_, _) => SystemEvents.DisplaySettingsChanged -= OnDisplaySettingsChanged;
+    }
+
+    /// <summary>
+    /// Siirtotila: läpi-klikattavuus pois, ikkunan voi raahata hiirellä.
+    /// Pois kytkettäessä palautetaan läpi-klikattavuus.
+    /// </summary>
+    public void SetMoveMode(bool enabled)
+    {
+        _moveMode = enabled;
+        IsHitTestVisible = enabled;
+        Cursor = enabled ? Cursors.SizeAll : Cursors.Arrow;
+        Panel.BorderBrush = enabled
+            ? new SolidColorBrush(Color.FromRgb(0x4F, 0xC3, 0xF7))
+            : Brushes.Transparent;
+
+        var handle = new WindowInteropHelper(this).Handle;
+        if (handle == 0)
+        {
+            return;
+        }
+
+        int style = GetWindowLong(handle, GwlExStyle);
+        _ = SetWindowLong(handle, GwlExStyle, enabled
+            ? style & ~(WsExTransparent | WsExNoActivate)
+            : style | WsExTransparent | WsExNoActivate);
+    }
+
+    protected override void OnMouseLeftButtonDown(MouseButtonEventArgs e)
+    {
+        base.OnMouseLeftButtonDown(e);
+
+        if (_moveMode)
+        {
+            DragMove();
+            PositionChangedByUser?.Invoke(Left, Top);
+        }
     }
 
     /// <summary>Vie sijainti- ja ulkoasuasetukset ikkunaan ja asemoi sen uudelleen.</summary>
     public void ApplySettings(OverlaySettings settings)
     {
         _settings = settings;
+
+        // Rivivalinnat ovat voineet muuttua — vapautetaan salpalukko, jotta
+        // ikkuna voi myös pienentyä uuteen sisältöön.
+        MinWidth = 0;
+        MinHeight = 0;
+
         Reposition();
     }
 
@@ -52,10 +107,23 @@ public partial class OverlayWindow : Window
     private void OnDisplaySettingsChanged(object? sender, EventArgs e) =>
         Dispatcher.Invoke(Reposition);
 
-    /// <summary>Asemoi ikkunan valittuun työalueen kulmaan (DIP-yksiköissä).</summary>
+    /// <summary>Asemoi ikkunan kulmaan tai käyttäjän raahaamaan paikkaan (DIP).</summary>
     private void Reposition()
     {
+        if (_moveMode)
+        {
+            return; // ei taistella raahauksen kanssa
+        }
+
         Rect workArea = SystemParameters.WorkArea;
+
+        if (_settings.UseCustomPosition)
+        {
+            Left = Math.Clamp(_settings.CustomLeft, workArea.Left, Math.Max(workArea.Left, workArea.Right - ActualWidth));
+            Top = Math.Clamp(_settings.CustomTop, workArea.Top, Math.Max(workArea.Top, workArea.Bottom - ActualHeight));
+            return;
+        }
+
         double margin = _settings.MarginPx;
 
         Left = _settings.Corner is OverlayCorner.TopLeft or OverlayCorner.BottomLeft

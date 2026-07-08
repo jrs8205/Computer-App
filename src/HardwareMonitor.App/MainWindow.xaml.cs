@@ -146,15 +146,28 @@ public partial class MainWindow : Window
                 // EI Owner-kytköstä: omistettu ikkuna piiloutuisi pääikkunan
                 // mukana trayhin. Overlay suljetaan erikseen Closed-käsittelijässä.
                 _overlay = new OverlayWindow(_viewModel.Overlay);
+                _overlay.PositionChangedByUser += _viewModel.SetOverlayCustomPosition;
                 _overlay.Show();
+
+                if (MoveOverlayCheck.IsChecked == true)
+                {
+                    _overlay.SetMoveMode(true);
+                }
             }
 
             _overlay.ApplySettings(_viewModel.OverlaySettings);
         }
         else if (_overlay is not null)
         {
+            MoveOverlayCheck.IsChecked = false;
             _overlay.Close();
             _overlay = null;
         }
     }
+
+    private void MoveOverlay_Checked(object sender, RoutedEventArgs e) =>
+        _overlay?.SetMoveMode(true);
+
+    private void MoveOverlay_Unchecked(object sender, RoutedEventArgs e) =>
+        _overlay?.SetMoveMode(false);
 }

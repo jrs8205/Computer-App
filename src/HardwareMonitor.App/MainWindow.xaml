@@ -90,6 +90,11 @@
                               Margin="8,0,0,0" VerticalAlignment="Center" />
                     <CheckBox Content="Tuulettimet" IsChecked="{Binding OverlayShowFans}" Foreground="White"
                               Margin="8,0,0,0" VerticalAlignment="Center" />
+                    <CheckBox x:Name="MoveOverlayCheck" Content="Siirrä overlayta"
+                              IsEnabled="{Binding OverlayEnabled}"
+                              Checked="MoveOverlay_Checked" Unchecked="MoveOverlay_Unchecked"
+                              Foreground="White" Margin="16,0,0,0" VerticalAlignment="Center"
+                              ToolTip="Kun päällä, overlayn voi raahata hiirellä haluamaansa paikkaan" />
                     <CheckBox Content="Pienennä trayhin" IsChecked="{Binding MinimizeToTray}"
                               Foreground="White" Margin="16,0,0,0" VerticalAlignment="Center" />
                     <CheckBox Content="Käynnistä Windowsin mukana" IsChecked="{Binding AutoStart}"

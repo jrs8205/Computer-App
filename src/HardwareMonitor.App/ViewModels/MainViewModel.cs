@@ -72,6 +72,15 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
         }
     }
 
+    /// <summary>Tallentaa käyttäjän raahaaman overlay-sijainnin.</summary>
+    public void SetOverlayCustomPosition(double left, double top)
+    {
+        _settings.Overlay.UseCustomPosition = true;
+        _settings.Overlay.CustomLeft = left;
+        _settings.Overlay.CustomTop = top;
+        OnOverlaySettingChanged(nameof(OverlayCornerIndex));
+    }
+
     /// <summary>Tallentaa tuulettimen oman nimen; tyhjä nimi palauttaa oletuksen.</summary>
     public void RenameFan(string identifier, string newName)
     {
@@ -125,6 +134,7 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
             }
 
             _settings.Overlay.Corner = (OverlayCorner)value;
+            _settings.Overlay.UseCustomPosition = false; // kulmavalinta palauttaa kulma-asemointiin
             OnOverlaySettingChanged(nameof(OverlayCornerIndex));
         }
     }

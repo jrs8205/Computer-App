@@ -15,6 +15,11 @@ public sealed class OverlaySettings
     public bool Enabled { get; set; }
     public OverlayCorner Corner { get; set; } = OverlayCorner.TopRight;
     public int MarginPx { get; set; } = 16;
+
+    /// <summary>Käyttäjän raahaama oma sijainti; false = asemointi kulman mukaan.</summary>
+    public bool UseCustomPosition { get; set; }
+    public double CustomLeft { get; set; }
+    public double CustomTop { get; set; }
     public double Opacity { get; set; } = 0.85;
     public double FontSize { get; set; } = 14;
     public bool ShowCpu { get; set; } = true;

@@ -16,9 +16,10 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <!-- WinForms-tyypit vain täysin kvalifioituina (NotifyIcon); globaali using
-         törmäisi WPF:n Application/KeyEventArgs-tyyppeihin. -->
+    <!-- WinForms/GDI-tyypit vain täysin kvalifioituina (NotifyIcon, Icon);
+         globaalit usingit törmäisivät WPF:n Application/KeyEventArgs/Color-tyyppeihin. -->
     <Using Remove="System.Windows.Forms" />
+    <Using Remove="System.Drawing" />
   </ItemGroup>
 
   <ItemGroup>
