@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!--
+      LibreHardwareMonitorLib lukee CPU-, GPU-, levy-, tuuletin-, jännite- ja
+      lämpötilatietoja valmiiksi. Tämä on ohjelman sensoripohjan ydin.
+      Lisenssi: MPL-2.0.
+    -->
+    <PackageReference Include="LibreHardwareMonitorLib" Version="0.9.4" />
+  </ItemGroup>
+
+</Project>

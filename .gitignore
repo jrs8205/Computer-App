@@ -1,0 +1,29 @@
+# .NET build -tulokset
+bin/
+obj/
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+[Aa][Rr][Mm]/
+[Aa][Rr][Mm]64/
+*.user
+*.suo
+
+# Visual Studio
+.vs/
+*.userprefs
+
+# Rider
+.idea/
+
+# NuGet
+*.nupkg
+packages/
+
+# Ohjelman tuottama data (lokit, tietokannat) ei kuulu versionhallintaan
+data/logs/
+data/reports/
+*.log
+*.sqlite
+*.db

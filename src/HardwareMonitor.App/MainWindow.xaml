@@ -1,0 +1,71 @@
+<Window x:Class="HardwareMonitor.App.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="clr-namespace:HardwareMonitor.App.ViewModels"
+        Title="Windows 11 Hardware Monitor — sensoritestaus (PoC)"
+        Height="760" Width="960"
+        Background="#1E1E1E"
+        WindowStartupLocation="CenterScreen">
+
+    <Window.Resources>
+        <!-- Laite (ja alalaite) puun solmuna. Lapset tulevat Items-listasta. -->
+        <HierarchicalDataTemplate DataType="{x:Type vm:HardwareViewModel}"
+                                  ItemsSource="{Binding Items}">
+            <TextBlock Text="{Binding Header}"
+                       FontWeight="Bold"
+                       Foreground="#4FC3F7"
+                       Margin="0,3" />
+        </HierarchicalDataTemplate>
+
+        <!-- Yksittäinen sensori: nimi | arvo | tyyppi -->
+        <DataTemplate DataType="{x:Type vm:SensorViewModel}">
+            <Grid Margin="0,1">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="300" />
+                    <ColumnDefinition Width="150" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <TextBlock Grid.Column="0" Text="{Binding Name}" Foreground="#E0E0E0" />
+                <TextBlock Grid.Column="1" Text="{Binding DisplayValue}"
+                           Foreground="#A5D6A7" HorizontalAlignment="Right" Margin="0,0,20,0" />
+                <TextBlock Grid.Column="2" Text="{Binding Type}" Foreground="#9E9E9E" />
+            </Grid>
+        </DataTemplate>
+    </Window.Resources>
+
+    <DockPanel>
+        <!-- Yläpalkki -->
+        <Border DockPanel.Dock="Top" Background="#252526" Padding="16,12">
+            <StackPanel>
+                <TextBlock Text="Windows 11 Hardware Monitor"
+                           FontSize="20" FontWeight="Bold" Foreground="White" />
+                <TextBlock Text="Proof of concept — kaikki löydetyt sensorit, arvot päivittyvät 1 sekunnin välein"
+                           Foreground="#BDBDBD" Margin="0,2,0,0" />
+            </StackPanel>
+        </Border>
+
+        <!-- Alapalkki: tila + lokipolku -->
+        <Border DockPanel.Dock="Bottom" Background="#007ACC" Padding="16,8">
+            <StackPanel>
+                <TextBlock Text="{Binding Status}" Foreground="White" FontWeight="SemiBold" />
+                <TextBlock Text="{Binding LogPath, StringFormat=Debug-loki: {0}}"
+                           Foreground="#DCF3FF" FontSize="11" Margin="0,2,0,0" />
+            </StackPanel>
+        </Border>
+
+        <!-- Sensoripuu -->
+        <TreeView ItemsSource="{Binding Hardware}"
+                  Background="#1E1E1E"
+                  BorderThickness="0"
+                  Foreground="White"
+                  FontFamily="Consolas"
+                  FontSize="13"
+                  Padding="12">
+            <TreeView.ItemContainerStyle>
+                <Style TargetType="TreeViewItem">
+                    <Setter Property="IsExpanded" Value="True" />
+                </Style>
+            </TreeView.ItemContainerStyle>
+        </TreeView>
+    </DockPanel>
+</Window>
