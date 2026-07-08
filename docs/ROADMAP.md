@@ -85,6 +85,15 @@ Specissä `docs/superpowers/specs/2026-07-08-fan-labels-tray-icon-design.md`:
 
 - [ ] Pisteytys ja selkokielinen yhteenveto (luvut 19 ja 31)
 - [ ] "Ennen kaatumista" -puskuri + `last_state.json` (luku 17)
+- [ ] **Konetuntemus-loki** (käyttäjän idea 8.7.2026): jatkuvasti päivittyvä
+      `machine-insights.md`, johon analyysi kirjaa havainnot ja opit koneesta —
+      piikit (mikä sensori, kuinka korkea, kuinka kauan, mihin kellonaikaan),
+      toistuvat kuviot (esim. "NVMe-ohjainlämpö ylittää 80 °C pitkissä
+      kirjoituksissa"), normaalitasot per sensori ja konkreettiset
+      optimointiehdotukset. Tiedosto on sekä ihmisen että tekoälyn (Claude)
+      luettavissa: tulevissa istunnoissa Claude voi lukea sen ja auttaa
+      optimoinnissa suoraan datan pohjalta. Pohjautuu Vaihe 3:n
+      SQLite-historiaan ja tapahtumalokiin.
 
 ## ⏭️ Vaihe 7 — Raportointi
 
