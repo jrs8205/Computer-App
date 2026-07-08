@@ -50,6 +50,24 @@ public sealed class SettingsServiceTests : IDisposable
     }
 
     [Fact]
+    public void FanLabelsJaMinimizeToTray_OletuksetJaTallennus()
+    {
+        var service = new SettingsService(_dir);
+
+        AppSettings defaults = service.Load();
+        Assert.Empty(defaults.FanLabels);
+        Assert.True(defaults.MinimizeToTray);
+
+        defaults.FanLabels["/lpc/nct6798d/0/fan/2"] = "AIO-pumppu";
+        defaults.MinimizeToTray = false;
+        service.Save(defaults);
+
+        AppSettings loaded = new SettingsService(_dir).Load();
+        Assert.Equal("AIO-pumppu", loaded.FanLabels["/lpc/nct6798d/0/fan/2"]);
+        Assert.False(loaded.MinimizeToTray);
+    }
+
+    [Fact]
     public void Load_VioittunutTiedosto_PalauttaaOletuksetEikaHeitaPoikkeusta()
     {
         Directory.CreateDirectory(_dir);

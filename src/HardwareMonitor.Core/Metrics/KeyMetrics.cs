@@ -3,8 +3,12 @@ namespace HardwareMonitor.Core.Metrics;
 /// <summary>Yhden levyn tärkeimmät arvot (nimi, lämpö, aktiivisuus).</summary>
 public sealed record DiskMetrics(string Name, float? TemperatureC, float? ActivityPercent);
 
-/// <summary>Yhden tuulettimen nimi ja kierrosnopeus.</summary>
-public sealed record FanMetrics(string Name, float? Rpm);
+/// <summary>
+/// Yhden tuulettimen nimi ja kierrosnopeus. Identifier on sensorin pysyvä
+/// tunniste (esim. "/lpc/nct6798d/0/fan/2"), jota käytetään käyttäjän omien
+/// nimilappujen avaimena — näyttönimi voi toistua, tunniste ei.
+/// </summary>
+public sealed record FanMetrics(string Name, float? Rpm, string Identifier);
 
 /// <summary>
 /// Tärkeimmät arvot valmiiksi poimittuina (specin Vaihe 2 / 2.5). Kaikki arvot

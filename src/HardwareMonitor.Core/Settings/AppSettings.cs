@@ -30,4 +30,10 @@ public sealed class OverlaySettings
 public sealed class AppSettings
 {
     public OverlaySettings Overlay { get; set; } = new();
+
+    /// <summary>Käyttäjän omat nimet tuulettimille: sensorin Identifier -> nimi.</summary>
+    public Dictionary<string, string> FanLabels { get; set; } = new();
+
+    /// <summary>Pienennä- ja sulje-nappi vievät ilmaisinalueelle; mittaus jatkuu taustalla.</summary>
+    public bool MinimizeToTray { get; set; } = true;
 }

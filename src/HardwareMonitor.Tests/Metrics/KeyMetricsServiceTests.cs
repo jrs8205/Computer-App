@@ -158,6 +158,19 @@ public class KeyMetricsServiceTests
     }
 
     [Fact]
+    public void Extract_TuulettimillaOnPysyvaTunniste()
+    {
+        var gpu = Group("RTX 2060", "GpuNvidia", new[]
+        {
+            Reading("gpu", "GpuNvidia", "GPU Fan 1", "Fan", 1200f),
+        });
+
+        KeyMetrics m = KeyMetricsService.Extract(new[] { gpu });
+
+        Assert.Equal("/gpunvidia/gpu/fan/gpu fan 1", m.Fans[0].Identifier);
+    }
+
+    [Fact]
     public void Extract_KeraaTuulettimetMyosAlalaitteista()
     {
         var superIo = Group("Nuvoton NCT6798D", "SuperIO", new[]

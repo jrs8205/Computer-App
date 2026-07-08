@@ -164,7 +164,7 @@ public static class KeyMetricsService
         {
             if (s.SensorType == "Fan")
             {
-                fans.Add(new FanMetrics(s.SensorName, s.Value));
+                fans.Add(new FanMetrics(s.SensorName, s.Value, s.Identifier));
             }
         }
 
