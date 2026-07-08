@@ -4,6 +4,7 @@ using System.Windows.Threading;
 using HardwareMonitor.Core.Logging;
 using HardwareMonitor.Core.Metrics;
 using HardwareMonitor.Core.Sensors;
+using HardwareMonitor.Core.Settings;
 
 namespace HardwareMonitor.App.ViewModels;
 
@@ -20,12 +21,15 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
     private readonly DebugLogger _logger = new();
     private readonly DispatcherTimer _timer;
     private readonly Dictionary<string, SensorViewModel> _sensorIndex = new();
+    private readonly SettingsService _settingsService = new();
+    private readonly AppSettings _settings;
 
     private string _status = "Käynnistetään sensorit…";
     private int _tickCount;
 
     public MainViewModel()
     {
+        _settings = _settingsService.Load();
         _timer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
         _timer.Tick += (_, _) => Refresh();
     }
@@ -33,6 +37,134 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
     public ObservableCollection<HardwareViewModel> Hardware { get; } = new();
 
     public DashboardViewModel Dashboard { get; } = new();
+
+    public OverlayViewModel Overlay { get; } = new();
+
+    /// <summary>Laukeaa kun mikä tahansa overlay-asetus muuttuu (tallennus + ikkunan päivitys).</summary>
+    public event Action? OverlaySettingsChanged;
+
+    public OverlaySettings OverlaySettings => _settings.Overlay;
+
+    public bool OverlayEnabled
+    {
+        get => _settings.Overlay.Enabled;
+        set
+        {
+            if (_settings.Overlay.Enabled == value)
+            {
+                return;
+            }
+
+            _settings.Overlay.Enabled = value;
+            OnOverlaySettingChanged(nameof(OverlayEnabled));
+        }
+    }
+
+    /// <summary>0=vasen ylä, 1=oikea ylä, 2=vasen ala, 3=oikea ala (ComboBoxin järjestys).</summary>
+    public int OverlayCornerIndex
+    {
+        get => (int)_settings.Overlay.Corner;
+        set
+        {
+            if ((int)_settings.Overlay.Corner == value)
+            {
+                return;
+            }
+
+            _settings.Overlay.Corner = (OverlayCorner)value;
+            OnOverlaySettingChanged(nameof(OverlayCornerIndex));
+        }
+    }
+
+    public double OverlayOpacity
+    {
+        get => _settings.Overlay.Opacity;
+        set
+        {
+            if (Math.Abs(_settings.Overlay.Opacity - value) < 0.01)
+            {
+                return;
+            }
+
+            _settings.Overlay.Opacity = value;
+            OnOverlaySettingChanged(nameof(OverlayOpacity));
+        }
+    }
+
+    public bool OverlayShowCpu
+    {
+        get => _settings.Overlay.ShowCpu;
+        set
+        {
+            if (_settings.Overlay.ShowCpu == value)
+            {
+                return;
+            }
+
+            _settings.Overlay.ShowCpu = value;
+            OnOverlaySettingChanged(nameof(OverlayShowCpu));
+        }
+    }
+
+    public bool OverlayShowGpu
+    {
+        get => _settings.Overlay.ShowGpu;
+        set
+        {
+            if (_settings.Overlay.ShowGpu == value)
+            {
+                return;
+            }
+
+            _settings.Overlay.ShowGpu = value;
+            OnOverlaySettingChanged(nameof(OverlayShowGpu));
+        }
+    }
+
+    public bool OverlayShowRam
+    {
+        get => _settings.Overlay.ShowRam;
+        set
+        {
+            if (_settings.Overlay.ShowRam == value)
+            {
+                return;
+            }
+
+            _settings.Overlay.ShowRam = value;
+            OnOverlaySettingChanged(nameof(OverlayShowRam));
+        }
+    }
+
+    public bool OverlayShowDisks
+    {
+        get => _settings.Overlay.ShowDisks;
+        set
+        {
+            if (_settings.Overlay.ShowDisks == value)
+            {
+                return;
+            }
+
+            _settings.Overlay.ShowDisks = value;
+            OnOverlaySettingChanged(nameof(OverlayShowDisks));
+        }
+    }
+
+    public bool OverlayShowFans
+    {
+        get => _settings.Overlay.ShowFans;
+        set
+        {
+            if (_settings.Overlay.ShowFans == value)
+            {
+                return;
+            }
+
+            _settings.Overlay.ShowFans = value;
+            OnOverlaySettingChanged(nameof(OverlayShowFans));
+        }
+    }
 
     public string Status
     {
@@ -76,6 +208,7 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
 
             KeyMetrics metrics = KeyMetricsService.Extract(groups);
             Dashboard.Update(metrics);
+            Overlay.Update(metrics, _settings.Overlay);
 
             if (Hardware.Count == 0)
             {
@@ -205,6 +338,21 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
         {
             LogGroup(sub, indent + 1);
         }
+    }
+
+    private void OnOverlaySettingChanged(string propertyName)
+    {
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        try
+        {
+            _settingsService.Save(_settings);
+        }
+        catch (Exception ex)
+        {
+            _logger.Log($"VIRHE asetusten tallennuksessa: {ex.Message}");
+        }
+
+        OverlaySettingsChanged?.Invoke();
     }
 
     public void Dispose()

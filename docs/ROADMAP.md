@@ -25,14 +25,30 @@ WinRing0:n (LibreHardwareMonitorLib 0.9.4) → CPU/emolevysensorit tyhjiä myös
 Korjaus: kirjasto päivitetty **0.9.6**:een + asennettu **PawnIO-ajuri** (pawnio.eu).
 Molemmat tarvitaan. Katso README "Vaatimukset".
 
-## ⏭️ Vaihe 2 — Sensorien ryhmittely ja Dashboard (seuraavaksi)
+## ✅ Vaihe 2 — Sensorien ryhmittely ja Dashboard (VALMIS 8.7.2026)
 
-Ideana siirtyä raakalistasta selkeään näkymään (määrittelyn luvut 24–25):
+Raakalistasta selkeään näkymään (määrittelyn luvut 24–25):
 
-- [ ] Poimi tärkeimmät arvot: CPU käyttö/lämpö/kellot, GPU käyttö/lämpö/hotspot,
-      RAM %, levyjen lämmöt, tuulettimet
-- [ ] Dashboard-kortit (CPU / GPU / RAM / Levyt / Tuulettimet)
-- [ ] Erottele sensorityypit siisteihin ryhmiin
+- [x] `KeyMetricsService` (Core/Metrics): poimii tärkeimmät arvot — CPU
+      käyttö/lämpö/kellot/teho, GPU käyttö/lämpö/hotspot/VRAM/teho, RAM %,
+      levyjen lämmöt+aktiivisuus, tuulettimet (yksikkötestattu)
+- [x] Dashboard-kortit (CPU / GPU / RAM / Levyt / Tuulettimet) omalla välilehdellä
+- [x] "Kaikki sensorit" -välilehti säilyttää raakapuun
+- [x] `HardwareMonitor.Tests`-projekti (xUnit, 11 testiä)
+
+## ✅ Vaihe 2.5 — Työpöytäoverlay (VALMIS 8.7.2026)
+
+Specissä `docs/superpowers/specs/2026-07-08-overlay-design.md`:
+
+- [x] Läpi-klikattava always-on-top-overlay (WS_EX_TRANSPARENT + NOACTIVATE
+      + TOOLWINDOW) — ei näy Alt+Tabissa eikä tehtäväpalkissa
+- [x] Näyttää valitut rivit: CPU / GPU+VRAM / RAM / levylämmöt / tuulettimet
+- [x] Asetukset: päällä/pois, kulma (4), läpinäkyvyys, rivivalinnat —
+      tallentuvat `%LOCALAPPDATA%\HardwareMonitor\settings.json`
+- [x] `SettingsService` (Core/Settings) — pohja Vaihe 4:n raja-arvoasetuksille
+
+Rajattu tietoisesti ulos (jatkokehitysideat alla): FPS-mittaus, exclusive
+fullscreen -pelituki, monen näytön valinta, raja-arvojen värikoodaus.
 
 ## ⏭️ Vaihe 3 — Lokitus (SQLite)
 
@@ -80,4 +96,11 @@ Ideana siirtyä raakalistasta selkeään näkymään (määrittelyn luvut 24–2
 ## MVP:n ulkopuolella (luku 24)
 
 Tuulettimien ohjaus, RGB, ylikellotus, jännitteiden muuttaminen, automaattinen säätö,
-overlay, pilvisynkronointi. **Ensimmäinen versio vain lukee, näyttää, lokittaa ja analysoi.**
+pilvisynkronointi. **Ensimmäinen versio vain lukee, näyttää, lokittaa ja analysoi.**
+
+## Jatkokehitysideat (luku 27 + overlay-spec)
+
+- FPS-mittaus overlayhin (PresentMon/ETW) — oma työvaiheensa
+- Overlay exclusive fullscreen -pelien päälle (vaatisi DirectX-injektion)
+- Monen näytön valinta overlayn sijainnille
+- Raja-arvojen värikoodaus overlayhin ja Dashboardiin (Vaihe 4:n yhteydessä)

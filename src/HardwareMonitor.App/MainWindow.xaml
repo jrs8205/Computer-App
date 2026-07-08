@@ -66,6 +66,31 @@
                            FontSize="20" FontWeight="Bold" Foreground="White" />
                 <TextBlock Text="Proof of concept — kaikki löydetyt sensorit, arvot päivittyvät 1 sekunnin välein"
                            Foreground="#BDBDBD" Margin="0,2,0,0" />
+                <WrapPanel Margin="0,10,0,0">
+                    <CheckBox Content="Overlay työpöydälle" IsChecked="{Binding OverlayEnabled}"
+                              Foreground="White" VerticalAlignment="Center" />
+                    <ComboBox SelectedIndex="{Binding OverlayCornerIndex}" Margin="16,0,0,0"
+                              VerticalAlignment="Center" Width="110">
+                        <ComboBoxItem Content="Vasen ylä" />
+                        <ComboBoxItem Content="Oikea ylä" />
+                        <ComboBoxItem Content="Vasen ala" />
+                        <ComboBoxItem Content="Oikea ala" />
+                    </ComboBox>
+                    <TextBlock Text="Läpinäkyvyys" Foreground="#BDBDBD" Margin="16,0,6,0"
+                               VerticalAlignment="Center" />
+                    <Slider Value="{Binding OverlayOpacity}" Minimum="0.3" Maximum="1.0"
+                            Width="90" VerticalAlignment="Center" />
+                    <CheckBox Content="CPU" IsChecked="{Binding OverlayShowCpu}" Foreground="White"
+                              Margin="16,0,0,0" VerticalAlignment="Center" />
+                    <CheckBox Content="GPU" IsChecked="{Binding OverlayShowGpu}" Foreground="White"
+                              Margin="8,0,0,0" VerticalAlignment="Center" />
+                    <CheckBox Content="RAM" IsChecked="{Binding OverlayShowRam}" Foreground="White"
+                              Margin="8,0,0,0" VerticalAlignment="Center" />
+                    <CheckBox Content="Levyt" IsChecked="{Binding OverlayShowDisks}" Foreground="White"
+                              Margin="8,0,0,0" VerticalAlignment="Center" />
+                    <CheckBox Content="Tuulettimet" IsChecked="{Binding OverlayShowFans}" Foreground="White"
+                              Margin="8,0,0,0" VerticalAlignment="Center" />
+                </WrapPanel>
             </StackPanel>
         </Border>
 
