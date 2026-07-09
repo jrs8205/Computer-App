@@ -18,10 +18,13 @@ $projectRoot = $PSScriptRoot
 $appProject  = Join-Path $projectRoot "src\HardwareMonitor.App\HardwareMonitor.App.csproj"
 
 if ($AsAdmin) {
-    Write-Host "Käynnistetään järjestelmänvalvojana (kaikki sensorit näkyviin)..." -ForegroundColor Cyan
-    $cmd = "dotnet run --project `"$appProject`""
-    Start-Process -Verb RunAs -FilePath "powershell.exe" `
-        -ArgumentList "-NoExit", "-Command", "cd `"$projectRoot`"; $cmd"
+    Write-Host "Käännetään ja käynnistetään järjestelmänvalvojana (kaikki sensorit näkyviin)..." -ForegroundColor Cyan
+    # Buildataan tässä (ei-korotettuna) ja käynnistetään exe suoraan korotettuna —
+    # näin ei jää ylimääräistä PowerShell-ikkunaa auki.
+    dotnet build (Join-Path $projectRoot "HardwareMonitor.sln") | Out-Host
+    if ($LASTEXITCODE -ne 0) { throw "Build epäonnistui." }
+    $exe = Join-Path $projectRoot "src\HardwareMonitor.App\bin\Debug\net8.0-windows\HardwareMonitor.exe"
+    Start-Process -Verb RunAs -FilePath $exe
     return
 }
 

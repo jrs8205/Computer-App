@@ -72,7 +72,7 @@ public sealed class HistoryViewModel : INotifyPropertyChanged
 
     public Axis[] FanYAxes { get; } = new[] { ValueAxis(0, null) };
 
-    public SolidColorPaint LegendPaint { get; } = new(SKColors.White) { SKTypeface = SKTypeface.FromFamilyName("Segoe UI", SKFontStyle.Bold) };
+    public SolidColorPaint LegendPaint { get; } = new(SKColors.White);
 
     public SolidColorPaint TooltipTextPaint { get; } = new(SKColors.White);
 
