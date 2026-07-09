@@ -1,5 +1,6 @@
 using System.Globalization;
 using System.Text;
+using HardwareMonitor.Core.Localization;
 using HardwareMonitor.Core.Storage;
 
 namespace HardwareMonitor.Core.Reports;
@@ -37,25 +38,32 @@ public static class CsvExporter
     private static void AppendHeader(
         StringBuilder sb, List<string> diskNames, List<string> fanNames)
     {
+        static string Avg(string name) => $"{name} {Strings.Csv_SuffixAvg}";
+        static string Max(string name) => $"{name} {Strings.Csv_SuffixMax}";
+
         var columns = new List<string>
         {
-            "Aika",
-            "CPU käyttö % (ka)", "CPU käyttö % (max)",
-            "CPU lämpö °C (ka)", "CPU lämpö °C (max)",
-            "CPU kello MHz (max)",
-            "CPU teho W (ka)", "CPU teho W (max)",
-            "GPU käyttö % (ka)", "GPU käyttö % (max)",
-            "GPU lämpö °C (ka)", "GPU lämpö °C (max)",
-            "GPU hotspot °C (ka)", "GPU hotspot °C (max)",
-            "GPU teho W (ka)", "GPU teho W (max)",
-            "VRAM käytössä MB (ka)", "VRAM käytössä MB (max)",
-            "RAM käyttö % (ka)", "RAM käyttö % (max)",
-            "RAM käytössä GB (ka)", "RAM käytössä GB (max)",
+            Strings.Csv_Time,
+            Avg(Strings.Csv_CpuLoad), Max(Strings.Csv_CpuLoad),
+            Avg(Strings.Csv_CpuTemp), Max(Strings.Csv_CpuTemp),
+            Max(Strings.Csv_CpuClock),
+            Avg(Strings.Csv_CpuPower), Max(Strings.Csv_CpuPower),
+            Avg(Strings.Csv_GpuLoad), Max(Strings.Csv_GpuLoad),
+            Avg(Strings.Csv_GpuTemp), Max(Strings.Csv_GpuTemp),
+            Avg(Strings.Csv_GpuHotspot), Max(Strings.Csv_GpuHotspot),
+            Avg(Strings.Csv_GpuPower), Max(Strings.Csv_GpuPower),
+            Avg(Strings.Csv_Vram), Max(Strings.Csv_Vram),
+            Avg(Strings.Csv_RamLoad), Max(Strings.Csv_RamLoad),
+            Avg(Strings.Csv_RamUsed), Max(Strings.Csv_RamUsed),
         };
 
         columns.AddRange(diskNames.SelectMany(n =>
-            new[] { $"Levy {n} lämpö °C (ka)", $"Levy {n} lämpö °C (max)" }));
-        columns.AddRange(fanNames.Select(n => $"Tuuletin {n} RPM (ka)"));
+            new[]
+            {
+                Avg(string.Format(Strings.Csv_DiskTemp, n)),
+                Max(string.Format(Strings.Csv_DiskTemp, n)),
+            }));
+        columns.AddRange(fanNames.Select(n => string.Format(Strings.Csv_FanRpm, n)));
 
         sb.AppendLine(string.Join(Separator, columns.Select(Escape)));
     }

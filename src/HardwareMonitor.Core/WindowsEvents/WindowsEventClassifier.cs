@@ -1,3 +1,5 @@
+using HardwareMonitor.Core.Localization;
+
 namespace HardwareMonitor.Core.WindowsEvents;
 
 /// <summary>Luokiteltu Windows-tapahtuma tapahtumalokiin kirjattavaksi.</summary>
@@ -22,33 +24,32 @@ public static class WindowsEventClassifier
 
         return e.Provider switch
         {
+            // HUOM: Component-arvot ("Järjestelmä", "Laitteisto", ...) ovat kantaan
+            // tallennettavia luokitteluavaimia — niitä ei lokalisoida.
             "Microsoft-Windows-Kernel-Power" when e.EventId == 41 => new(
-                "CRITICAL", "Järjestelmä",
-                "Kone sammui yllättäen tai kaatui (Kernel-Power 41)"),
+                "CRITICAL", "Järjestelmä", Strings.WinEvent_KernelPower),
 
             "EventLog" when e.EventId == 6008 => new(
-                "WARNING", "Järjestelmä",
-                "Edellinen sammutus oli odottamaton (EventLog 6008)"),
+                "WARNING", "Järjestelmä", Strings.WinEvent_UnexpectedShutdown),
 
             "Microsoft-Windows-WER-SystemErrorReporting" when e.EventId == 1001 => new(
-                "CRITICAL", "Järjestelmä",
-                "Windows kaatui siniseen ruutuun eli BSOD (BugCheck 1001)"),
+                "CRITICAL", "Järjestelmä", Strings.WinEvent_Bsod),
 
             "Microsoft-Windows-WHEA-Logger" => new(
                 isError ? "CRITICAL" : "WARNING",
                 "Laitteisto",
-                isError
-                    ? $"Vakava rautavirhe: CPU/RAM/PCIe (WHEA-Logger {e.EventId})"
-                    : $"Korjattu rautavirhe (WHEA-Logger {e.EventId})"),
+                string.Format(
+                    isError ? Strings.WinEvent_WheaError : Strings.WinEvent_WheaCorrected,
+                    e.EventId)),
 
             "Display" or "nvlddmkm" when e.WindowsLevel <= LevelWarning => new(
                 "WARNING", "GPU-ajuri",
-                $"Näyttöajurivirhe tai ajurin palautuminen ({e.Provider} {e.EventId})"),
+                string.Format(Strings.WinEvent_DisplayDriver, e.Provider, e.EventId)),
 
             "disk" or "Ntfs" or "storahci" or "stornvme" when e.WindowsLevel <= LevelWarning => new(
                 isError ? "CRITICAL" : "WARNING",
                 "Levy",
-                $"Levy- tai tiedostojärjestelmävirhe ({e.Provider} {e.EventId})"),
+                string.Format(Strings.WinEvent_DiskError, e.Provider, e.EventId)),
 
             _ => null,
         };

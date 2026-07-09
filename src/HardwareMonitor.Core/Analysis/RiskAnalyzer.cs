@@ -1,3 +1,4 @@
+using HardwareMonitor.Core.Localization;
 using HardwareMonitor.Core.Metrics;
 using HardwareMonitor.Core.Settings;
 using HardwareMonitor.Core.Storage;
@@ -46,31 +47,34 @@ public static class RiskAnalyzer
         if (previousSessionCrashed)
         {
             crash += 10;
-            observations.Add("Edellinen istunto päättyi yllättäen");
+            observations.Add(Strings.Risk_PrevSessionCrashed);
         }
 
         thermal += CurrentStateScore(states.CpuTemp);
-        AddExceedance(observations, states.CpuTemp, "CPU-lämpötila",
+        AddExceedance(observations, states.CpuTemp, Strings.Threshold_LabelCpuTemp,
             metrics.CpuPackageTempC, limits.CpuWarningTemp, limits.CpuCriticalTemp, "°C");
 
         thermal += CurrentStateScore(states.GpuTemp);
-        AddExceedance(observations, states.GpuTemp, "GPU-lämpötila",
+        AddExceedance(observations, states.GpuTemp, Strings.Threshold_LabelGpuTemp,
             metrics.GpuTempC, limits.GpuWarningTemp, limits.GpuCriticalTemp, "°C");
 
         thermal += CurrentStateScore(states.GpuHotspot);
-        AddExceedance(observations, states.GpuHotspot, "GPU hotspot -lämpötila",
+        AddExceedance(observations, states.GpuHotspot, Strings.Threshold_LabelGpuHotspot,
             metrics.GpuHotspotTempC, limits.GpuHotspotWarningTemp, limits.GpuHotspotCriticalTemp, "°C");
 
         thermal += CurrentStateScore(states.RamLoad);
-        AddExceedance(observations, states.RamLoad, "RAM-käyttö",
+        AddExceedance(observations, states.RamLoad, Strings.Threshold_LabelRamLoad,
             metrics.RamLoadPercent, limits.RamWarningPercent, limits.RamCriticalPercent, "%");
 
         for (int i = 0; i < states.Disks.Count; i++)
         {
             thermal += CurrentStateScore(states.Disks[i]);
-            string name = i < metrics.Disks.Count ? metrics.Disks[i].Name : $"Levy {i + 1}";
+            string name = i < metrics.Disks.Count
+                ? metrics.Disks[i].Name
+                : string.Format(Strings.Risk_DiskFallbackName, i + 1);
             float? temp = i < metrics.Disks.Count ? metrics.Disks[i].TemperatureC : null;
-            AddExceedance(observations, states.Disks[i], $"Levyn {name} lämpötila",
+            AddExceedance(observations, states.Disks[i],
+                string.Format(Strings.Threshold_LabelDiskTemp, name),
                 temp, limits.NvmeWarningTemp, limits.NvmeCriticalTemp, "°C");
         }
 
@@ -81,7 +85,7 @@ public static class RiskAnalyzer
         if (states.Worst > individualWorst)
         {
             thermal += CurrentStateScore(states.Worst);
-            observations.Add("Tuuletinongelma: istunnossa pyörinyt tuuletin on pysähtynyt CPU:n ollessa kuuma");
+            observations.Add(Strings.Risk_FanProblem);
         }
 
         AddDayPeaks(observations, dayStats);
@@ -121,25 +125,25 @@ public static class RiskAnalyzer
         }
 
         observations.Add(wheaCount > 0
-            ? $"WHEA-rautavirheitä 24 h: {wheaCount}"
-            : "Ei WHEA-virheitä (24 h)");
+            ? string.Format(Strings.Risk_WheaCount, wheaCount)
+            : Strings.Risk_NoWhea);
         observations.Add(systemCount > 0
-            ? $"Yllättäviä sammutuksia tai kaatumisia 24 h: {systemCount}"
-            : "Ei yllättäviä sammutuksia (24 h)");
+            ? string.Format(Strings.Risk_CrashCount, systemCount)
+            : Strings.Risk_NoCrashes);
 
         if (gpuDriverCount > 0)
         {
-            observations.Add($"Näyttöajurivirheitä 24 h: {gpuDriverCount}");
+            observations.Add(string.Format(Strings.Risk_GpuDriverCount, gpuDriverCount));
         }
 
         if (winDiskCount > 0)
         {
-            observations.Add($"Levyvirheitä Windows-lokissa 24 h: {winDiskCount}");
+            observations.Add(string.Format(Strings.Risk_WinDiskCount, winDiskCount));
         }
 
         if (thresholdCount > 0)
         {
-            observations.Add($"Raja-arvoylityksiä 24 h: {thresholdCount}");
+            observations.Add(string.Format(Strings.Risk_ThresholdCount, thresholdCount));
         }
 
         int score = thermal + whea + system + winDisk + gpuDriver + crash;
@@ -155,15 +159,15 @@ public static class RiskAnalyzer
             level,
             level switch
             {
-                ThresholdState.Critical => "Kriittinen",
-                ThresholdState.Warning => "Varoitus",
-                _ => "Hyvä",
+                ThresholdState.Critical => Strings.Risk_StatusCritical,
+                ThresholdState.Warning => Strings.Risk_StatusWarning,
+                _ => Strings.Risk_StatusGood,
             },
             level switch
             {
-                ThresholdState.Critical => "Korkea",
-                ThresholdState.Warning => "Kohonnut",
-                _ => "Matala",
+                ThresholdState.Critical => Strings.Risk_LevelHigh,
+                ThresholdState.Warning => Strings.Risk_LevelElevated,
+                _ => Strings.Risk_LevelLow,
             },
             score,
             observations,
@@ -187,9 +191,10 @@ public static class RiskAnalyzer
         }
 
         bool critical = state == ThresholdState.Critical;
-        string limitText = critical ? "kriittisen rajan" : "varoitusrajan";
         float limit = critical ? critLimit : warnLimit;
-        observations.Add($"{label} {v:0} {unit} ylittää {limitText} ({limit:0} {unit})");
+        observations.Add(string.Format(
+            critical ? Strings.Risk_ExceedsCritical : Strings.Risk_ExceedsWarning,
+            label, v, unit, limit));
     }
 
     private static void AddDayPeaks(List<string> observations, SampleStats? stats)
@@ -201,17 +206,17 @@ public static class RiskAnalyzer
 
         if (stats.CpuTemp.Max is { } cpu)
         {
-            observations.Add($"CPU-lämpötila kävi korkeimmillaan {cpu:0} °C (24 h)");
+            observations.Add(string.Format(Strings.Risk_PeakCpu, cpu));
         }
 
         if (stats.GpuHotspot.Max is { } hotspot)
         {
-            observations.Add($"GPU hotspot kävi korkeimmillaan {hotspot:0} °C (24 h)");
+            observations.Add(string.Format(Strings.Risk_PeakHotspot, hotspot));
         }
 
         if (stats.RamLoad.Max is { } ram)
         {
-            observations.Add($"RAM-käyttö nousi korkeimmillaan {ram:0} % (24 h)");
+            observations.Add(string.Format(Strings.Risk_PeakRam, ram));
         }
     }
 
@@ -223,24 +228,24 @@ public static class RiskAnalyzer
         // Tasapelissä vakavin syy ensin: rauta > levy > lämpö > järjestelmä > ajuri.
         if (whea == max)
         {
-            return "Mahdollinen rautaongelma: tarkista ylikellotus/XMP-profiili, muistikammat ja ajurit.";
+            return Strings.Risk_RecommendWhea;
         }
 
         if (winDisk == max)
         {
-            return "Ota varmuuskopiot tärkeistä tiedoista ja tarkista levyn kunto (SMART).";
+            return Strings.Risk_RecommendDisk;
         }
 
         if (thermal == max)
         {
-            return "Tarkista jäähdytys: tuulettimien toiminta, pölyt ja kotelon ilmankierto.";
+            return Strings.Risk_RecommendThermal;
         }
 
         if (system == max)
         {
-            return "Kone on kaatunut tai sammunut yllättäen — seuraa lämpötiloja ja tarkista virransyöttö.";
+            return Strings.Risk_RecommendSystem;
         }
 
-        return "Päivitä näytönohjaimen ajuri puhtaalla asennuksella.";
+        return Strings.Risk_RecommendGpuDriver;
     }
 }

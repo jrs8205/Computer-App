@@ -1,4 +1,5 @@
 using System.Globalization;
+using HardwareMonitor.Core.Localization;
 
 namespace HardwareMonitor.Core.Settings;
 
@@ -24,17 +25,17 @@ public static class SettingsValidator
             || (!float.TryParse(trimmed, NumberStyles.Float, Fi, out float value)
                 && !float.TryParse(trimmed, NumberStyles.Float, CultureInfo.InvariantCulture, out value)))
         {
-            return new ParseResult(null, "Anna numero");
+            return new ParseResult(null, Strings.Validate_EnterNumber);
         }
 
         if (value < min || value > max)
         {
-            return new ParseResult(null, $"Sallittu väli on {min:0}–{max:0}");
+            return new ParseResult(null, string.Format(Strings.Validate_AllowedRange, min, max));
         }
 
         return new ParseResult(value, null);
     }
 
     public static string? ValidateWarnCrit(float warn, float crit) =>
-        warn >= crit ? "Varoitusrajan on oltava pienempi kuin kriittisen rajan" : null;
+        warn >= crit ? Strings.Validate_WarnBelowCrit : null;
 }

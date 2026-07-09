@@ -1,5 +1,6 @@
 using System.Text;
 using HardwareMonitor.Core.Analysis;
+using HardwareMonitor.Core.Localization;
 using HardwareMonitor.Core.Settings;
 using HardwareMonitor.Core.Storage;
 
@@ -23,16 +24,14 @@ public static class MachineInsightsBuilder
         ThresholdSettings limits)
     {
         var sb = new StringBuilder();
-        sb.AppendLine("# Konetuntemus-loki — Hardware Monitor");
+        sb.AppendLine(Strings.Insights_Title);
         sb.AppendLine();
-        sb.AppendLine($"Päivitetty: {now:d.M.yyyy 'klo' HH.mm}. Generoitu automaattisesti");
-        sb.AppendLine("sensorihistoriasta (30 pv). Tiedosto on tarkoitettu sekä käyttäjälle");
-        sb.AppendLine("että tekoälyavustajalle (Claude) koneen tuntemiseen ja optimointiin.");
+        sb.AppendLine(string.Format(Strings.Insights_Intro, now).ReplaceLineEndings());
         sb.AppendLine();
 
         if (stats.SampleCount == 0)
         {
-            sb.AppendLine("Ei vielä riittävästi dataa — historia karttuu ohjelman ollessa käynnissä.");
+            sb.AppendLine(Strings.Insights_NotEnoughData);
             return sb.ToString();
         }
 
@@ -46,22 +45,22 @@ public static class MachineInsightsBuilder
 
     private static void AppendLevels(StringBuilder sb, SampleStats stats, ThresholdSettings limits)
     {
-        sb.AppendLine("## Normaalitasot ja huiput (30 pv)");
+        sb.AppendLine(Strings.Insights_LevelsHeading);
         sb.AppendLine();
-        sb.AppendLine("| Mittari | Keskiarvo | Huippu | Varoitusraja |");
+        sb.AppendLine(Strings.Insights_LevelsTableHeader);
         sb.AppendLine("|---|---|---|---|");
-        AppendRow(sb, "CPU-lämpötila", stats.CpuTemp, "°C", limits.CpuWarningTemp);
-        AppendRow(sb, "CPU-kuorma", stats.CpuLoad, "%", null);
-        AppendRow(sb, "GPU-lämpötila", stats.GpuTemp, "°C", limits.GpuWarningTemp);
-        AppendRow(sb, "GPU hotspot", stats.GpuHotspot, "°C", limits.GpuHotspotWarningTemp);
-        AppendRow(sb, "RAM-käyttö", stats.RamLoad, "%", limits.RamWarningPercent);
+        AppendRow(sb, Strings.Common_CpuTemp, stats.CpuTemp, "°C", limits.CpuWarningTemp);
+        AppendRow(sb, Strings.Insights_CpuLoad, stats.CpuLoad, "%", null);
+        AppendRow(sb, Strings.Common_GpuTemp, stats.GpuTemp, "°C", limits.GpuWarningTemp);
+        AppendRow(sb, Strings.Common_GpuHotspot, stats.GpuHotspot, "°C", limits.GpuHotspotWarningTemp);
+        AppendRow(sb, Strings.Common_RamLoad, stats.RamLoad, "%", limits.RamWarningPercent);
         sb.AppendLine();
 
         if (stats.Disks.Count > 0)
         {
-            sb.AppendLine("### Levyt");
+            sb.AppendLine(Strings.Insights_DisksHeading);
             sb.AppendLine();
-            sb.AppendLine("| Levy | Keskilämpö | Huippu | Varoitusraja |");
+            sb.AppendLine(Strings.Insights_DisksTableHeader);
             sb.AppendLine("|---|---|---|---|");
             foreach (DiskStat disk in stats.Disks)
             {
@@ -75,9 +74,9 @@ public static class MachineInsightsBuilder
 
         if (stats.Fans.Count > 0)
         {
-            sb.AppendLine("### Tuulettimet");
+            sb.AppendLine(Strings.Insights_FansHeading);
             sb.AppendLine();
-            sb.AppendLine("| Tuuletin | RPM keskimäärin | RPM huippu |");
+            sb.AppendLine(Strings.Insights_FansTableHeader);
             sb.AppendLine("|---|---|---|");
             foreach (FanStat fan in stats.Fans)
             {
@@ -124,13 +123,13 @@ public static class MachineInsightsBuilder
     private static void AppendEvents(
         StringBuilder sb, int whea, int crashes, int thresholds, int gpuDriver, int winDisk)
     {
-        sb.AppendLine("## Tapahtumat (30 pv)");
+        sb.AppendLine(Strings.Insights_EventsHeading);
         sb.AppendLine();
-        sb.AppendLine($"- WHEA-rautavirheitä: {whea}");
-        sb.AppendLine($"- Yllättäviä sammutuksia tai kaatumisia: {crashes}");
-        sb.AppendLine($"- Raja-arvoylityksiä: {thresholds}");
-        sb.AppendLine($"- Näyttöajurivirheitä: {gpuDriver}");
-        sb.AppendLine($"- Windowsin levyvirheitä: {winDisk}");
+        sb.AppendLine(string.Format(Strings.Insights_EventWhea, whea));
+        sb.AppendLine(string.Format(Strings.Insights_EventCrashes, crashes));
+        sb.AppendLine(string.Format(Strings.Insights_EventThresholds, thresholds));
+        sb.AppendLine(string.Format(Strings.Insights_EventGpuDriver, gpuDriver));
+        sb.AppendLine(string.Format(Strings.Insights_EventWinDisk, winDisk));
         sb.AppendLine();
     }
 
@@ -138,67 +137,55 @@ public static class MachineInsightsBuilder
         StringBuilder sb, SampleStats stats, ThresholdSettings limits,
         int whea, int crashes, int winDisk)
     {
-        sb.AppendLine("## Havainnot ja optimointiehdotukset");
+        sb.AppendLine(Strings.Insights_InsightsHeading);
         sb.AppendLine();
 
         var insights = new List<string>();
 
         if (stats.CpuTemp.Max is { } cpuMax && cpuMax >= limits.CpuWarningTemp)
         {
-            insights.Add(
-                $"CPU:n huippulämpö {cpuMax:0} °C on käynyt varoitusrajalla ({limits.CpuWarningTemp:0} °C) " +
-                "— tarkista jäähdytys ja pölyt, harkitse tuulettimien käyrien säätöä.");
+            insights.Add(string.Format(Strings.Insights_CpuHot, cpuMax, limits.CpuWarningTemp));
         }
 
         if (stats.GpuHotspot.Max is { } hotMax && hotMax >= limits.GpuHotspotWarningTemp)
         {
-            insights.Add(
-                $"GPU hotspot on käynyt {hotMax:0} °C:ssa (varoitusraja {limits.GpuHotspotWarningTemp:0} °C) " +
-                "— tarkista kotelon ilmavirta ja GPU-tuulettimet.");
+            insights.Add(string.Format(
+                Strings.Insights_HotspotHot, hotMax, limits.GpuHotspotWarningTemp));
         }
 
         if (stats.RamLoad.Max is { } ramMax && ramMax >= limits.RamWarningPercent)
         {
-            insights.Add(
-                $"RAM-käyttö on käynyt {ramMax:0} %:ssa (varoitusraja {limits.RamWarningPercent:0} %) " +
-                "— muisti on ajoittain vähissä.");
+            insights.Add(string.Format(
+                Strings.Insights_RamHigh, ramMax, limits.RamWarningPercent));
         }
 
         foreach (DiskStat disk in stats.Disks)
         {
             if (disk.TempMax is { } max && max >= limits.NvmeWarningTemp)
             {
-                insights.Add(
-                    $"Levyn {disk.Name} huippulämpö {max:0} °C ylittää varoitusrajan " +
-                    $"({limits.NvmeWarningTemp:0} °C) — harkitse M.2-jäähdytyslevyä tai kotelon " +
-                    "ilmavirran parantamista pitkien kirjoitusten ajaksi.");
+                insights.Add(string.Format(
+                    Strings.Insights_DiskHot, disk.Name, max, limits.NvmeWarningTemp));
             }
         }
 
         if (whea > 0)
         {
-            insights.Add(
-                $"WHEA-rautavirheitä ({whea} kpl 30 pv) — viittaa mahdolliseen rauta- tai " +
-                "kellotusongelmaan: tarkista XMP-profiili, jännitteet ja ajurit.");
+            insights.Add(string.Format(Strings.Insights_Whea, whea));
         }
 
         if (crashes > 0)
         {
-            insights.Add(
-                $"Yllättäviä sammutuksia tai kaatumisia ({crashes} kpl 30 pv) — seuraa " +
-                "lämpötiloja kuormassa ja tarkista virransyöttö.");
+            insights.Add(string.Format(Strings.Insights_Crashes, crashes));
         }
 
         if (winDisk > 0)
         {
-            insights.Add(
-                $"Windowsin levyvirheitä ({winDisk} kpl 30 pv) — ota varmuuskopiot ja " +
-                "tarkista levyn SMART-kunto.");
+            insights.Add(string.Format(Strings.Insights_WinDisk, winDisk));
         }
 
         if (insights.Count == 0)
         {
-            insights.Add("Ei merkittäviä ongelmia havaittu — arvot ovat normaalitasolla.");
+            insights.Add(Strings.Insights_AllGood);
         }
 
         foreach (string insight in insights)

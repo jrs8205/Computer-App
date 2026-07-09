@@ -1,3 +1,4 @@
+using HardwareMonitor.Core.Localization;
 using HardwareMonitor.Core.Metrics;
 using HardwareMonitor.Core.Settings;
 
@@ -65,16 +66,16 @@ public sealed class ThresholdMonitor
 
         ThresholdState cpu = Check("cpu_temp", m.CpuPackageTempC,
             _s.CpuWarningTemp, _s.CpuCriticalTemp,
-            "CPU", "CPU Package", "CPU-lämpötila", "°C", now, events);
+            "CPU", "CPU Package", Strings.Threshold_LabelCpuTemp, "°C", now, events);
         ThresholdState gpu = Check("gpu_temp", m.GpuTempC,
             _s.GpuWarningTemp, _s.GpuCriticalTemp,
-            "GPU", "GPU Core", "GPU-lämpötila", "°C", now, events);
+            "GPU", "GPU Core", Strings.Threshold_LabelGpuTemp, "°C", now, events);
         ThresholdState hotspot = Check("gpu_hotspot", m.GpuHotspotTempC,
             _s.GpuHotspotWarningTemp, _s.GpuHotspotCriticalTemp,
-            "GPU", "GPU Hot Spot", "GPU hotspot -lämpötila", "°C", now, events);
+            "GPU", "GPU Hot Spot", Strings.Threshold_LabelGpuHotspot, "°C", now, events);
         ThresholdState ram = Check("ram_load", m.RamLoadPercent,
             _s.RamWarningPercent, _s.RamCriticalPercent,
-            "RAM", "Memory", "RAM-käyttö", "%", now, events);
+            "RAM", "Memory", Strings.Threshold_LabelRamLoad, "%", now, events);
 
         var disks = new List<ThresholdState>();
         for (int i = 0; i < m.Disks.Count; i++)
@@ -82,7 +83,8 @@ public sealed class ThresholdMonitor
             DiskMetrics disk = m.Disks[i];
             disks.Add(Check($"disk:{i}", disk.TemperatureC,
                 _s.NvmeWarningTemp, _s.NvmeCriticalTemp,
-                "Levy", disk.Name, $"Levyn {disk.Name} lämpötila", "°C", now, events));
+                "Levy", disk.Name,
+                string.Format(Strings.Threshold_LabelDiskTemp, disk.Name), "°C", now, events));
         }
 
         ThresholdState fans = CheckFans(m, now, fanLabels, events);
@@ -124,7 +126,7 @@ public sealed class ThresholdMonitor
             && CooldownOk(state.LastCriticalEvent, now))
         {
             events.Add(new ThresholdEvent("CRITICAL", component, sensor, current, crit,
-                $"{label} ylitti kriittisen rajan: {current:0} {unit} (raja {crit:0} {unit})"));
+                string.Format(Strings.Threshold_ExceededCritical, label, current, crit, unit)));
             state.RaisedLevel = ThresholdState.Critical;
             state.LastCriticalEvent = now;
         }
@@ -134,7 +136,7 @@ public sealed class ThresholdMonitor
             && CooldownOk(state.LastWarningEvent, now))
         {
             events.Add(new ThresholdEvent("WARNING", component, sensor, current, warn,
-                $"{label} ylitti varoitusrajan: {current:0} {unit} (raja {warn:0} {unit})"));
+                string.Format(Strings.Threshold_ExceededWarning, label, current, warn, unit)));
             state.RaisedLevel = ThresholdState.Warning;
             state.LastWarningEvent = now;
         }
@@ -176,7 +178,7 @@ public sealed class ThresholdMonitor
                     && CooldownOk(state.LastCriticalEvent, now))
                 {
                     events.Add(new ThresholdEvent("CRITICAL", "Tuuletin", name, 0, null,
-                        $"Tuuletin {name} on pysähtynyt (0 RPM) CPU:n ollessa {m.CpuPackageTempC:0} °C"));
+                        string.Format(Strings.Threshold_FanStopped, name, m.CpuPackageTempC)));
                     state.RaisedLevel = ThresholdState.Critical;
                     state.LastCriticalEvent = now;
                 }
@@ -186,7 +188,7 @@ public sealed class ThresholdMonitor
                 if (state.RaisedLevel == ThresholdState.Critical)
                 {
                     events.Add(new ThresholdEvent("INFO", "Tuuletin", name, fan.Rpm, null,
-                        $"Tuuletin {name} pyörii taas"));
+                        string.Format(Strings.Threshold_FanRecovered, name)));
                 }
 
                 Reset(state);
@@ -203,7 +205,8 @@ public sealed class ThresholdMonitor
         if (state.ExcursionStart is { } start && state.RaisedLevel != ThresholdState.Normal)
         {
             events.Add(new ThresholdEvent("INFO", component, sensor, state.Peak, warnLimit,
-                $"{label} palautui normaaliksi (huippu {state.Peak:0} {unit}, kesto {FormatDuration(now - start)})"));
+                string.Format(Strings.Threshold_Recovered,
+                    label, state.Peak, unit, FormatDuration(now - start))));
         }
 
         Reset(state);

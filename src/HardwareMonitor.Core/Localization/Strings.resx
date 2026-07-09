@@ -1,0 +1,174 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+
+  <!-- SettingsValidator -->
+  <data name="Validate_EnterNumber" xml:space="preserve"><value>Anna numero</value></data>
+  <data name="Validate_AllowedRange" xml:space="preserve"><value>Sallittu väli on {0:0}–{1:0}</value></data>
+  <data name="Validate_WarnBelowCrit" xml:space="preserve"><value>Varoitusrajan on oltava pienempi kuin kriittisen rajan</value></data>
+
+  <!-- NotificationBuilder -->
+  <data name="Notify_Warning" xml:space="preserve"><value>Varoitus</value></data>
+  <data name="Notify_Critical" xml:space="preserve"><value>Kriittinen hälytys</value></data>
+  <data name="Notify_Multiple" xml:space="preserve"><value>{0} hälytystä</value></data>
+
+  <!-- ThresholdMonitor -->
+  <data name="Threshold_ExceededCritical" xml:space="preserve"><value>{0} ylitti kriittisen rajan: {1:0} {3} (raja {2:0} {3})</value></data>
+  <data name="Threshold_ExceededWarning" xml:space="preserve"><value>{0} ylitti varoitusrajan: {1:0} {3} (raja {2:0} {3})</value></data>
+  <data name="Threshold_FanStopped" xml:space="preserve"><value>Tuuletin {0} on pysähtynyt (0 RPM) CPU:n ollessa {1:0} °C</value></data>
+  <data name="Threshold_FanRecovered" xml:space="preserve"><value>Tuuletin {0} pyörii taas</value></data>
+  <data name="Threshold_Recovered" xml:space="preserve"><value>{0} palautui normaaliksi (huippu {1:0} {2}, kesto {3})</value></data>
+  <data name="Threshold_LabelCpuTemp" xml:space="preserve"><value>CPU-lämpötila</value></data>
+  <data name="Threshold_LabelGpuTemp" xml:space="preserve"><value>GPU-lämpötila</value></data>
+  <data name="Threshold_LabelGpuHotspot" xml:space="preserve"><value>GPU hotspot -lämpötila</value></data>
+  <data name="Threshold_LabelRamLoad" xml:space="preserve"><value>RAM-käyttö</value></data>
+  <data name="Threshold_LabelDiskTemp" xml:space="preserve"><value>Levyn {0} lämpötila</value></data>
+
+  <!-- WindowsEventClassifier -->
+  <data name="WinEvent_KernelPower" xml:space="preserve"><value>Kone sammui yllättäen tai kaatui (Kernel-Power 41)</value></data>
+  <data name="WinEvent_UnexpectedShutdown" xml:space="preserve"><value>Edellinen sammutus oli odottamaton (EventLog 6008)</value></data>
+  <data name="WinEvent_Bsod" xml:space="preserve"><value>Windows kaatui siniseen ruutuun eli BSOD (BugCheck 1001)</value></data>
+  <data name="WinEvent_WheaError" xml:space="preserve"><value>Vakava rautavirhe: CPU/RAM/PCIe (WHEA-Logger {0})</value></data>
+  <data name="WinEvent_WheaCorrected" xml:space="preserve"><value>Korjattu rautavirhe (WHEA-Logger {0})</value></data>
+  <data name="WinEvent_DisplayDriver" xml:space="preserve"><value>Näyttöajurivirhe tai ajurin palautuminen ({0} {1})</value></data>
+  <data name="WinEvent_DiskError" xml:space="preserve"><value>Levy- tai tiedostojärjestelmävirhe ({0} {1})</value></data>
+
+  <!-- Yhteiset mittarinimet -->
+  <data name="Common_CpuTemp" xml:space="preserve"><value>CPU-lämpötila</value></data>
+  <data name="Common_GpuTemp" xml:space="preserve"><value>GPU-lämpötila</value></data>
+  <data name="Common_GpuHotspot" xml:space="preserve"><value>GPU hotspot</value></data>
+  <data name="Common_RamLoad" xml:space="preserve"><value>RAM-käyttö</value></data>
+
+  <!-- RiskAnalyzer -->
+  <data name="Risk_PrevSessionCrashed" xml:space="preserve"><value>Edellinen istunto päättyi yllättäen</value></data>
+  <data name="Risk_FanProblem" xml:space="preserve"><value>Tuuletinongelma: istunnossa pyörinyt tuuletin on pysähtynyt CPU:n ollessa kuuma</value></data>
+  <data name="Risk_ExceedsCritical" xml:space="preserve"><value>{0} {1:0} {2} ylittää kriittisen rajan ({3:0} {2})</value></data>
+  <data name="Risk_ExceedsWarning" xml:space="preserve"><value>{0} {1:0} {2} ylittää varoitusrajan ({3:0} {2})</value></data>
+  <data name="Risk_DiskFallbackName" xml:space="preserve"><value>Levy {0}</value></data>
+  <data name="Risk_WheaCount" xml:space="preserve"><value>WHEA-rautavirheitä 24 h: {0}</value></data>
+  <data name="Risk_NoWhea" xml:space="preserve"><value>Ei WHEA-virheitä (24 h)</value></data>
+  <data name="Risk_CrashCount" xml:space="preserve"><value>Yllättäviä sammutuksia tai kaatumisia 24 h: {0}</value></data>
+  <data name="Risk_NoCrashes" xml:space="preserve"><value>Ei yllättäviä sammutuksia (24 h)</value></data>
+  <data name="Risk_GpuDriverCount" xml:space="preserve"><value>Näyttöajurivirheitä 24 h: {0}</value></data>
+  <data name="Risk_WinDiskCount" xml:space="preserve"><value>Levyvirheitä Windows-lokissa 24 h: {0}</value></data>
+  <data name="Risk_ThresholdCount" xml:space="preserve"><value>Raja-arvoylityksiä 24 h: {0}</value></data>
+  <data name="Risk_PeakCpu" xml:space="preserve"><value>CPU-lämpötila kävi korkeimmillaan {0:0} °C (24 h)</value></data>
+  <data name="Risk_PeakHotspot" xml:space="preserve"><value>GPU hotspot kävi korkeimmillaan {0:0} °C (24 h)</value></data>
+  <data name="Risk_PeakRam" xml:space="preserve"><value>RAM-käyttö nousi korkeimmillaan {0:0} % (24 h)</value></data>
+  <data name="Risk_StatusCritical" xml:space="preserve"><value>Kriittinen</value></data>
+  <data name="Risk_StatusWarning" xml:space="preserve"><value>Varoitus</value></data>
+  <data name="Risk_StatusGood" xml:space="preserve"><value>Hyvä</value></data>
+  <data name="Risk_LevelHigh" xml:space="preserve"><value>Korkea</value></data>
+  <data name="Risk_LevelElevated" xml:space="preserve"><value>Kohonnut</value></data>
+  <data name="Risk_LevelLow" xml:space="preserve"><value>Matala</value></data>
+  <data name="Risk_RecommendWhea" xml:space="preserve"><value>Mahdollinen rautaongelma: tarkista ylikellotus/XMP-profiili, muistikammat ja ajurit.</value></data>
+  <data name="Risk_RecommendDisk" xml:space="preserve"><value>Ota varmuuskopiot tärkeistä tiedoista ja tarkista levyn kunto (SMART).</value></data>
+  <data name="Risk_RecommendThermal" xml:space="preserve"><value>Tarkista jäähdytys: tuulettimien toiminta, pölyt ja kotelon ilmankierto.</value></data>
+  <data name="Risk_RecommendSystem" xml:space="preserve"><value>Kone on kaatunut tai sammunut yllättäen — seuraa lämpötiloja ja tarkista virransyöttö.</value></data>
+  <data name="Risk_RecommendGpuDriver" xml:space="preserve"><value>Päivitä näytönohjaimen ajuri puhtaalla asennuksella.</value></data>
+
+  <!-- CsvExporter -->
+  <data name="Csv_Time" xml:space="preserve"><value>Aika</value></data>
+  <data name="Csv_CpuLoad" xml:space="preserve"><value>CPU käyttö %</value></data>
+  <data name="Csv_CpuTemp" xml:space="preserve"><value>CPU lämpö °C</value></data>
+  <data name="Csv_CpuClock" xml:space="preserve"><value>CPU kello MHz</value></data>
+  <data name="Csv_CpuPower" xml:space="preserve"><value>CPU teho W</value></data>
+  <data name="Csv_GpuLoad" xml:space="preserve"><value>GPU käyttö %</value></data>
+  <data name="Csv_GpuTemp" xml:space="preserve"><value>GPU lämpö °C</value></data>
+  <data name="Csv_GpuHotspot" xml:space="preserve"><value>GPU hotspot °C</value></data>
+  <data name="Csv_GpuPower" xml:space="preserve"><value>GPU teho W</value></data>
+  <data name="Csv_Vram" xml:space="preserve"><value>VRAM käytössä MB</value></data>
+  <data name="Csv_RamLoad" xml:space="preserve"><value>RAM käyttö %</value></data>
+  <data name="Csv_RamUsed" xml:space="preserve"><value>RAM käytössä GB</value></data>
+  <data name="Csv_DiskTemp" xml:space="preserve"><value>Levy {0} lämpö °C</value></data>
+  <data name="Csv_FanRpm" xml:space="preserve"><value>Tuuletin {0} RPM (ka)</value></data>
+  <data name="Csv_SuffixAvg" xml:space="preserve"><value>(ka)</value></data>
+  <data name="Csv_SuffixMax" xml:space="preserve"><value>(max)</value></data>
+
+  <!-- ReportBuilder -->
+  <data name="Report_Title" xml:space="preserve"><value># Järjestelmäraportti — {0:d.M.yyyy 'klo' HH.mm}</value></data>
+  <data name="Report_Intro" xml:space="preserve"><value>Tämän raportin on tuottanut Hardware Monitor -ohjelma. Se kertoo koneen
+kunnon tavallisella kielellä: ensin kokonaisarvio, sitten mittarien arvot
+selityksineen ja lopussa sanasto, joka avaa tekniset termit.</value></data>
+  <data name="Report_SummaryHeading" xml:space="preserve"><value>## Yhteenveto</value></data>
+  <data name="Report_MachineStatus" xml:space="preserve"><value>Koneen tila: {0}</value></data>
+  <data name="Report_RiskLevel" xml:space="preserve"><value>Riskitaso: {0}</value></data>
+  <data name="Report_LevelsExplanation" xml:space="preserve"><value>Mitä tasot tarkoittavat: Hyvä = kaikki arvot ovat normaalilla tasolla.
+Varoitus = jokin arvo on ylittänyt varoitusrajan tai koneessa on ollut
+huomiota vaativia tapahtumia. Kriittinen = jokin asia vaatii toimia heti.</value></data>
+  <data name="Report_Observations" xml:space="preserve"><value>Havainnot:</value></data>
+  <data name="Report_Recommendation" xml:space="preserve"><value>Suositus: {0}</value></data>
+  <data name="Report_CurrentHeading" xml:space="preserve"><value>## Arvot juuri nyt</value></data>
+  <data name="Report_DiskLabel" xml:space="preserve"><value>Levy {0}</value></data>
+  <data name="Report_NoReading" xml:space="preserve"><value>- {0}: ei lukemaa</value></data>
+  <data name="Report_VerdictCritical" xml:space="preserve"><value>KRIITTINEN: kriittinen raja on ylittynyt</value></data>
+  <data name="Report_VerdictWarning" xml:space="preserve"><value>VAROITUS: varoitusraja on ylittynyt</value></data>
+  <data name="Report_VerdictOk" xml:space="preserve"><value>kunnossa (varoitusraja {0:0} {1})</value></data>
+  <data name="Report_ValueLine" xml:space="preserve"><value>- {0}: {1:0} {2} — {3}</value></data>
+  <data name="Report_DayHeading" xml:space="preserve"><value>## Viimeiset 24 tuntia</value></data>
+  <data name="Report_NoHistoryPeriod" xml:space="preserve"><value>Historiaa ei ole vielä kertynyt tältä ajalta.</value></data>
+  <data name="Report_PeaksIntro" xml:space="preserve"><value>Korkeimmat lukemat:</value></data>
+  <data name="Report_PeakExceeded" xml:space="preserve"><value>ylitti varoitusrajan ({0:0} {1})</value></data>
+  <data name="Report_PeakNear" xml:space="preserve"><value>kävi lähellä varoitusrajaa ({0:0} {1})</value></data>
+  <data name="Report_PeakWellBelow" xml:space="preserve"><value>jäi selvästi alle varoitusrajan ({0:0} {1})</value></data>
+  <data name="Report_PeakLine" xml:space="preserve"><value>- {0}: enimmillään {1:0} {2} — {3}</value></data>
+  <data name="Report_MonthHeading" xml:space="preserve"><value>## Viimeiset 30 päivää (normaalitaso)</value></data>
+  <data name="Report_NoHistory" xml:space="preserve"><value>Historiaa ei ole vielä kertynyt.</value></data>
+  <data name="Report_TypicalIntro" xml:space="preserve"><value>Kone on tyypillisesti toiminut näissä lukemissa:</value></data>
+  <data name="Report_LevelLine" xml:space="preserve"><value>- {0}: keskimäärin {1:0} {2}, korkeimmillaan {3:0} {2}</value></data>
+  <data name="Report_EventsHeading" xml:space="preserve"><value>## Tapahtumat viimeisen 24 tunnin ajalta</value></data>
+  <data name="Report_NoEvents" xml:space="preserve"><value>Ei varoituksia eikä kriittisiä tapahtumia — hyvä merkki.</value></data>
+  <data name="Report_EventLevelCritical" xml:space="preserve"><value>KRIITTINEN</value></data>
+  <data name="Report_EventLevelWarning" xml:space="preserve"><value>VAROITUS</value></data>
+  <data name="Report_EventLevelError" xml:space="preserve"><value>VIRHE</value></data>
+  <data name="Report_EventLine" xml:space="preserve"><value>- {0:d.M. 'klo' HH.mm} [{1}] {2}</value></data>
+  <data name="Report_InfoOmitted" xml:space="preserve"><value>(Tavalliset tiedotusrivit, kuten ohjelman käynnistykset, on jätetty pois.)</value></data>
+  <data name="Report_GlossaryHeading" xml:space="preserve"><value>## Sanasto</value></data>
+  <data name="Report_Glossary" xml:space="preserve"><value>- Varoitusraja ja kriittinen raja: ohjelmaan asetetut lämpö- ja
+  käyttörajat. Varoitusrajan ylitys kannattaa huomioida; kriittisen
+  rajan ylitys vaatii toimia.
+- GPU hotspot: näytönohjaimen kuumin yksittäinen mittauspiste — aina
+  korkeampi kuin GPU:n yleislämpötila, ja se saa ollakin.
+- WHEA: Windowsin kirjaama laitteistovirhe (esim. muisti, PCIe tai
+  suoritin). Yksittäinen korjattu virhe ei kaada konetta, mutta
+  toistuvat virheet viittaavat rauta- tai kellotusongelmaan.
+- Kernel-Power 41: Windowsin merkintä siitä, että kone sammui
+  edellisellä kerralla yllättäen (kaatuminen tai virran katkeaminen).
+- BSOD / BugCheck: "sininen ruutu" eli Windowsin kaatuminen.
+- TDR / näyttöajurivirhe: näytönohjaimen ajuri lakkasi hetkeksi
+  vastaamasta ja Windows palautti sen. Satunnaisena harmiton,
+  toistuvana syytä päivittää ajuri.
+- RPM: tuulettimen kierrosnopeus minuutissa.</value></data>
+
+  <!-- MachineInsightsBuilder -->
+  <data name="Insights_Title" xml:space="preserve"><value># Konetuntemus-loki — Hardware Monitor</value></data>
+  <data name="Insights_Intro" xml:space="preserve"><value>Päivitetty: {0:d.M.yyyy 'klo' HH.mm}. Generoitu automaattisesti
+sensorihistoriasta (30 pv). Tiedosto on tarkoitettu sekä käyttäjälle
+että tekoälyavustajalle (Claude) koneen tuntemiseen ja optimointiin.</value></data>
+  <data name="Insights_NotEnoughData" xml:space="preserve"><value>Ei vielä riittävästi dataa — historia karttuu ohjelman ollessa käynnissä.</value></data>
+  <data name="Insights_LevelsHeading" xml:space="preserve"><value>## Normaalitasot ja huiput (30 pv)</value></data>
+  <data name="Insights_LevelsTableHeader" xml:space="preserve"><value>| Mittari | Keskiarvo | Huippu | Varoitusraja |</value></data>
+  <data name="Insights_CpuLoad" xml:space="preserve"><value>CPU-kuorma</value></data>
+  <data name="Insights_DisksHeading" xml:space="preserve"><value>### Levyt</value></data>
+  <data name="Insights_DisksTableHeader" xml:space="preserve"><value>| Levy | Keskilämpö | Huippu | Varoitusraja |</value></data>
+  <data name="Insights_FansHeading" xml:space="preserve"><value>### Tuulettimet</value></data>
+  <data name="Insights_FansTableHeader" xml:space="preserve"><value>| Tuuletin | RPM keskimäärin | RPM huippu |</value></data>
+  <data name="Insights_EventsHeading" xml:space="preserve"><value>## Tapahtumat (30 pv)</value></data>
+  <data name="Insights_EventWhea" xml:space="preserve"><value>- WHEA-rautavirheitä: {0}</value></data>
+  <data name="Insights_EventCrashes" xml:space="preserve"><value>- Yllättäviä sammutuksia tai kaatumisia: {0}</value></data>
+  <data name="Insights_EventThresholds" xml:space="preserve"><value>- Raja-arvoylityksiä: {0}</value></data>
+  <data name="Insights_EventGpuDriver" xml:space="preserve"><value>- Näyttöajurivirheitä: {0}</value></data>
+  <data name="Insights_EventWinDisk" xml:space="preserve"><value>- Windowsin levyvirheitä: {0}</value></data>
+  <data name="Insights_InsightsHeading" xml:space="preserve"><value>## Havainnot ja optimointiehdotukset</value></data>
+  <data name="Insights_CpuHot" xml:space="preserve"><value>CPU:n huippulämpö {0:0} °C on käynyt varoitusrajalla ({1:0} °C) — tarkista jäähdytys ja pölyt, harkitse tuulettimien käyrien säätöä.</value></data>
+  <data name="Insights_HotspotHot" xml:space="preserve"><value>GPU hotspot on käynyt {0:0} °C:ssa (varoitusraja {1:0} °C) — tarkista kotelon ilmavirta ja GPU-tuulettimet.</value></data>
+  <data name="Insights_RamHigh" xml:space="preserve"><value>RAM-käyttö on käynyt {0:0} %:ssa (varoitusraja {1:0} %) — muisti on ajoittain vähissä.</value></data>
+  <data name="Insights_DiskHot" xml:space="preserve"><value>Levyn {0} huippulämpö {1:0} °C ylittää varoitusrajan ({2:0} °C) — harkitse M.2-jäähdytyslevyä tai kotelon ilmavirran parantamista pitkien kirjoitusten ajaksi.</value></data>
+  <data name="Insights_Whea" xml:space="preserve"><value>WHEA-rautavirheitä ({0} kpl 30 pv) — viittaa mahdolliseen rauta- tai kellotusongelmaan: tarkista XMP-profiili, jännitteet ja ajurit.</value></data>
+  <data name="Insights_Crashes" xml:space="preserve"><value>Yllättäviä sammutuksia tai kaatumisia ({0} kpl 30 pv) — seuraa lämpötiloja kuormassa ja tarkista virransyöttö.</value></data>
+  <data name="Insights_WinDisk" xml:space="preserve"><value>Windowsin levyvirheitä ({0} kpl 30 pv) — ota varmuuskopiot ja tarkista levyn SMART-kunto.</value></data>
+  <data name="Insights_AllGood" xml:space="preserve"><value>Ei merkittäviä ongelmia havaittu — arvot ovat normaalitasolla.</value></data>
+</root>

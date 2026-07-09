@@ -1,4 +1,5 @@
 using HardwareMonitor.Core.Analysis;
+using HardwareMonitor.Core.Localization;
 
 namespace HardwareMonitor.Core.Notifications;
 
@@ -39,8 +40,8 @@ public static class NotificationBuilder
 
         bool critical = alerts.Any(e => e.Level == "CRITICAL");
         string title = alerts.Count > 1
-            ? $"{alerts.Count} hälytystä"
-            : critical ? "Kriittinen hälytys" : "Varoitus";
+            ? string.Format(Strings.Notify_Multiple, alerts.Count)
+            : critical ? Strings.Notify_Critical : Strings.Notify_Warning;
 
         string message = string.Join(Environment.NewLine, alerts.Select(e => e.Message));
         if (message.Length > MaxMessageLength)

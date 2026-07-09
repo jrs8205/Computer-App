@@ -1,0 +1,174 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+
+  <!-- SettingsValidator -->
+  <data name="Validate_EnterNumber" xml:space="preserve"><value>Enter a number</value></data>
+  <data name="Validate_AllowedRange" xml:space="preserve"><value>Allowed range is {0:0}–{1:0}</value></data>
+  <data name="Validate_WarnBelowCrit" xml:space="preserve"><value>The warning limit must be lower than the critical limit</value></data>
+
+  <!-- NotificationBuilder -->
+  <data name="Notify_Warning" xml:space="preserve"><value>Warning</value></data>
+  <data name="Notify_Critical" xml:space="preserve"><value>Critical alert</value></data>
+  <data name="Notify_Multiple" xml:space="preserve"><value>{0} alerts</value></data>
+
+  <!-- ThresholdMonitor -->
+  <data name="Threshold_ExceededCritical" xml:space="preserve"><value>{0} exceeded the critical limit: {1:0} {3} (limit {2:0} {3})</value></data>
+  <data name="Threshold_ExceededWarning" xml:space="preserve"><value>{0} exceeded the warning limit: {1:0} {3} (limit {2:0} {3})</value></data>
+  <data name="Threshold_FanStopped" xml:space="preserve"><value>Fan {0} has stopped (0 RPM) while the CPU is at {1:0} °C</value></data>
+  <data name="Threshold_FanRecovered" xml:space="preserve"><value>Fan {0} is spinning again</value></data>
+  <data name="Threshold_Recovered" xml:space="preserve"><value>{0} returned to normal (peak {1:0} {2}, duration {3})</value></data>
+  <data name="Threshold_LabelCpuTemp" xml:space="preserve"><value>CPU temperature</value></data>
+  <data name="Threshold_LabelGpuTemp" xml:space="preserve"><value>GPU temperature</value></data>
+  <data name="Threshold_LabelGpuHotspot" xml:space="preserve"><value>GPU hot spot temperature</value></data>
+  <data name="Threshold_LabelRamLoad" xml:space="preserve"><value>RAM usage</value></data>
+  <data name="Threshold_LabelDiskTemp" xml:space="preserve"><value>Temperature of drive {0}</value></data>
+
+  <!-- WindowsEventClassifier -->
+  <data name="WinEvent_KernelPower" xml:space="preserve"><value>The computer shut down unexpectedly or crashed (Kernel-Power 41)</value></data>
+  <data name="WinEvent_UnexpectedShutdown" xml:space="preserve"><value>The previous shutdown was unexpected (EventLog 6008)</value></data>
+  <data name="WinEvent_Bsod" xml:space="preserve"><value>Windows crashed with a blue screen (BSOD, BugCheck 1001)</value></data>
+  <data name="WinEvent_WheaError" xml:space="preserve"><value>Serious hardware error: CPU/RAM/PCIe (WHEA-Logger {0})</value></data>
+  <data name="WinEvent_WheaCorrected" xml:space="preserve"><value>Corrected hardware error (WHEA-Logger {0})</value></data>
+  <data name="WinEvent_DisplayDriver" xml:space="preserve"><value>Display driver error or driver recovery ({0} {1})</value></data>
+  <data name="WinEvent_DiskError" xml:space="preserve"><value>Disk or file system error ({0} {1})</value></data>
+
+  <!-- Common metric names -->
+  <data name="Common_CpuTemp" xml:space="preserve"><value>CPU temperature</value></data>
+  <data name="Common_GpuTemp" xml:space="preserve"><value>GPU temperature</value></data>
+  <data name="Common_GpuHotspot" xml:space="preserve"><value>GPU hot spot</value></data>
+  <data name="Common_RamLoad" xml:space="preserve"><value>RAM usage</value></data>
+
+  <!-- RiskAnalyzer -->
+  <data name="Risk_PrevSessionCrashed" xml:space="preserve"><value>The previous session ended unexpectedly</value></data>
+  <data name="Risk_FanProblem" xml:space="preserve"><value>Fan problem: a fan that was spinning this session has stopped while the CPU is hot</value></data>
+  <data name="Risk_ExceedsCritical" xml:space="preserve"><value>{0} {1:0} {2} exceeds the critical limit ({3:0} {2})</value></data>
+  <data name="Risk_ExceedsWarning" xml:space="preserve"><value>{0} {1:0} {2} exceeds the warning limit ({3:0} {2})</value></data>
+  <data name="Risk_DiskFallbackName" xml:space="preserve"><value>Drive {0}</value></data>
+  <data name="Risk_WheaCount" xml:space="preserve"><value>WHEA hardware errors in 24 h: {0}</value></data>
+  <data name="Risk_NoWhea" xml:space="preserve"><value>No WHEA errors (24 h)</value></data>
+  <data name="Risk_CrashCount" xml:space="preserve"><value>Unexpected shutdowns or crashes in 24 h: {0}</value></data>
+  <data name="Risk_NoCrashes" xml:space="preserve"><value>No unexpected shutdowns (24 h)</value></data>
+  <data name="Risk_GpuDriverCount" xml:space="preserve"><value>Display driver errors in 24 h: {0}</value></data>
+  <data name="Risk_WinDiskCount" xml:space="preserve"><value>Disk errors in the Windows log in 24 h: {0}</value></data>
+  <data name="Risk_ThresholdCount" xml:space="preserve"><value>Threshold limit exceedances in 24 h: {0}</value></data>
+  <data name="Risk_PeakCpu" xml:space="preserve"><value>CPU temperature peaked at {0:0} °C (24 h)</value></data>
+  <data name="Risk_PeakHotspot" xml:space="preserve"><value>GPU hot spot peaked at {0:0} °C (24 h)</value></data>
+  <data name="Risk_PeakRam" xml:space="preserve"><value>RAM usage peaked at {0:0} % (24 h)</value></data>
+  <data name="Risk_StatusCritical" xml:space="preserve"><value>Critical</value></data>
+  <data name="Risk_StatusWarning" xml:space="preserve"><value>Warning</value></data>
+  <data name="Risk_StatusGood" xml:space="preserve"><value>Good</value></data>
+  <data name="Risk_LevelHigh" xml:space="preserve"><value>High</value></data>
+  <data name="Risk_LevelElevated" xml:space="preserve"><value>Elevated</value></data>
+  <data name="Risk_LevelLow" xml:space="preserve"><value>Low</value></data>
+  <data name="Risk_RecommendWhea" xml:space="preserve"><value>Possible hardware problem: check overclocking/XMP profile, memory modules, and drivers.</value></data>
+  <data name="Risk_RecommendDisk" xml:space="preserve"><value>Back up important data and check the drive's health (SMART).</value></data>
+  <data name="Risk_RecommendThermal" xml:space="preserve"><value>Check cooling: fan operation, dust, and case airflow.</value></data>
+  <data name="Risk_RecommendSystem" xml:space="preserve"><value>The computer has crashed or shut down unexpectedly — monitor temperatures and check the power supply.</value></data>
+  <data name="Risk_RecommendGpuDriver" xml:space="preserve"><value>Update the graphics driver with a clean installation.</value></data>
+
+  <!-- CsvExporter -->
+  <data name="Csv_Time" xml:space="preserve"><value>Time</value></data>
+  <data name="Csv_CpuLoad" xml:space="preserve"><value>CPU load %</value></data>
+  <data name="Csv_CpuTemp" xml:space="preserve"><value>CPU temp °C</value></data>
+  <data name="Csv_CpuClock" xml:space="preserve"><value>CPU clock MHz</value></data>
+  <data name="Csv_CpuPower" xml:space="preserve"><value>CPU power W</value></data>
+  <data name="Csv_GpuLoad" xml:space="preserve"><value>GPU load %</value></data>
+  <data name="Csv_GpuTemp" xml:space="preserve"><value>GPU temp °C</value></data>
+  <data name="Csv_GpuHotspot" xml:space="preserve"><value>GPU hotspot °C</value></data>
+  <data name="Csv_GpuPower" xml:space="preserve"><value>GPU power W</value></data>
+  <data name="Csv_Vram" xml:space="preserve"><value>VRAM used MB</value></data>
+  <data name="Csv_RamLoad" xml:space="preserve"><value>RAM load %</value></data>
+  <data name="Csv_RamUsed" xml:space="preserve"><value>RAM used GB</value></data>
+  <data name="Csv_DiskTemp" xml:space="preserve"><value>Drive {0} temp °C</value></data>
+  <data name="Csv_FanRpm" xml:space="preserve"><value>Fan {0} RPM (avg)</value></data>
+  <data name="Csv_SuffixAvg" xml:space="preserve"><value>(avg)</value></data>
+  <data name="Csv_SuffixMax" xml:space="preserve"><value>(max)</value></data>
+
+  <!-- ReportBuilder -->
+  <data name="Report_Title" xml:space="preserve"><value># System report — {0:d.M.yyyy 'at' HH.mm}</value></data>
+  <data name="Report_Intro" xml:space="preserve"><value>This report was produced by the Hardware Monitor application. It describes
+the computer's condition in plain language: first an overall assessment,
+then metric values with explanations, and finally a glossary of terms.</value></data>
+  <data name="Report_SummaryHeading" xml:space="preserve"><value>## Summary</value></data>
+  <data name="Report_MachineStatus" xml:space="preserve"><value>Machine status: {0}</value></data>
+  <data name="Report_RiskLevel" xml:space="preserve"><value>Risk level: {0}</value></data>
+  <data name="Report_LevelsExplanation" xml:space="preserve"><value>What the levels mean: Good = all values are at normal levels.
+Warning = a value has exceeded its warning limit or there have been
+events requiring attention. Critical = something needs action right away.</value></data>
+  <data name="Report_Observations" xml:space="preserve"><value>Observations:</value></data>
+  <data name="Report_Recommendation" xml:space="preserve"><value>Recommendation: {0}</value></data>
+  <data name="Report_CurrentHeading" xml:space="preserve"><value>## Current values</value></data>
+  <data name="Report_DiskLabel" xml:space="preserve"><value>Drive {0}</value></data>
+  <data name="Report_NoReading" xml:space="preserve"><value>- {0}: no reading</value></data>
+  <data name="Report_VerdictCritical" xml:space="preserve"><value>CRITICAL: the critical limit has been exceeded</value></data>
+  <data name="Report_VerdictWarning" xml:space="preserve"><value>WARNING: the warning limit has been exceeded</value></data>
+  <data name="Report_VerdictOk" xml:space="preserve"><value>OK (warning limit {0:0} {1})</value></data>
+  <data name="Report_ValueLine" xml:space="preserve"><value>- {0}: {1:0} {2} — {3}</value></data>
+  <data name="Report_DayHeading" xml:space="preserve"><value>## Last 24 hours</value></data>
+  <data name="Report_NoHistoryPeriod" xml:space="preserve"><value>No history has accumulated for this period yet.</value></data>
+  <data name="Report_PeaksIntro" xml:space="preserve"><value>Highest readings:</value></data>
+  <data name="Report_PeakExceeded" xml:space="preserve"><value>exceeded the warning limit ({0:0} {1})</value></data>
+  <data name="Report_PeakNear" xml:space="preserve"><value>came close to the warning limit ({0:0} {1})</value></data>
+  <data name="Report_PeakWellBelow" xml:space="preserve"><value>stayed well below the warning limit ({0:0} {1})</value></data>
+  <data name="Report_PeakLine" xml:space="preserve"><value>- {0}: at most {1:0} {2} — {3}</value></data>
+  <data name="Report_MonthHeading" xml:space="preserve"><value>## Last 30 days (normal level)</value></data>
+  <data name="Report_NoHistory" xml:space="preserve"><value>No history has accumulated yet.</value></data>
+  <data name="Report_TypicalIntro" xml:space="preserve"><value>The computer has typically operated at these levels:</value></data>
+  <data name="Report_LevelLine" xml:space="preserve"><value>- {0}: on average {1:0} {2}, at most {3:0} {2}</value></data>
+  <data name="Report_EventsHeading" xml:space="preserve"><value>## Events in the last 24 hours</value></data>
+  <data name="Report_NoEvents" xml:space="preserve"><value>No warnings or critical events — a good sign.</value></data>
+  <data name="Report_EventLevelCritical" xml:space="preserve"><value>CRITICAL</value></data>
+  <data name="Report_EventLevelWarning" xml:space="preserve"><value>WARNING</value></data>
+  <data name="Report_EventLevelError" xml:space="preserve"><value>ERROR</value></data>
+  <data name="Report_EventLine" xml:space="preserve"><value>- {0:d.M. 'at' HH.mm} [{1}] {2}</value></data>
+  <data name="Report_InfoOmitted" xml:space="preserve"><value>(Routine informational entries, such as application startups, are omitted.)</value></data>
+  <data name="Report_GlossaryHeading" xml:space="preserve"><value>## Glossary</value></data>
+  <data name="Report_Glossary" xml:space="preserve"><value>- Warning limit and critical limit: temperature and usage limits set in
+  the application. Exceeding the warning limit deserves attention;
+  exceeding the critical limit requires action.
+- GPU hot spot: the hottest single measurement point on the graphics
+  card — always higher than the general GPU temperature, and that is fine.
+- WHEA: a hardware error recorded by Windows (e.g. memory, PCIe, or the
+  processor). A single corrected error will not crash the computer, but
+  recurring errors suggest a hardware or overclocking problem.
+- Kernel-Power 41: a Windows record indicating the computer previously
+  shut down unexpectedly (a crash or power loss).
+- BSOD / BugCheck: the "blue screen", i.e. a Windows crash.
+- TDR / display driver error: the graphics driver stopped responding
+  briefly and Windows recovered it. Harmless when occasional; if it
+  recurs, update the driver.
+- RPM: fan revolutions per minute.</value></data>
+
+  <!-- MachineInsightsBuilder -->
+  <data name="Insights_Title" xml:space="preserve"><value># Machine insights log — Hardware Monitor</value></data>
+  <data name="Insights_Intro" xml:space="preserve"><value>Updated: {0:d.M.yyyy 'at' HH.mm}. Generated automatically
+from sensor history (30 days). This file is intended both for the user
+and for an AI assistant (Claude) to understand and optimize this machine.</value></data>
+  <data name="Insights_NotEnoughData" xml:space="preserve"><value>Not enough data yet — history accumulates while the application is running.</value></data>
+  <data name="Insights_LevelsHeading" xml:space="preserve"><value>## Normal levels and peaks (30 days)</value></data>
+  <data name="Insights_LevelsTableHeader" xml:space="preserve"><value>| Metric | Average | Peak | Warning limit |</value></data>
+  <data name="Insights_CpuLoad" xml:space="preserve"><value>CPU load</value></data>
+  <data name="Insights_DisksHeading" xml:space="preserve"><value>### Drives</value></data>
+  <data name="Insights_DisksTableHeader" xml:space="preserve"><value>| Drive | Avg temp | Peak | Warning limit |</value></data>
+  <data name="Insights_FansHeading" xml:space="preserve"><value>### Fans</value></data>
+  <data name="Insights_FansTableHeader" xml:space="preserve"><value>| Fan | Avg RPM | Peak RPM |</value></data>
+  <data name="Insights_EventsHeading" xml:space="preserve"><value>## Events (30 days)</value></data>
+  <data name="Insights_EventWhea" xml:space="preserve"><value>- WHEA hardware errors: {0}</value></data>
+  <data name="Insights_EventCrashes" xml:space="preserve"><value>- Unexpected shutdowns or crashes: {0}</value></data>
+  <data name="Insights_EventThresholds" xml:space="preserve"><value>- Threshold limit exceedances: {0}</value></data>
+  <data name="Insights_EventGpuDriver" xml:space="preserve"><value>- Display driver errors: {0}</value></data>
+  <data name="Insights_EventWinDisk" xml:space="preserve"><value>- Windows disk errors: {0}</value></data>
+  <data name="Insights_InsightsHeading" xml:space="preserve"><value>## Findings and optimization suggestions</value></data>
+  <data name="Insights_CpuHot" xml:space="preserve"><value>CPU peak temperature {0:0} °C has reached the warning limit ({1:0} °C) — check cooling and dust, consider adjusting fan curves.</value></data>
+  <data name="Insights_HotspotHot" xml:space="preserve"><value>GPU hot spot has reached {0:0} °C (warning limit {1:0} °C) — check case airflow and GPU fans.</value></data>
+  <data name="Insights_RamHigh" xml:space="preserve"><value>RAM usage has reached {0:0} % (warning limit {1:0} %) — memory runs low at times.</value></data>
+  <data name="Insights_DiskHot" xml:space="preserve"><value>Drive {0} peak temperature {1:0} °C exceeds the warning limit ({2:0} °C) — consider an M.2 heatsink or improving case airflow for long writes.</value></data>
+  <data name="Insights_Whea" xml:space="preserve"><value>WHEA hardware errors ({0} in 30 days) — suggests a possible hardware or overclocking problem: check XMP profile, voltages, and drivers.</value></data>
+  <data name="Insights_Crashes" xml:space="preserve"><value>Unexpected shutdowns or crashes ({0} in 30 days) — monitor temperatures under load and check the power supply.</value></data>
+  <data name="Insights_WinDisk" xml:space="preserve"><value>Windows disk errors ({0} in 30 days) — back up your data and check the drive's SMART health.</value></data>
+  <data name="Insights_AllGood" xml:space="preserve"><value>No significant problems detected — values are at normal levels.</value></data>
+</root>

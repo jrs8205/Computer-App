@@ -1,5 +1,6 @@
 using System.Text;
 using HardwareMonitor.Core.Analysis;
+using HardwareMonitor.Core.Localization;
 using HardwareMonitor.Core.Metrics;
 using HardwareMonitor.Core.Settings;
 using HardwareMonitor.Core.Storage;
@@ -30,11 +31,9 @@ public static class ReportBuilder
     {
         var sb = new StringBuilder();
 
-        sb.AppendLine($"# Järjestelmäraportti — {now:d.M.yyyy 'klo' HH.mm}");
+        sb.AppendLine(string.Format(Strings.Report_Title, now));
         sb.AppendLine();
-        sb.AppendLine("Tämän raportin on tuottanut Hardware Monitor -ohjelma. Se kertoo koneen");
-        sb.AppendLine("kunnon tavallisella kielellä: ensin kokonaisarvio, sitten mittarien arvot");
-        sb.AppendLine("selityksineen ja lopussa sanasto, joka avaa tekniset termit.");
+        sb.AppendLine(Strings.Report_Intro.ReplaceLineEndings());
         sb.AppendLine();
 
         AppendSummary(sb, assessment);
@@ -49,16 +48,14 @@ public static class ReportBuilder
 
     private static void AppendSummary(StringBuilder sb, RiskAssessment a)
     {
-        sb.AppendLine("## Yhteenveto");
+        sb.AppendLine(Strings.Report_SummaryHeading);
         sb.AppendLine();
-        sb.AppendLine($"Koneen tila: {a.Status}");
-        sb.AppendLine($"Riskitaso: {a.RiskLevel}");
+        sb.AppendLine(string.Format(Strings.Report_MachineStatus, a.Status));
+        sb.AppendLine(string.Format(Strings.Report_RiskLevel, a.RiskLevel));
         sb.AppendLine();
-        sb.AppendLine("Mitä tasot tarkoittavat: Hyvä = kaikki arvot ovat normaalilla tasolla.");
-        sb.AppendLine("Varoitus = jokin arvo on ylittänyt varoitusrajan tai koneessa on ollut");
-        sb.AppendLine("huomiota vaativia tapahtumia. Kriittinen = jokin asia vaatii toimia heti.");
+        sb.AppendLine(Strings.Report_LevelsExplanation.ReplaceLineEndings());
         sb.AppendLine();
-        sb.AppendLine("Havainnot:");
+        sb.AppendLine(Strings.Report_Observations);
         foreach (string observation in a.Observations)
         {
             sb.AppendLine($"- {observation}");
@@ -67,7 +64,7 @@ public static class ReportBuilder
         if (a.Recommendation is { } recommendation)
         {
             sb.AppendLine();
-            sb.AppendLine($"Suositus: {recommendation}");
+            sb.AppendLine(string.Format(Strings.Report_Recommendation, recommendation));
         }
 
         sb.AppendLine();
@@ -76,16 +73,16 @@ public static class ReportBuilder
     private static void AppendCurrentValues(
         StringBuilder sb, KeyMetrics m, MetricStates states, ThresholdSettings limits)
     {
-        sb.AppendLine("## Arvot juuri nyt");
+        sb.AppendLine(Strings.Report_CurrentHeading);
         sb.AppendLine();
 
-        AppendValueLine(sb, "CPU-lämpötila", m.CpuPackageTempC, "°C",
+        AppendValueLine(sb, Strings.Common_CpuTemp, m.CpuPackageTempC, "°C",
             states.CpuTemp, limits.CpuWarningTemp);
-        AppendValueLine(sb, "GPU-lämpötila", m.GpuTempC, "°C",
+        AppendValueLine(sb, Strings.Common_GpuTemp, m.GpuTempC, "°C",
             states.GpuTemp, limits.GpuWarningTemp);
-        AppendValueLine(sb, "GPU hotspot", m.GpuHotspotTempC, "°C",
+        AppendValueLine(sb, Strings.Common_GpuHotspot, m.GpuHotspotTempC, "°C",
             states.GpuHotspot, limits.GpuHotspotWarningTemp);
-        AppendValueLine(sb, "RAM-käyttö", m.RamLoadPercent, "%",
+        AppendValueLine(sb, Strings.Common_RamLoad, m.RamLoadPercent, "%",
             states.RamLoad, limits.RamWarningPercent);
 
         for (int i = 0; i < m.Disks.Count; i++)
@@ -93,8 +90,9 @@ public static class ReportBuilder
             ThresholdState state = i < states.Disks.Count
                 ? states.Disks[i]
                 : ThresholdState.Normal;
-            AppendValueLine(sb, $"Levy {m.Disks[i].Name.Trim()}", m.Disks[i].TemperatureC, "°C",
-                state, limits.NvmeWarningTemp);
+            AppendValueLine(sb,
+                string.Format(Strings.Report_DiskLabel, m.Disks[i].Name.Trim()),
+                m.Disks[i].TemperatureC, "°C", state, limits.NvmeWarningTemp);
         }
 
         sb.AppendLine();
@@ -106,39 +104,40 @@ public static class ReportBuilder
     {
         if (value is not { } v)
         {
-            sb.AppendLine($"- {label}: ei lukemaa");
+            sb.AppendLine(string.Format(Strings.Report_NoReading, label));
             return;
         }
 
         string verdict = state switch
         {
-            ThresholdState.Critical => "KRIITTINEN: kriittinen raja on ylittynyt",
-            ThresholdState.Warning => "VAROITUS: varoitusraja on ylittynyt",
-            _ => $"kunnossa (varoitusraja {warnLimit:0} {unit})",
+            ThresholdState.Critical => Strings.Report_VerdictCritical,
+            ThresholdState.Warning => Strings.Report_VerdictWarning,
+            _ => string.Format(Strings.Report_VerdictOk, warnLimit, unit),
         };
-        sb.AppendLine($"- {label}: {v:0} {unit} — {verdict}");
+        sb.AppendLine(string.Format(Strings.Report_ValueLine, label, v, unit, verdict));
     }
 
     private static void AppendDayPeaks(StringBuilder sb, SampleStats stats, ThresholdSettings limits)
     {
-        sb.AppendLine("## Viimeiset 24 tuntia");
+        sb.AppendLine(Strings.Report_DayHeading);
         sb.AppendLine();
 
         if (stats.SampleCount == 0)
         {
-            sb.AppendLine("Historiaa ei ole vielä kertynyt tältä ajalta.");
+            sb.AppendLine(Strings.Report_NoHistoryPeriod);
             sb.AppendLine();
             return;
         }
 
-        sb.AppendLine("Korkeimmat lukemat:");
-        AppendPeakLine(sb, "CPU-lämpötila", stats.CpuTemp.Max, "°C", limits.CpuWarningTemp);
-        AppendPeakLine(sb, "GPU-lämpötila", stats.GpuTemp.Max, "°C", limits.GpuWarningTemp);
-        AppendPeakLine(sb, "GPU hotspot", stats.GpuHotspot.Max, "°C", limits.GpuHotspotWarningTemp);
-        AppendPeakLine(sb, "RAM-käyttö", stats.RamLoad.Max, "%", limits.RamWarningPercent);
+        sb.AppendLine(Strings.Report_PeaksIntro);
+        AppendPeakLine(sb, Strings.Common_CpuTemp, stats.CpuTemp.Max, "°C", limits.CpuWarningTemp);
+        AppendPeakLine(sb, Strings.Common_GpuTemp, stats.GpuTemp.Max, "°C", limits.GpuWarningTemp);
+        AppendPeakLine(sb, Strings.Common_GpuHotspot, stats.GpuHotspot.Max, "°C", limits.GpuHotspotWarningTemp);
+        AppendPeakLine(sb, Strings.Common_RamLoad, stats.RamLoad.Max, "%", limits.RamWarningPercent);
         foreach (DiskStat disk in stats.Disks)
         {
-            AppendPeakLine(sb, $"Levy {disk.Name.Trim()}", disk.TempMax, "°C", limits.NvmeWarningTemp);
+            AppendPeakLine(sb, string.Format(Strings.Report_DiskLabel, disk.Name.Trim()),
+                disk.TempMax, "°C", limits.NvmeWarningTemp);
         }
 
         sb.AppendLine();
@@ -152,36 +151,39 @@ public static class ReportBuilder
             return;
         }
 
-        string comparison = v >= warnLimit
-            ? $"ylitti varoitusrajan ({warnLimit:0} {unit})"
-            : warnLimit - v <= NearLimitMargin
-                ? $"kävi lähellä varoitusrajaa ({warnLimit:0} {unit})"
-                : $"jäi selvästi alle varoitusrajan ({warnLimit:0} {unit})";
-        sb.AppendLine($"- {label}: enimmillään {v:0} {unit} — {comparison}");
+        string comparison = string.Format(
+            v >= warnLimit
+                ? Strings.Report_PeakExceeded
+                : warnLimit - v <= NearLimitMargin
+                    ? Strings.Report_PeakNear
+                    : Strings.Report_PeakWellBelow,
+            warnLimit, unit);
+        sb.AppendLine(string.Format(Strings.Report_PeakLine, label, v, unit, comparison));
     }
 
     private static void AppendMonthLevels(StringBuilder sb, SampleStats stats)
     {
-        sb.AppendLine("## Viimeiset 30 päivää (normaalitaso)");
+        sb.AppendLine(Strings.Report_MonthHeading);
         sb.AppendLine();
 
         if (stats.SampleCount == 0)
         {
-            sb.AppendLine("Historiaa ei ole vielä kertynyt.");
+            sb.AppendLine(Strings.Report_NoHistory);
             sb.AppendLine();
             return;
         }
 
-        sb.AppendLine("Kone on tyypillisesti toiminut näissä lukemissa:");
-        AppendLevelLine(sb, "CPU-lämpötila", stats.CpuTemp, "°C");
-        AppendLevelLine(sb, "GPU-lämpötila", stats.GpuTemp, "°C");
-        AppendLevelLine(sb, "GPU hotspot", stats.GpuHotspot, "°C");
-        AppendLevelLine(sb, "RAM-käyttö", stats.RamLoad, "%");
+        sb.AppendLine(Strings.Report_TypicalIntro);
+        AppendLevelLine(sb, Strings.Common_CpuTemp, stats.CpuTemp, "°C");
+        AppendLevelLine(sb, Strings.Common_GpuTemp, stats.GpuTemp, "°C");
+        AppendLevelLine(sb, Strings.Common_GpuHotspot, stats.GpuHotspot, "°C");
+        AppendLevelLine(sb, Strings.Common_RamLoad, stats.RamLoad, "%");
         foreach (DiskStat disk in stats.Disks)
         {
             if (disk.TempAvg is { } avg && disk.TempMax is { } max)
             {
-                sb.AppendLine($"- Levy {disk.Name.Trim()}: keskimäärin {avg:0} °C, korkeimmillaan {max:0} °C");
+                sb.AppendLine(string.Format(Strings.Report_LevelLine,
+                    string.Format(Strings.Report_DiskLabel, disk.Name.Trim()), avg, "°C", max));
             }
         }
 
@@ -192,19 +194,19 @@ public static class ReportBuilder
     {
         if (stat.Avg is { } avg && stat.Max is { } max)
         {
-            sb.AppendLine($"- {label}: keskimäärin {avg:0} {unit}, korkeimmillaan {max:0} {unit}");
+            sb.AppendLine(string.Format(Strings.Report_LevelLine, label, avg, unit, max));
         }
     }
 
     private static void AppendEvents(StringBuilder sb, IReadOnlyList<EventRow> events)
     {
-        sb.AppendLine("## Tapahtumat viimeisen 24 tunnin ajalta");
+        sb.AppendLine(Strings.Report_EventsHeading);
         sb.AppendLine();
 
         List<EventRow> important = events.Where(e => e.Level != "INFO").ToList();
         if (important.Count == 0)
         {
-            sb.AppendLine("Ei varoituksia eikä kriittisiä tapahtumia — hyvä merkki.");
+            sb.AppendLine(Strings.Report_NoEvents);
         }
         else
         {
@@ -212,15 +214,16 @@ public static class ReportBuilder
             {
                 string level = e.Level switch
                 {
-                    "CRITICAL" => "KRIITTINEN",
-                    "WARNING" => "VAROITUS",
-                    _ => "VIRHE",
+                    "CRITICAL" => Strings.Report_EventLevelCritical,
+                    "WARNING" => Strings.Report_EventLevelWarning,
+                    _ => Strings.Report_EventLevelError,
                 };
-                sb.AppendLine($"- {e.Timestamp.ToLocalTime():d.M. 'klo' HH.mm} [{level}] {e.Message}");
+                sb.AppendLine(string.Format(Strings.Report_EventLine,
+                    e.Timestamp.ToLocalTime(), level, e.Message));
             }
 
             sb.AppendLine();
-            sb.AppendLine("(Tavalliset tiedotusrivit, kuten ohjelman käynnistykset, on jätetty pois.)");
+            sb.AppendLine(Strings.Report_InfoOmitted);
         }
 
         sb.AppendLine();
@@ -228,22 +231,8 @@ public static class ReportBuilder
 
     private static void AppendGlossary(StringBuilder sb)
     {
-        sb.AppendLine("## Sanasto");
+        sb.AppendLine(Strings.Report_GlossaryHeading);
         sb.AppendLine();
-        sb.AppendLine("- Varoitusraja ja kriittinen raja: ohjelmaan asetetut lämpö- ja");
-        sb.AppendLine("  käyttörajat. Varoitusrajan ylitys kannattaa huomioida; kriittisen");
-        sb.AppendLine("  rajan ylitys vaatii toimia.");
-        sb.AppendLine("- GPU hotspot: näytönohjaimen kuumin yksittäinen mittauspiste — aina");
-        sb.AppendLine("  korkeampi kuin GPU:n yleislämpötila, ja se saa ollakin.");
-        sb.AppendLine("- WHEA: Windowsin kirjaama laitteistovirhe (esim. muisti, PCIe tai");
-        sb.AppendLine("  suoritin). Yksittäinen korjattu virhe ei kaada konetta, mutta");
-        sb.AppendLine("  toistuvat virheet viittaavat rauta- tai kellotusongelmaan.");
-        sb.AppendLine("- Kernel-Power 41: Windowsin merkintä siitä, että kone sammui");
-        sb.AppendLine("  edellisellä kerralla yllättäen (kaatuminen tai virran katkeaminen).");
-        sb.AppendLine("- BSOD / BugCheck: \"sininen ruutu\" eli Windowsin kaatuminen.");
-        sb.AppendLine("- TDR / näyttöajurivirhe: näytönohjaimen ajuri lakkasi hetkeksi");
-        sb.AppendLine("  vastaamasta ja Windows palautti sen. Satunnaisena harmiton,");
-        sb.AppendLine("  toistuvana syytä päivittää ajuri.");
-        sb.AppendLine("- RPM: tuulettimen kierrosnopeus minuutissa.");
+        sb.AppendLine(Strings.Report_Glossary.ReplaceLineEndings());
     }
 }
