@@ -199,8 +199,26 @@ Ehdotettu järjestys illan istunnolle:
    tooltipit kokonaislukuina) ja run.ps1 -AsAdmin ei enää jätä
    PowerShell-ikkunaa auki (buildaa ensin, käynnistää exen suoraan).
    126 testiä läpi; käyttäjä todensi graafit, tooltipit ja värit ajossa.
-4. Viimeisenä (erikseen käyttäjän kanssa): kielituki fi/en (resx),
-   LICENSE + repo julkiseksi, paketointi (self-contained julkaisu).
+4. ~~Kielituki fi/en~~ **TEHTY 9.7. illalla:** resx-lokalisointi koko
+   sovellukseen (spec docs/superpowers/specs/2026-07-09-localization-design.md,
+   plan docs/superpowers/plans/2026-07-09-localization.md). Neutraali kieli
+   fi, en satelliittina; käsintehdyt accessorit (Strings Coressa ~148 avainta
+   ml. sensorityypit, UiStrings Appissa ~114) koska resx-designer ei toimi
+   dotnet CLI:llä. Kielivalinta Asetukset → Yleiset (Automaattinen/Suomi/
+   English, AppSettings.Language, LanguageResolver TDD:llä), voimaan
+   uudelleenkäynnistyksellä; App.OnStartup asettaa
+   DefaultThreadCurrentUICulture ENNEN ikkunoita. CurrentCulture ei muutu
+   (CSV-muodot ennallaan). GOTCHAT: tapahtumien Component-arvot
+   ("Laitteisto", "Järjestelmä", ...) ovat kantaan tallennettavia
+   luokitteluavaimia — EI saa lokalisoida (RiskAnalyzer/Insights vertaavat
+   niitä); en-satelliitista puuttuva avain palautuu NEUTRAALIIN (fi) —
+   siksi myös identtiset en-arvot kirjataan en-resx:ään. Testiprojektissa
+   TestCulture (ModuleInitializer) kiinnittää fi-UI-kulttuurin. 134 testiä.
+   Käyttäjä todensi fi + en ajossa (UI, sensorityypit, raportti).
+   Lisäksi: repon juuressa "Hardware Monitor.lnk" (gitignoressa) —
+   käynnistys tuplaklikkauksella admin-lipulla ilman run.ps1:ää.
+5. Viimeisenä (erikseen käyttäjän kanssa): LICENSE + repo julkiseksi,
+   paketointi (self-contained julkaisu).
 
 Pientä hiottavaa (sopii väliin): fan_samples/insights käyttävät raakanimiä
 ("Fan #2"), ei nimilappuja ("AIO-pumppu") — voisi mapata nimilaput;
