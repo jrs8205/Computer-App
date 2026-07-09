@@ -103,6 +103,12 @@
                               Foreground="White" Margin="16,0,0,0" VerticalAlignment="Center" />
                     <CheckBox Content="Käynnistä Windowsin mukana" IsChecked="{Binding AutoStart}"
                               Foreground="White" Margin="16,0,0,0" VerticalAlignment="Center" />
+                    <Button Content="Luo raportti…" Click="CreateReport_Click"
+                            Margin="24,0,0,0" Padding="10,3" VerticalAlignment="Center"
+                            ToolTip="Selkokielinen yhteenveto koneen kunnosta tekstitiedostona" />
+                    <Button Content="Vie CSV…" Click="ExportCsv_Click"
+                            Margin="8,0,0,0" Padding="10,3" VerticalAlignment="Center"
+                            ToolTip="Viimeisen 24 tunnin sensorihistoria Exceliin sopivana CSV:nä" />
                 </WrapPanel>
             </StackPanel>
         </Border>

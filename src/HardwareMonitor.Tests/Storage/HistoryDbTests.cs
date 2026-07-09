@@ -123,6 +123,29 @@ public sealed class HistoryDbTests : IDisposable
     }
 
     [Fact]
+    public void ReadSampleRows_PalauttaaRivitLapsineenVanhinEnsin()
+    {
+        _db.InsertSample(Sample(Now.AddSeconds(5), cpuTempMax: 90f));
+        _db.InsertSample(Sample(Now, cpuTempMax: 70f));
+        _db.InsertSample(Sample(Now.AddDays(-2))); // rajautuu pois
+
+        IReadOnlyList<SampleRow> rows = _db.ReadSampleRows(Now.AddHours(-24));
+
+        Assert.Equal(2, rows.Count);
+        Assert.Equal(70, rows[0].CpuTempMax); // vanhin ensin (aikajana)
+        Assert.Equal(90, rows[1].CpuTempMax);
+        Assert.Equal(20, rows[0].CpuLoadAvg);
+
+        DiskSampleValue disk = Assert.Single(rows[0].Disks);
+        Assert.Equal("NVMe", disk.Name);
+        Assert.Equal(62, disk.TempMax);
+
+        FanSampleValue fan = Assert.Single(rows[0].Fans);
+        Assert.Equal("Fan #2", fan.Name);
+        Assert.Equal(1955, fan.RpmAvg);
+    }
+
+    [Fact]
     public void GetMeta_PuuttuvaAvain_PalauttaaNull()
     {
         Assert.Null(_db.GetMeta("windows_last_record_id"));

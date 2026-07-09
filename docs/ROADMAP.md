@@ -136,9 +136,23 @@ Specissä `docs/superpowers/specs/2026-07-09-risk-analysis-design.md`:
       prosessi → uudelleenkäynnistys näytti "Edellinen istunto päättyi
       yllättäen" + Varoitus/Kohonnut + suositus; insights-tiedosto syntyi.
 
-## ⏭️ Vaihe 7 — Raportointi
+## ✅ Vaihe 7 — Raportointi (VALMIS 9.7.2026)
 
-- [ ] "Luo raportti" Markdown/TXT (luku 20), CSV-vienti
+Specissä `docs/superpowers/specs/2026-07-09-reports-design.md`. Käyttäjän
+vaatimus 9.7.2026: vientien pitää olla selkokielisiä, ei konedataa.
+
+- [x] "Luo raportti…" -nappi (luku 20): `ReportBuilder` tuottaa Notepadissa
+      luettavan tekstiraportin — yhteenveto tasoselityksineen, arvot muodossa
+      "CPU-lämpötila: 45 °C — kunnossa (varoitusraja 85 °C)", 24 h huiput
+      vertailulauseella ("kävi lähellä varoitusrajaa"), 30 pv normaalitasot,
+      tapahtumat suomeksi ja sanasto (WHEA, Kernel-Power 41, hotspot, TDR…)
+- [x] "Vie CSV…" -nappi (luku 21): `CsvExporter` — suomenkieliset otsikot
+      yksiköineen, suomalaisen Excelin muoto (erotin `;`, desimaalipilkku),
+      levy- ja tuuletinsarakkeet pivotoitu nimillä; 24 h koosterivit;
+      UTF-8 BOM jotta ääkköset näkyvät Excelissä
+- [x] `HistoryDb.ReadSampleRows` (koosterivit lapsineen CSV:tä varten)
+- [x] Tallennus SaveFileDialogilla, tiedosto avataan tallennuksen jälkeen
+- [x] Todennettu oikealla kannalla (998 CSV-riviä; raportti luettu läpi)
 
 ## ⏭️ Vaihe 8 — Viimeistely
 

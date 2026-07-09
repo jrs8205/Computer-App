@@ -349,6 +349,104 @@ public sealed class HistoryDb : IDisposable
         Avg: reader.IsDBNull(avgOrdinal) ? null : reader.GetDouble(avgOrdinal),
         Max: reader.IsDBNull(avgOrdinal + 1) ? null : reader.GetDouble(avgOrdinal + 1));
 
+    /// <summary>Koosterivit lapsiriveineen CSV-vientiä varten, vanhin ensin.</summary>
+    public IReadOnlyList<SampleRow> ReadSampleRows(DateTimeOffset since)
+    {
+        lock (_lock)
+        {
+            long cutoff = since.ToUnixTimeSeconds();
+
+            var disksBySample = new Dictionary<long, List<DiskSampleValue>>();
+            using (var diskCmd = _connection.CreateCommand())
+            {
+                diskCmd.CommandText = """
+                    SELECT d.sample_id, d.name, d.temp_avg, d.temp_max
+                    FROM disk_samples d JOIN samples s ON s.id = d.sample_id
+                    WHERE s.ts >= $since ORDER BY d.disk_index;
+                    """;
+                diskCmd.Parameters.AddWithValue("$since", cutoff);
+                using SqliteDataReader r = diskCmd.ExecuteReader();
+                while (r.Read())
+                {
+                    long sampleId = r.GetInt64(0);
+                    if (!disksBySample.TryGetValue(sampleId, out List<DiskSampleValue>? list))
+                    {
+                        disksBySample[sampleId] = list = new List<DiskSampleValue>();
+                    }
+
+                    list.Add(new DiskSampleValue(
+                        r.GetString(1),
+                        r.IsDBNull(2) ? null : r.GetDouble(2),
+                        r.IsDBNull(3) ? null : r.GetDouble(3)));
+                }
+            }
+
+            var fansBySample = new Dictionary<long, List<FanSampleValue>>();
+            using (var fanCmd = _connection.CreateCommand())
+            {
+                fanCmd.CommandText = """
+                    SELECT f.sample_id, f.name, f.rpm_avg
+                    FROM fan_samples f JOIN samples s ON s.id = f.sample_id
+                    WHERE s.ts >= $since;
+                    """;
+                fanCmd.Parameters.AddWithValue("$since", cutoff);
+                using SqliteDataReader r = fanCmd.ExecuteReader();
+                while (r.Read())
+                {
+                    long sampleId = r.GetInt64(0);
+                    if (!fansBySample.TryGetValue(sampleId, out List<FanSampleValue>? list))
+                    {
+                        fansBySample[sampleId] = list = new List<FanSampleValue>();
+                    }
+
+                    list.Add(new FanSampleValue(
+                        r.GetString(1),
+                        r.IsDBNull(2) ? null : r.GetDouble(2)));
+                }
+            }
+
+            var rows = new List<SampleRow>();
+            using var cmd = _connection.CreateCommand();
+            cmd.CommandText = """
+                SELECT id, ts,
+                    cpu_load_avg, cpu_load_max, cpu_temp_avg, cpu_temp_max, cpu_clock_max,
+                    cpu_power_avg, cpu_power_max, gpu_load_avg, gpu_load_max,
+                    gpu_temp_avg, gpu_temp_max, gpu_hotspot_avg, gpu_hotspot_max,
+                    gpu_power_avg, gpu_power_max, vram_used_mb_avg, vram_used_mb_max,
+                    ram_load_avg, ram_load_max, ram_used_gb_avg, ram_used_gb_max
+                FROM samples WHERE ts >= $since ORDER BY ts, id;
+                """;
+            cmd.Parameters.AddWithValue("$since", cutoff);
+            using SqliteDataReader reader = cmd.ExecuteReader();
+            while (reader.Read())
+            {
+                long id = reader.GetInt64(0);
+                rows.Add(new SampleRow(
+                    Timestamp: DateTimeOffset.FromUnixTimeSeconds(reader.GetInt64(1)),
+                    CpuLoadAvg: Opt(reader, 2), CpuLoadMax: Opt(reader, 3),
+                    CpuTempAvg: Opt(reader, 4), CpuTempMax: Opt(reader, 5),
+                    CpuClockMax: Opt(reader, 6),
+                    CpuPowerAvg: Opt(reader, 7), CpuPowerMax: Opt(reader, 8),
+                    GpuLoadAvg: Opt(reader, 9), GpuLoadMax: Opt(reader, 10),
+                    GpuTempAvg: Opt(reader, 11), GpuTempMax: Opt(reader, 12),
+                    GpuHotspotAvg: Opt(reader, 13), GpuHotspotMax: Opt(reader, 14),
+                    GpuPowerAvg: Opt(reader, 15), GpuPowerMax: Opt(reader, 16),
+                    VramUsedMbAvg: Opt(reader, 17), VramUsedMbMax: Opt(reader, 18),
+                    RamLoadAvg: Opt(reader, 19), RamLoadMax: Opt(reader, 20),
+                    RamUsedGbAvg: Opt(reader, 21), RamUsedGbMax: Opt(reader, 22),
+                    Disks: disksBySample.TryGetValue(id, out List<DiskSampleValue>? d)
+                        ? d : Array.Empty<DiskSampleValue>(),
+                    Fans: fansBySample.TryGetValue(id, out List<FanSampleValue>? f)
+                        ? f : Array.Empty<FanSampleValue>()));
+            }
+
+            return rows;
+        }
+    }
+
+    private static double? Opt(SqliteDataReader reader, int ordinal) =>
+        reader.IsDBNull(ordinal) ? null : reader.GetDouble(ordinal);
+
     /// <summary>Avain–arvo-tila (esim. Windows-lokin lukukirjanmerkki).</summary>
     public string? GetMeta(string key)
     {

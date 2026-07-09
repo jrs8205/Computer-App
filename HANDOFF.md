@@ -6,11 +6,11 @@ sitten `docs/ROADMAP.md` (vaiheiden tila) ja tarvittaessa specit
 
 ## Tilanne yhdellä lauseella
 
-Vaiheet 1–6 ovat valmiit, testattu ja pushattu haaralle
-`claude/windows-11-program-setup-rxuyhn`; seuraavaksi **Vaihe 7: raportit**
-("Luo raportti" Markdown/TXT + CSV-vienti, luku 20), sitten Vaihe 8
-(ilmoitukset, asetussivu, graafit; kielituki fi/en ja repon julkistus ihan
-lopuksi — käyttäjän päätös 8.7.2026).
+Vaiheet 1–7 ovat valmiit, testattu ja pushattu haaralle
+`claude/windows-11-program-setup-rxuyhn`; jäljellä on **Vaihe 8:
+viimeistely** (ilmoitukset, asetussivu, graafit LiveCharts2; kielituki
+fi/en, LICENSE + repon julkistus ja paketointi ihan lopuksi — käyttäjän
+päätös 8.7.2026).
 
 ## Mitä tässä istunnossa tehtiin (9.7.2026)
 
@@ -70,6 +70,26 @@ lopuksi — käyttäjän päätös 8.7.2026).
    prosessin tappo + uudelleenkäynnistys → "Edellinen istunto päättyi
    yllättäen", Varoitus/Kohonnut, suositus näkyi; last_state.json ja
    machine-insights.md syntyivät oikealla datalla.
+6. **Vaihe 7 — Raportit (TDD; käyttäjän vaatimus: selkokieliset viennit):**
+   - `ReportBuilder` (Core/Reports, puhdas): tekstiraportti ilman
+     taulukoita — yhteenveto + "Mitä tasot tarkoittavat", arvot muodossa
+     "X: 45 °C — kunnossa (varoitusraja 85 °C)" tai "— VAROITUS: …",
+     24 h huiput vertailulauseella (raja ≥: "ylitti", ≤10 yksikköä päässä:
+     "kävi lähellä", muuten "jäi selvästi alle"), 30 pv normaalitasot,
+     tapahtumat ilman INFO-rivejä, sanasto. Levynimet trimmataan (LHM
+     jättää loppuvälilyönnin).
+   - `CsvExporter` (Core/Reports): fi-Excel-muoto — erotin `;`,
+     desimaalipilkku kulttuurista (fi-FI myös aikaerotin '.'), suomen-
+     kieliset otsikot yksiköineen, levy/tuuletin-sarakkeet pivotoitu
+     nimillä (unioni kaikista riveistä), puuttuva arvo = tyhjä kenttä.
+   - `HistoryDb.ReadSampleRows(since)` — koosterivit lapsiriveineen.
+   - MainWindow: napit "Luo raportti…" / "Vie CSV…" yläpalkissa →
+     SaveFileDialog → kirjoitus **UTF-8 BOM:lla** (ääkköset Excelissä) →
+     tiedosto avataan oletusohjelmassa. MainViewModel.BuildReport/BuildCsv
+     (null jos dataa ei vielä ole → ystävällinen MessageBox).
+7. **Todennus:** 100 testiä läpi; raportti + CSV generoitu oikeasta
+   kannasta scratchpad-konsolilla (998 riviä; sisältö luettu läpi),
+   napit todennettu kuvakaappauksella.
 
 ## Arkkitehtuurikartta
 
@@ -78,19 +98,21 @@ src/HardwareMonitor.Core/         (ei UI-riippuvuuksia, yksikkötestattu)
   Sensors/       SensorService (LHM-luku), HardwareGroup, SensorReading
   Metrics/       KeyMetrics(+Disk/FanMetrics), KeyMetricsService.Extract()
   Storage/       SampleAggregator, AggregatedSample, HistoryDb (+meta-taulu,
-                 ReadEventsSince, GetSampleStats), EventLogService, SampleStats
+                 ReadEventsSince, GetSampleStats, ReadSampleRows),
+                 EventLogService, SampleStats, SampleRow
   Analysis/      ThresholdMonitor, ThresholdState, RiskAnalyzer (pisteytys +
                  havainnot), LastStateService (last_state.json)
   Insights/      MachineInsightsBuilder (machine-insights.md)
+  Reports/       ReportBuilder (selkokielinen raportti), CsvExporter (fi-Excel)
   WindowsEvents/ WindowsLogEvent, WindowsEventClassifier, IWindowsEventSource,
                  SystemEventReader (EventLogReader), WindowsEventCollector
   Settings/      AppSettings, SettingsService (settings.json)
   Logging/       DebugLogger (debug.log)
 src/HardwareMonitor.App/          (WPF, MVVM ilman kirjastoja)
   App.xaml(.cs)         OnStartup: --tray → ikkuna piiloon; OnMainWindowClose
-  MainWindow            TabControl, yläpalkin asetusrivi, tray-NotifyIcon,
-                        StartMonitoring() (ctor jos tray, muuten Loaded);
-                        Dashboardissa tilapaneeli + väriselite
+  MainWindow            TabControl, yläpalkin asetusrivi + raportti/CSV-napit,
+                        tray-NotifyIcon, StartMonitoring() (ctor jos tray,
+                        muuten Loaded); Dashboardissa tilapaneeli + väriselite
   OverlayWindow         läpi-klikattava topmost-paneeli, siirtotila, reunus
                         aina näkyvissä (vihreä/oranssi/punainen/syaani)
   ViewModels/           Main (Windows-skannaus, analyysikoosteet, insights,
@@ -140,14 +162,14 @@ dotnet test src/HardwareMonitor.Tests/HardwareMonitor.Tests.csproj
 
 ## Seuraavat askeleet
 
-1. **Vaihe 7 — Raportit** (luku 20): "Luo raportti" -nappi → Markdown/TXT
-   (yhteenveto = RiskAnalyzerin tulos + maksimit + varoitusmäärät valmiina
-   HistoryDb.GetSampleStats/ReadEventsSince-kutsuilla), CSV-vienti.
-2. Vaihe 8 — ilmoitukset, asetussivu, graafit, kielituki fi/en, LICENSE +
-   repo julkiseksi (viimeisenä), paketointi.
-3. Pientä hiottavaa: fan_samples tallentaa raakanimet ("Fan #2"), ei
-   nimilappuja ("AIO-pumppu") — insights-taulukossa voisi mapata nimilaput;
-   0 RPM -tuulettimet voisi suodattaa insights-taulukosta.
+1. **Vaihe 8 — Viimeistely**: ilmoitukset (tray-balloon/toast raja-arvo-
+   tapahtumista), asetussivu (rajat, lokitus, CSV-aikaväli), graafit
+   (LiveCharts2), kielituki fi/en (resx), LICENSE + repo julkiseksi
+   (viimeisenä), paketointi (self-contained julkaisu + ikoni).
+2. Pientä hiottavaa: fan_samples/insights käyttävät raakanimiä ("Fan #2"),
+   ei nimilappuja ("AIO-pumppu") — voisi mapata nimilaput talteen;
+   0 RPM -tuulettimet voisi suodattaa insights-taulukosta; JSON/PDF-vienti
+   (luku 20 "myöhemmin"); ylitysten kestolaskenta raporttiin.
 
 ## Huomio testikaatumisista 9.7.
 

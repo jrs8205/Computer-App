@@ -1,3 +1,6 @@
+using System.Diagnostics;
+using System.IO;
+using System.Text;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -186,4 +189,53 @@ public partial class MainWindow : Window
 
     private void MoveOverlay_Unchecked(object sender, RoutedEventArgs e) =>
         _overlay?.SetMoveMode(false);
+
+    private void CreateReport_Click(object sender, RoutedEventArgs e) =>
+        SaveAndOpen(
+            content: _viewModel.BuildReport(),
+            fileName: $"Jarjestelmaraportti-{DateTime.Now:yyyy-MM-dd}",
+            filter: "Tekstitiedosto (*.txt)|*.txt|Markdown (*.md)|*.md",
+            emptyMessage: "Raporttia ei voi vielä luoda — sensoridataa ei ole ehtinyt kertyä.");
+
+    private void ExportCsv_Click(object sender, RoutedEventArgs e) =>
+        SaveAndOpen(
+            content: _viewModel.BuildCsv(),
+            fileName: $"Sensorihistoria-24h-{DateTime.Now:yyyy-MM-dd}",
+            filter: "CSV (Excel) (*.csv)|*.csv",
+            emptyMessage: "Vietävää historiaa ei vielä ole — lokitus on käynnissä, yritä hetken päästä.");
+
+    /// <summary>Kysyy tallennuspaikan, kirjoittaa tiedoston ja avaa sen oletusohjelmassa.</summary>
+    private void SaveAndOpen(string? content, string fileName, string filter, string emptyMessage)
+    {
+        if (content is null)
+        {
+            MessageBox.Show(this, emptyMessage, "Hardware Monitor",
+                MessageBoxButton.OK, MessageBoxImage.Information);
+            return;
+        }
+
+        var dialog = new Microsoft.Win32.SaveFileDialog
+        {
+            FileName = fileName,
+            Filter = filter,
+        };
+
+        if (dialog.ShowDialog(this) != true)
+        {
+            return;
+        }
+
+        try
+        {
+            // BOM mukaan, jotta suomalainen Excel ja Notepad tunnistavat
+            // UTF-8:n ja ääkköset näkyvät oikein.
+            File.WriteAllText(dialog.FileName, content, new UTF8Encoding(true));
+            Process.Start(new ProcessStartInfo(dialog.FileName) { UseShellExecute = true });
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show(this, $"Tallennus epäonnistui: {ex.Message}", "Hardware Monitor",
+                MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+    }
 }

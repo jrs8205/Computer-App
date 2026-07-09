@@ -1,5 +1,6 @@
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Globalization;
 using System.IO;
 using System.Windows.Threading;
 using HardwareMonitor.App.Services;
@@ -7,6 +8,7 @@ using HardwareMonitor.Core.Analysis;
 using HardwareMonitor.Core.Insights;
 using HardwareMonitor.Core.Logging;
 using HardwareMonitor.Core.Metrics;
+using HardwareMonitor.Core.Reports;
 using HardwareMonitor.Core.Sensors;
 using HardwareMonitor.Core.Settings;
 using HardwareMonitor.Core.Storage;
@@ -38,6 +40,9 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
     private bool _previousSessionCrashed;
     private IReadOnlyList<EventRow> _recentEvents = Array.Empty<EventRow>();
     private SampleStats? _dayStats;
+    private KeyMetrics? _latestMetrics;
+    private MetricStates? _latestStates;
+    private RiskAssessment? _latestAssessment;
     private int _windowsScanRunning;
     private int _analysisRefreshRunning;
     private int _insightsWriteRunning;
@@ -341,9 +346,15 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
             Overlay.SetWorstState(thresholds.States.Worst);
 
             // Vaihe 6: selkokielinen kokonaisarvio tilapaneeliin (luku 19).
-            Dashboard.ApplySummary(RiskAnalyzer.Assess(
+            RiskAssessment assessment = RiskAnalyzer.Assess(
                 thresholds.States, metrics, _settings.Thresholds,
-                _recentEvents, _dayStats, _previousSessionCrashed));
+                _recentEvents, _dayStats, _previousSessionCrashed);
+            Dashboard.ApplySummary(assessment);
+
+            // Raporttia varten (Vaihe 7).
+            _latestMetrics = metrics;
+            _latestStates = thresholds.States;
+            _latestAssessment = assessment;
 
             foreach (ThresholdEvent alert in thresholds.Events)
             {
@@ -470,6 +481,42 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
                 Volatile.Write(ref _windowsScanRunning, 0);
             }
         });
+    }
+
+    private static readonly SampleStats EmptyStats = new(
+        0, new MetricStat(null, null), new MetricStat(null, null),
+        new MetricStat(null, null), new MetricStat(null, null),
+        new MetricStat(null, null), Array.Empty<DiskStat>(), Array.Empty<FanStat>());
+
+    /// <summary>Selkokielinen raportti (luku 20), tai null jos dataa ei vielä ole.</summary>
+    public string? BuildReport()
+    {
+        if (_latestMetrics is not { } metrics ||
+            _latestStates is not { } states ||
+            _latestAssessment is not { } assessment)
+        {
+            return null;
+        }
+
+        DateTimeOffset now = DateTimeOffset.Now;
+        return ReportBuilder.Build(
+            now, assessment, metrics, states,
+            _historyDb?.GetSampleStats(now.AddHours(-24)) ?? EmptyStats,
+            _historyDb?.GetSampleStats(now.AddDays(-30)) ?? EmptyStats,
+            _historyDb?.ReadEventsSince(now.AddHours(-24)) ?? Array.Empty<EventRow>(),
+            _settings.Thresholds);
+    }
+
+    /// <summary>Viimeisen 24 h sensorihistoria CSV:nä, tai null jos historiaa ei ole.</summary>
+    public string? BuildCsv()
+    {
+        if (_historyDb is not { } db)
+        {
+            return null;
+        }
+
+        IReadOnlyList<SampleRow> rows = db.ReadSampleRows(DateTimeOffset.Now.AddHours(-24));
+        return rows.Count == 0 ? null : CsvExporter.Build(rows, CultureInfo.CurrentCulture);
     }
 
     /// <summary>Kuvaa kaatumista edeltäneen tilan tapahtumaviestiin (luku 17).</summary>
