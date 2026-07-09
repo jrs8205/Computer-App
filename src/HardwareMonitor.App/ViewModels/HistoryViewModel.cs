@@ -72,7 +72,7 @@ public sealed class HistoryViewModel : INotifyPropertyChanged
 
     public Axis[] FanYAxes { get; } = new[] { ValueAxis(0, null) };
 
-    public SolidColorPaint LegendPaint { get; } = new(new SKColor(0xE0, 0xE0, 0xE0));
+    public SolidColorPaint LegendPaint { get; } = new(SKColors.White) { SKTypeface = SKTypeface.FromFamilyName("Segoe UI", SKFontStyle.Bold) };
 
     public SolidColorPaint TooltipTextPaint { get; } = new(SKColors.White);
 
@@ -105,7 +105,7 @@ public sealed class HistoryViewModel : INotifyPropertyChanged
             GeometrySize = 0,
             LineSmoothness = 0,
             Fill = null,
-            Stroke = new SolidColorPaint(Palette[i % Palette.Length]) { StrokeThickness = 1.5f },
+            Stroke = new SolidColorPaint(Palette[i % Palette.Length]) { StrokeThickness = 2.5f },
             // Kokonaisluku riittää tooltippiin (käyttäjän palaute: ei desimaaleja).
             YToolTipLabelFormatter = point => point.Coordinate.PrimaryValue.ToString("0"),
         }).ToArray();
@@ -122,9 +122,9 @@ public sealed class HistoryViewModel : INotifyPropertyChanged
 
         return new DateTimeAxis(unit, d => d.ToString(format))
         {
-            LabelsPaint = new SolidColorPaint(new SKColor(0xE0, 0xE0, 0xE0)),
-            TextSize = 12,
-            SeparatorsPaint = new SolidColorPaint(new SKColor(0x3F, 0x3F, 0x46))
+            LabelsPaint = new SolidColorPaint(SKColors.White),
+            TextSize = 14,
+            SeparatorsPaint = new SolidColorPaint(new SKColor(0x4A, 0x4A, 0x52))
             {
                 StrokeThickness = 1,
             },
@@ -135,9 +135,9 @@ public sealed class HistoryViewModel : INotifyPropertyChanged
     {
         MinLimit = min,
         MaxLimit = max,
-        LabelsPaint = new SolidColorPaint(new SKColor(0xE0, 0xE0, 0xE0)),
-        TextSize = 12,
-        SeparatorsPaint = new SolidColorPaint(new SKColor(0x3F, 0x3F, 0x46))
+        LabelsPaint = new SolidColorPaint(SKColors.White),
+        TextSize = 14,
+        SeparatorsPaint = new SolidColorPaint(new SKColor(0x4A, 0x4A, 0x52))
         {
             StrokeThickness = 1,
         },
