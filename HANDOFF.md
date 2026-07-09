@@ -1,4 +1,4 @@
-# HANDOFF — 9.7.2026 aamun istunto
+# HANDOFF — 9.7.2026 istunto
 
 Tämä tiedosto kertoo mihin jäätiin ja miten jatketaan. Lue tämä ensin,
 sitten `docs/ROADMAP.md` (vaiheiden tila) ja tarvittaessa specit
@@ -6,12 +6,11 @@ sitten `docs/ROADMAP.md` (vaiheiden tila) ja tarvittaessa specit
 
 ## Tilanne yhdellä lauseella
 
-Vaiheet 1–5 ovat valmiit, testattu ja pushattu haaralle
-`claude/windows-11-program-setup-rxuyhn`; seuraavaksi **Vaihe 6:
-riskianalyysi** (pisteytys + selkokielinen yhteenveto, "ennen kaatumista"
--puskuri + last_state.json, konetuntemus-loki machine-insights.md), sitten
-Vaihe 7 (raportit) ja Vaihe 8 (viimeistely; kielituki fi/en ja repon
-julkistus ihan lopuksi — käyttäjän päätös 8.7.2026).
+Vaiheet 1–6 ovat valmiit, testattu ja pushattu haaralle
+`claude/windows-11-program-setup-rxuyhn`; seuraavaksi **Vaihe 7: raportit**
+("Luo raportti" Markdown/TXT + CSV-vienti, luku 20), sitten Vaihe 8
+(ilmoitukset, asetussivu, graafit; kielituki fi/en ja repon julkistus ihan
+lopuksi — käyttäjän päätös 8.7.2026).
 
 ## Mitä tässä istunnossa tehtiin (9.7.2026)
 
@@ -41,10 +40,36 @@ julkistus ihan lopuksi — käyttäjän päätös 8.7.2026).
      → ei duplikaatteja uudelleenkäynnistyksissä
    - MainViewModel: skannaus käynnistyksessä + 5 min välein (tick % 300)
      taustasäikeessä, päällekkäisyys estetty Interlocked-lipulla
-3. **Todennus:** 59 testiä läpi (19 luokittelija-, 2 meta-, 6 collector-
-   testiä uusia). Ajossa kirjanmerkki asettui (124277); 0 tapahtumaa
+3. **Todennus:** ajossa kirjanmerkki asettui (124277); 0 tapahtumaa
    kirjattiin ja Get-WinEvent-vertailu vahvisti että 30 pv:n System-lokissa
    on vain informatiivisia rivejä — kone on terve, tulos oikea.
+4. **Vaihe 6 — Riskianalyysi (TDD) + käyttäjän UI-toiveet:**
+   - `RiskAnalyzer` (Core/Analysis, puhdas): pisteytys nykytiloista (5/15 p),
+     24 h tapahtumista (raja-arvot 2/6, WHEA 6/15, Kernel-Power/BSOD 15,
+     6008 6, GPU-ajuri 6, Windows-levyvirhe 10) ja kaatumislipusta (10) →
+     Hyvä/Varoitus/Kriittinen + Matala/Kohonnut/Korkea + havainnot + suositus
+     suurimman pistelähteen mukaan. Kaatumistapahtuma (sensor=`last_state`)
+     EI pisteydy lipun lisäksi (tuplapiste-esto, testattu).
+   - `LastStateService`: last_state.json 5 s välein (CleanShutdown=false),
+     Dispose merkitsee siistin sulkemisen; Write siistin merkinnän jälkeen
+     ei likaa lippua (kilpajuoksusuoja). Käynnistys kirjaa kaatumisesta
+     WARNING-tapahtuman viimeisimmillä arvoilla.
+   - `MachineInsightsBuilder` (Core/Insights): machine-insights.md —
+     normaalitasot/huiput/tapahtumat/optimointivinkit; kirjoitus
+     käynnistyksessä + 30 min välein (`MainViewModel.MachineInsightsPath`).
+   - `HistoryDb.ReadEventsSince` + `GetSampleStats` (avg/max + per-levy/
+     tuuletin GROUP BY).
+   - **Dashboardin tilapaneeli**: värillinen tilapiste + "Koneen tila: X ·
+     Riskitaso: Y", havainnot arvoineen ja rajoineen, oranssi suositusrivi,
+     **väriselite** (vihreä = kunnossa · oranssi = varoitusraja ylittynyt ·
+     punainen = kriittinen raja ylittynyt). Analyysi lasketaan joka tick;
+     tapahtuma-/huippukoosteet päivittyvät taustalla 60 s välein.
+   - **Overlayn reunus aina näkyvissä**: vihreä kun kaikki kunnossa
+     (käyttäjän toive), oranssi/punainen hälytyksissä, syaani siirtotilassa.
+5. **Todennus:** 84 testiä läpi. Ajossa: paneeli Hyvä-tilassa (kuvakaappaus),
+   prosessin tappo + uudelleenkäynnistys → "Edellinen istunto päättyi
+   yllättäen", Varoitus/Kohonnut, suositus näkyi; last_state.json ja
+   machine-insights.md syntyivät oikealla datalla.
 
 ## Arkkitehtuurikartta
 
@@ -52,9 +77,11 @@ julkistus ihan lopuksi — käyttäjän päätös 8.7.2026).
 src/HardwareMonitor.Core/         (ei UI-riippuvuuksia, yksikkötestattu)
   Sensors/       SensorService (LHM-luku), HardwareGroup, SensorReading
   Metrics/       KeyMetrics(+Disk/FanMetrics), KeyMetricsService.Extract()
-  Storage/       SampleAggregator, AggregatedSample, HistoryDb (+meta-taulu),
-                 EventLogService
-  Analysis/      ThresholdMonitor (tilat + tapahtumat), ThresholdState
+  Storage/       SampleAggregator, AggregatedSample, HistoryDb (+meta-taulu,
+                 ReadEventsSince, GetSampleStats), EventLogService, SampleStats
+  Analysis/      ThresholdMonitor, ThresholdState, RiskAnalyzer (pisteytys +
+                 havainnot), LastStateService (last_state.json)
+  Insights/      MachineInsightsBuilder (machine-insights.md)
   WindowsEvents/ WindowsLogEvent, WindowsEventClassifier, IWindowsEventSource,
                  SystemEventReader (EventLogReader), WindowsEventCollector
   Settings/      AppSettings, SettingsService (settings.json)
@@ -62,17 +89,21 @@ src/HardwareMonitor.Core/         (ei UI-riippuvuuksia, yksikkötestattu)
 src/HardwareMonitor.App/          (WPF, MVVM ilman kirjastoja)
   App.xaml(.cs)         OnStartup: --tray → ikkuna piiloon; OnMainWindowClose
   MainWindow            TabControl, yläpalkin asetusrivi, tray-NotifyIcon,
-                        StartMonitoring() (ctor jos tray, muuten Loaded)
-  OverlayWindow         läpi-klikattava topmost-paneeli, siirtotila, reunusvärit
-  ViewModels/           Main (+Windows-skannaus), Dashboard, Overlay, ...
+                        StartMonitoring() (ctor jos tray, muuten Loaded);
+                        Dashboardissa tilapaneeli + väriselite
+  OverlayWindow         läpi-klikattava topmost-paneeli, siirtotila, reunus
+                        aina näkyvissä (vihreä/oranssi/punainen/syaani)
+  ViewModels/           Main (Windows-skannaus, analyysikoosteet, insights,
+                        last_state), Dashboard (+ApplySummary), Overlay, ...
   Services/             AutostartService (schtasks, --tray, RefreshIfEnabled)
-src/HardwareMonitor.Tests/        59 testiä (xUnit), kaikki läpi
+src/HardwareMonitor.Tests/        84 testiä (xUnit), kaikki läpi
 ```
 
 Datavirta joka sekunti: `SensorService.Read()` → `KeyMetricsService.Extract()`
-→ Dashboard + Overlay + `ThresholdMonitor.Update()` + `SampleAggregator.Add()`
-(joka 5. s → HistoryDb). Lisäksi joka 300. s `WindowsEventCollector.Scan()`
-taustasäikeessä.
+→ Dashboard + Overlay + `ThresholdMonitor.Update()` + `RiskAnalyzer.Assess()`
+(tilapaneeli) + `SampleAggregator.Add()` (joka 5. s → HistoryDb; samalla
+last_state.json). Taustalla: WindowsEventCollector 300 s, analyysikoosteet
+60 s, machine-insights.md 1800 s välein.
 
 ## Build- ja ajokomennot + sudenkuopat
 
@@ -102,18 +133,30 @@ dotnet test src/HardwareMonitor.Tests/HardwareMonitor.Tests.csproj
 - Asetukset: `%LOCALAPPDATA%\HardwareMonitor\settings.json`
 - Debug-loki: `%LOCALAPPDATA%\HardwareMonitor\logs\debug.log`
 - Historia+tapahtumat: `%LOCALAPPDATA%\HardwareMonitor\data\history.db` (+ -wal/-shm)
+- Viimeisin tila: `%LOCALAPPDATA%\HardwareMonitor\data\last_state.json`
+- Konetuntemus-loki: `%LOCALAPPDATA%\HardwareMonitor\machine-insights.md`
+  — **lue tämä istunnon alussa**, se kertoo koneen normaalitasot ja ongelmat
 - Ajastettu tehtävä: `schtasks /Query /TN HardwareMonitor /XML` (Arguments: --tray)
 
 ## Seuraavat askeleet
 
-1. **Vaihe 6 — Riskianalyysi** (luvut 17, 19, 31): pisteytys + selkokielinen
-   yhteenveto UI:hin; "ennen kaatumista" -puskuri + `last_state.json`;
-   **konetuntemus-loki** (machine-insights.md — käyttäjän idea: jatkuvasti
-   oppiva optimointitiedosto, jota myös Claude lukee tulevissa istunnoissa).
-   Windows-tapahtumat ovat nyt events-taulussa analyysin käytettävissä.
-2. Vaihe 7 — raportit (luku 20): "Luo raportti" Markdown/TXT, CSV-vienti.
-3. Vaihe 8 — ilmoitukset, asetussivu, graafit, kielituki fi/en, LICENSE +
+1. **Vaihe 7 — Raportit** (luku 20): "Luo raportti" -nappi → Markdown/TXT
+   (yhteenveto = RiskAnalyzerin tulos + maksimit + varoitusmäärät valmiina
+   HistoryDb.GetSampleStats/ReadEventsSince-kutsuilla), CSV-vienti.
+2. Vaihe 8 — ilmoitukset, asetussivu, graafit, kielituki fi/en, LICENSE +
    repo julkiseksi (viimeisenä), paketointi.
+3. Pientä hiottavaa: fan_samples tallentaa raakanimet ("Fan #2"), ei
+   nimilappuja ("AIO-pumppu") — insights-taulukossa voisi mapata nimilaput;
+   0 RPM -tuulettimet voisi suodattaa insights-taulukosta.
+
+## Huomio testikaatumisista 9.7.
+
+Istunnon testeissä prosessi tapettiin (Stop-Process), joten events-taulussa
+on aitoja "Edellinen istunto päättyi yllättäen" -rivejä ja käynnissä olevan
+istunnon tilapaneeli näyttää Varoitusta (kaatumislippu +10 p). Tämä on
+tarkoituksellista: kaatumisTAPAHTUMA (sensor=last_state) ei pisteydy —
+vain heti kaatumista seuraavan istunnon lippu nostaa pisteitä. Siisti
+sulkeminen + uudelleenkäynnistys palauttaa Hyvä-tilan.
 
 ## Muut muistiinpanot
 

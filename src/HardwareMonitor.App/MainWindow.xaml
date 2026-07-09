@@ -120,7 +120,51 @@
         <TabControl Background="#1E1E1E" BorderThickness="0">
             <TabItem Header="Dashboard">
                 <ScrollViewer VerticalScrollBarVisibility="Auto">
-                    <WrapPanel Margin="8" DataContext="{Binding Dashboard}">
+                    <StackPanel Margin="8" DataContext="{Binding Dashboard}">
+
+                        <!-- Tilapaneeli: riskianalyysin yhteenveto + väriselite (luku 19) -->
+                        <Border Background="#252526" CornerRadius="8" Padding="14,12" Margin="8,8,8,4">
+                            <StackPanel>
+                                <StackPanel Orientation="Horizontal">
+                                    <Ellipse Width="14" Height="14" VerticalAlignment="Center"
+                                             Fill="{Binding SummaryState, Converter={StaticResource StateBrush}}" />
+                                    <TextBlock Text="{Binding SummaryTitle}" FontSize="16" FontWeight="Bold"
+                                               Foreground="White" Margin="10,0,0,0" VerticalAlignment="Center" />
+                                </StackPanel>
+                                <TextBlock Text="{Binding SummaryObservations}" Foreground="#CCCCCC"
+                                           Margin="24,8,0,0" TextWrapping="Wrap" LineHeight="20" />
+                                <TextBlock Foreground="#FFB74D" FontWeight="SemiBold"
+                                           Margin="24,8,0,0" TextWrapping="Wrap">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Text" Value="{Binding SummaryRecommendation}" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding SummaryRecommendation}" Value="">
+                                                    <Setter Property="Visibility" Value="Collapsed" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                                <WrapPanel Margin="24,10,0,0">
+                                    <TextBlock Text="Värien selitys:" Foreground="#8A8A8A" FontSize="11"
+                                               Margin="0,0,10,0" VerticalAlignment="Center" />
+                                    <Ellipse Width="10" Height="10" Fill="#A5D6A7" VerticalAlignment="Center" />
+                                    <TextBlock Text="kunnossa" Foreground="#8A8A8A" FontSize="11"
+                                               Margin="4,0,14,0" VerticalAlignment="Center" />
+                                    <Ellipse Width="10" Height="10" Fill="#FFB74D" VerticalAlignment="Center" />
+                                    <TextBlock Text="varoitusraja ylittynyt" Foreground="#8A8A8A" FontSize="11"
+                                               Margin="4,0,14,0" VerticalAlignment="Center" />
+                                    <Ellipse Width="10" Height="10" Fill="#EF5350" VerticalAlignment="Center" />
+                                    <TextBlock Text="kriittinen raja ylittynyt" Foreground="#8A8A8A" FontSize="11"
+                                               Margin="4,0,14,0" VerticalAlignment="Center" />
+                                    <TextBlock Text="— samat värit korteissa, levyriveissä ja overlayn reunuksessa"
+                                               Foreground="#8A8A8A" FontSize="11" VerticalAlignment="Center" />
+                                </WrapPanel>
+                            </StackPanel>
+                        </Border>
+
+                        <WrapPanel>
 
                         <Border Style="{StaticResource Card}">
                             <StackPanel>
@@ -260,7 +304,8 @@
                             </StackPanel>
                         </Border>
 
-                    </WrapPanel>
+                        </WrapPanel>
+                    </StackPanel>
                 </ScrollViewer>
             </TabItem>
 

@@ -236,19 +236,118 @@ public sealed class HistoryDb : IDisposable
             using SqliteDataReader reader = cmd.ExecuteReader();
             while (reader.Read())
             {
-                result.Add(new EventRow(
-                    Timestamp: DateTimeOffset.FromUnixTimeSeconds(reader.GetInt64(0)),
-                    Level: reader.GetString(1),
-                    Component: reader.GetString(2),
-                    Sensor: reader.IsDBNull(3) ? null : reader.GetString(3),
-                    Value: reader.IsDBNull(4) ? null : reader.GetDouble(4),
-                    Threshold: reader.IsDBNull(5) ? null : reader.GetDouble(5),
-                    Message: reader.GetString(6)));
+                result.Add(ReadEventRow(reader));
             }
 
             return result;
         }
     }
+
+    private static EventRow ReadEventRow(SqliteDataReader reader) => new(
+        Timestamp: DateTimeOffset.FromUnixTimeSeconds(reader.GetInt64(0)),
+        Level: reader.GetString(1),
+        Component: reader.GetString(2),
+        Sensor: reader.IsDBNull(3) ? null : reader.GetString(3),
+        Value: reader.IsDBNull(4) ? null : reader.GetDouble(4),
+        Threshold: reader.IsDBNull(5) ? null : reader.GetDouble(5),
+        Message: reader.GetString(6));
+
+    /// <summary>Tapahtumat annetusta hetkestä eteenpäin, uusimmat ensin.</summary>
+    public IReadOnlyList<EventRow> ReadEventsSince(DateTimeOffset since)
+    {
+        lock (_lock)
+        {
+            using var cmd = _connection.CreateCommand();
+            cmd.CommandText = """
+                SELECT ts, level, component, sensor, value, threshold, message
+                FROM events WHERE ts >= $since ORDER BY ts DESC, id DESC;
+                """;
+            cmd.Parameters.AddWithValue("$since", since.ToUnixTimeSeconds());
+
+            var result = new List<EventRow>();
+            using SqliteDataReader reader = cmd.ExecuteReader();
+            while (reader.Read())
+            {
+                result.Add(ReadEventRow(reader));
+            }
+
+            return result;
+        }
+    }
+
+    /// <summary>Aikavälin avg/max-koosteet riskianalyysille ja konetuntemus-lokille.</summary>
+    public SampleStats GetSampleStats(DateTimeOffset since)
+    {
+        lock (_lock)
+        {
+            long cutoff = since.ToUnixTimeSeconds();
+
+            using var cmd = _connection.CreateCommand();
+            cmd.CommandText = """
+                SELECT COUNT(*),
+                    AVG(cpu_temp_avg), MAX(cpu_temp_max),
+                    AVG(cpu_load_avg), MAX(cpu_load_max),
+                    AVG(gpu_temp_avg), MAX(gpu_temp_max),
+                    AVG(gpu_hotspot_avg), MAX(gpu_hotspot_max),
+                    AVG(ram_load_avg), MAX(ram_load_max)
+                FROM samples WHERE ts >= $since;
+                """;
+            cmd.Parameters.AddWithValue("$since", cutoff);
+
+            long count;
+            MetricStat cpuTemp, cpuLoad, gpuTemp, gpuHotspot, ramLoad;
+            using (SqliteDataReader reader = cmd.ExecuteReader())
+            {
+                reader.Read();
+                count = reader.GetInt64(0);
+                cpuTemp = ReadStat(reader, 1);
+                cpuLoad = ReadStat(reader, 3);
+                gpuTemp = ReadStat(reader, 5);
+                gpuHotspot = ReadStat(reader, 7);
+                ramLoad = ReadStat(reader, 9);
+            }
+
+            var disks = new List<DiskStat>();
+            using (var diskCmd = _connection.CreateCommand())
+            {
+                diskCmd.CommandText = """
+                    SELECT d.name, AVG(d.temp_avg), MAX(d.temp_max)
+                    FROM disk_samples d JOIN samples s ON s.id = d.sample_id
+                    WHERE s.ts >= $since GROUP BY d.name ORDER BY d.name;
+                    """;
+                diskCmd.Parameters.AddWithValue("$since", cutoff);
+                using SqliteDataReader reader = diskCmd.ExecuteReader();
+                while (reader.Read())
+                {
+                    MetricStat stat = ReadStat(reader, 1);
+                    disks.Add(new DiskStat(reader.GetString(0), stat.Avg, stat.Max));
+                }
+            }
+
+            var fans = new List<FanStat>();
+            using (var fanCmd = _connection.CreateCommand())
+            {
+                fanCmd.CommandText = """
+                    SELECT f.name, AVG(f.rpm_avg), MAX(f.rpm_max)
+                    FROM fan_samples f JOIN samples s ON s.id = f.sample_id
+                    WHERE s.ts >= $since GROUP BY f.name ORDER BY f.name;
+                    """;
+                fanCmd.Parameters.AddWithValue("$since", cutoff);
+                using SqliteDataReader reader = fanCmd.ExecuteReader();
+                while (reader.Read())
+                {
+                    MetricStat stat = ReadStat(reader, 1);
+                    fans.Add(new FanStat(reader.GetString(0), stat.Avg, stat.Max));
+                }
+            }
+
+            return new SampleStats(count, cpuTemp, cpuLoad, gpuTemp, gpuHotspot, ramLoad, disks, fans);
+        }
+    }
+
+    private static MetricStat ReadStat(SqliteDataReader reader, int avgOrdinal) => new(
+        Avg: reader.IsDBNull(avgOrdinal) ? null : reader.GetDouble(avgOrdinal),
+        Max: reader.IsDBNull(avgOrdinal + 1) ? null : reader.GetDouble(avgOrdinal + 1));
 
     /// <summary>Avain–arvo-tila (esim. Windows-lokin lukukirjanmerkki).</summary>
     public string? GetMeta(string key)

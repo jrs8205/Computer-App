@@ -113,19 +113,28 @@ Specissä `docs/superpowers/specs/2026-07-09-windows-event-log-design.md`:
 - [x] Todennettu: 30 pv:n lokissa vain informatiivisia rivejä → 0 kirjausta
       (oikein, vertailtu Get-WinEventillä), kirjanmerkki eteni
 
-## ⏭️ Vaihe 6 — Riskianalyysi
+## ✅ Vaihe 6 — Riskianalyysi (VALMIS 9.7.2026)
 
-- [ ] Pisteytys ja selkokielinen yhteenveto (luvut 19 ja 31)
-- [ ] "Ennen kaatumista" -puskuri + `last_state.json` (luku 17)
-- [ ] **Konetuntemus-loki** (käyttäjän idea 8.7.2026): jatkuvasti päivittyvä
-      `machine-insights.md`, johon analyysi kirjaa havainnot ja opit koneesta —
-      piikit (mikä sensori, kuinka korkea, kuinka kauan, mihin kellonaikaan),
-      toistuvat kuviot (esim. "NVMe-ohjainlämpö ylittää 80 °C pitkissä
-      kirjoituksissa"), normaalitasot per sensori ja konkreettiset
-      optimointiehdotukset. Tiedosto on sekä ihmisen että tekoälyn (Claude)
-      luettavissa: tulevissa istunnoissa Claude voi lukea sen ja auttaa
-      optimoinnissa suoraan datan pohjalta. Pohjautuu Vaihe 3:n
-      SQLite-historiaan ja tapahtumalokiin.
+Specissä `docs/superpowers/specs/2026-07-09-risk-analysis-design.md`:
+
+- [x] Pisteytys ja selkokielinen yhteenveto (luvut 19 ja 31): `RiskAnalyzer`
+      (puhdas, TDD) — nykytilat + 24 h tapahtumat + 24 h huiput + edellisen
+      istunnon kaatuminen → Hyvä/Varoitus/Kriittinen, Matala/Kohonnut/Korkea,
+      havainnot ja suositus. **Dashboardin tilapaneeli** näyttää tuloksen
+      värillisellä tilapisteellä + **väriselite** (käyttäjän toive 9.7.2026:
+      vihreä = kunnossa, oranssi = varoitusraja, punainen = kriittinen raja);
+      overlayn reunus on nyt aina näkyvissä — vihreä kun kaikki kunnossa.
+- [x] "Ennen kaatumista" + `last_state.json` (luku 17): `LastStateService`
+      kirjoittaa tilan 5 s välein, siisti sulkeminen merkitään; käynnistys
+      tunnistaa kaatumisen → WARNING-tapahtuma viimeisimmillä arvoilla +
+      havainto analyysiin. 10 min puskuri on jo SQLite-historiassa.
+- [x] **Konetuntemus-loki**: `MachineInsightsBuilder` generoi
+      `%LOCALAPPDATA%\HardwareMonitor\machine-insights.md` (normaalitasot,
+      huiput, tapahtumat, optimointiehdotukset) käynnistyksessä ja 30 min
+      välein — ihmisen ja Clauden luettavissa.
+- [x] Todennettu ajossa: paneeli Hyvä-tilassa oikealla datalla; tapettu
+      prosessi → uudelleenkäynnistys näytti "Edellinen istunto päättyi
+      yllättäen" + Varoitus/Kohonnut + suositus; insights-tiedosto syntyi.
 
 ## ⏭️ Vaihe 7 — Raportointi
 

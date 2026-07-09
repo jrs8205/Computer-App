@@ -76,6 +76,53 @@ public sealed class HistoryDbTests : IDisposable
     }
 
     [Fact]
+    public void ReadEventsSince_PalauttaaVainRajanJalkeiset()
+    {
+        _db.InsertEvent(Now.AddHours(-30), "WARNING", "CPU", null, null, null, "vanha");
+        _db.InsertEvent(Now.AddHours(-1), "CRITICAL", "Järjestelmä", null, null, null, "uusi");
+
+        IReadOnlyList<EventRow> events = _db.ReadEventsSince(Now.AddHours(-24));
+
+        EventRow row = Assert.Single(events);
+        Assert.Equal("uusi", row.Message);
+    }
+
+    [Fact]
+    public void GetSampleStats_LaskeeKeskiarvotJaMaksimitRajanJalkeen()
+    {
+        _db.InsertSample(Sample(Now, cpuTempMax: 70f));
+        _db.InsertSample(Sample(Now.AddSeconds(5), cpuTempMax: 90f));
+        _db.InsertSample(Sample(Now.AddDays(-2), cpuTempMax: 99f)); // rajautuu pois
+
+        SampleStats stats = _db.GetSampleStats(Now.AddHours(-24));
+
+        Assert.Equal(2, stats.SampleCount);
+        Assert.Equal(60, stats.CpuTemp.Avg!.Value, 3); // avg(avg)
+        Assert.Equal(90, stats.CpuTemp.Max);           // max(max), vain 24 h sisältä
+
+        DiskStat disk = Assert.Single(stats.Disks);
+        Assert.Equal("NVMe", disk.Name);
+        Assert.Equal(61, disk.TempAvg!.Value, 3);
+        Assert.Equal(62, disk.TempMax);
+
+        FanStat fan = Assert.Single(stats.Fans);
+        Assert.Equal("Fan #2", fan.Name);
+        Assert.Equal(1955, fan.RpmAvg!.Value, 3);
+        Assert.Equal(1960, fan.RpmMax);
+    }
+
+    [Fact]
+    public void GetSampleStats_TyhjaKanta_PalauttaaNollatJaNullit()
+    {
+        SampleStats stats = _db.GetSampleStats(Now.AddHours(-24));
+
+        Assert.Equal(0, stats.SampleCount);
+        Assert.Null(stats.CpuTemp.Max);
+        Assert.Empty(stats.Disks);
+        Assert.Empty(stats.Fans);
+    }
+
+    [Fact]
     public void GetMeta_PuuttuvaAvain_PalauttaaNull()
     {
         Assert.Null(_db.GetMeta("windows_last_record_id"));

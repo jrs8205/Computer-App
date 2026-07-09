@@ -63,15 +63,19 @@ public sealed class OverlayViewModel : INotifyPropertyChanged
         }
     }
 
+    private static readonly Brush NormalBorder = Frozen(new SolidColorBrush(Color.FromRgb(0xA5, 0xD6, 0xA7)));
     private static readonly Brush WarningBorder = Frozen(new SolidColorBrush(Color.FromRgb(0xFF, 0xB7, 0x4D)));
     private static readonly Brush CriticalBorder = Frozen(new SolidColorBrush(Color.FromRgb(0xEF, 0x53, 0x50)));
     private static readonly Brush MoveModeBorder = Frozen(new SolidColorBrush(Color.FromRgb(0x4F, 0xC3, 0xF7)));
 
-    private Brush _borderBrush = Brushes.Transparent;
+    private Brush _borderBrush = NormalBorder;
     private ThresholdState _worstState;
     private bool _moveModeVisual;
 
-    /// <summary>Paneelin reunus: näkyvissä vain kun jokin mittari hälyttää.</summary>
+    /// <summary>
+    /// Paneelin reunus on aina näkyvissä: vihreä = kaikki kunnossa,
+    /// oranssi = varoitus, punainen = kriittinen, syaani = siirtotila.
+    /// </summary>
     public Brush BorderBrush
     {
         get => _borderBrush;
@@ -110,7 +114,7 @@ public sealed class OverlayViewModel : INotifyPropertyChanged
             {
                 ThresholdState.Critical => CriticalBorder,
                 ThresholdState.Warning => WarningBorder,
-                _ => Brushes.Transparent,
+                _ => NormalBorder,
             };
 
     private static Brush Frozen(SolidColorBrush brush)

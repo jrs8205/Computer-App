@@ -1,8 +1,10 @@
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.IO;
 using System.Windows.Threading;
 using HardwareMonitor.App.Services;
 using HardwareMonitor.Core.Analysis;
+using HardwareMonitor.Core.Insights;
 using HardwareMonitor.Core.Logging;
 using HardwareMonitor.Core.Metrics;
 using HardwareMonitor.Core.Sensors;
@@ -29,10 +31,16 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
     private readonly AppSettings _settings;
     private readonly SampleAggregator _aggregator;
     private readonly ThresholdMonitor _thresholdMonitor;
+    private readonly LastStateService _lastState = new();
     private HistoryDb? _historyDb;
     private EventLogService? _events;
     private WindowsEventCollector? _windowsEvents;
+    private bool _previousSessionCrashed;
+    private IReadOnlyList<EventRow> _recentEvents = Array.Empty<EventRow>();
+    private SampleStats? _dayStats;
     private int _windowsScanRunning;
+    private int _analysisRefreshRunning;
+    private int _insightsWriteRunning;
     private int _rowsLogged;
 
     private string _status = "Käynnistetään sensorit…";
@@ -283,9 +291,20 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
                 _events.Info("App", "Sovellus käynnistyi");
                 _logger.Log($"Historia-kanta: {_historyDb.DbPath}");
 
+                // Vaihe 6: tunnista edellisen istunnon yllättävä päättyminen (luku 17).
+                if (_lastState.ReadPrevious() is { CleanShutdown: false } previous)
+                {
+                    _previousSessionCrashed = true;
+                    string message = "Edellinen istunto päättyi yllättäen" + DescribeLastState(previous);
+                    _events.Warning("Järjestelmä", message, sensor: RiskAnalyzer.LastStateSensor);
+                    _logger.Log($"[WARNING] {message}");
+                }
+
                 // Vaihe 5: Windowsin System-lokin rautatapahtumat events-tauluun.
                 _windowsEvents = new WindowsEventCollector(new SystemEventReader(), _historyDb);
                 ScanWindowsEventsInBackground();
+                RefreshAnalysisCachesInBackground();
+                WriteMachineInsightsInBackground();
             }
             catch (Exception ex)
             {
@@ -320,6 +339,11 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
             ThresholdResult thresholds = _thresholdMonitor.Update(metrics, DateTimeOffset.Now, _settings.FanLabels);
             Dashboard.ApplyStates(thresholds.States);
             Overlay.SetWorstState(thresholds.States.Worst);
+
+            // Vaihe 6: selkokielinen kokonaisarvio tilapaneeliin (luku 19).
+            Dashboard.ApplySummary(RiskAnalyzer.Assess(
+                thresholds.States, metrics, _settings.Thresholds,
+                _recentEvents, _dayStats, _previousSessionCrashed));
 
             foreach (ThresholdEvent alert in thresholds.Events)
             {
@@ -366,10 +390,39 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
 
             _tickCount++;
 
+            // "Ennen kaatumista" -tila talteen 5 s välein (luku 17).
+            if (_tickCount % 5 == 0)
+            {
+                Task.Run(() =>
+                {
+                    try
+                    {
+                        _lastState.Write(metrics, DateTimeOffset.Now);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.Log($"VIRHE last_state-kirjoituksessa: {ex.Message}");
+                    }
+                });
+            }
+
             // Windows-lokin uudelleenskannaus 5 minuutin välein.
             if (_tickCount % 300 == 0)
             {
                 ScanWindowsEventsInBackground();
+            }
+
+            // Analyysin tapahtuma- ja huippukoosteet minuutin välein.
+            if (_tickCount % 60 == 30)
+            {
+                RefreshAnalysisCachesInBackground();
+            }
+
+            // Konetuntemus-loki 30 min välein (ensin minuutin kohdalla,
+            // jotta istunnon tuore data päätyy tiedostoon nopeasti).
+            if (_tickCount % 1800 == 60)
+            {
+                WriteMachineInsightsInBackground();
             }
 
             Status =
@@ -415,6 +468,103 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
             finally
             {
                 Volatile.Write(ref _windowsScanRunning, 0);
+            }
+        });
+    }
+
+    /// <summary>Kuvaa kaatumista edeltäneen tilan tapahtumaviestiin (luku 17).</summary>
+    private static string DescribeLastState(LastState state)
+    {
+        var parts = new List<string>();
+        if (state.CpuTempC is { } cpu)
+        {
+            parts.Add($"CPU {cpu:0} °C");
+        }
+
+        if (state.GpuHotspotC is { } hotspot)
+        {
+            parts.Add($"GPU hotspot {hotspot:0} °C");
+        }
+
+        if (state.RamLoadPercent is { } ram)
+        {
+            parts.Add($"RAM {ram:0} %");
+        }
+
+        foreach (LastStateDisk disk in state.Disks)
+        {
+            if (disk.TempC is { } t)
+            {
+                parts.Add($"{disk.Name} {t:0} °C");
+            }
+        }
+
+        return parts.Count == 0
+            ? ""
+            : $" — viimeisin tila {state.Timestamp.ToLocalTime():d.M. 'klo' HH.mm}: {string.Join(", ", parts)}";
+    }
+
+    /// <summary>Hakee 24 h tapahtumat ja huiput riskianalyysille taustalla.</summary>
+    private void RefreshAnalysisCachesInBackground()
+    {
+        if (_historyDb is not { } db ||
+            Interlocked.CompareExchange(ref _analysisRefreshRunning, 1, 0) != 0)
+        {
+            return;
+        }
+
+        Task.Run(() =>
+        {
+            try
+            {
+                DateTimeOffset since = DateTimeOffset.Now.AddHours(-24);
+                _recentEvents = db.ReadEventsSince(since);
+                _dayStats = db.GetSampleStats(since);
+            }
+            catch (Exception ex)
+            {
+                _logger.Log($"VIRHE analyysikoosteiden haussa: {ex.Message}");
+            }
+            finally
+            {
+                Volatile.Write(ref _analysisRefreshRunning, 0);
+            }
+        });
+    }
+
+    /// <summary>Polku konetuntemus-lokiin (myös Claude lukee tätä istunnoissaan).</summary>
+    public static string MachineInsightsPath => Path.Combine(
+        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+        "HardwareMonitor",
+        "machine-insights.md");
+
+    private void WriteMachineInsightsInBackground()
+    {
+        if (_historyDb is not { } db ||
+            Interlocked.CompareExchange(ref _insightsWriteRunning, 1, 0) != 0)
+        {
+            return;
+        }
+
+        Task.Run(() =>
+        {
+            try
+            {
+                DateTimeOffset now = DateTimeOffset.Now;
+                string markdown = MachineInsightsBuilder.Build(
+                    now,
+                    db.GetSampleStats(now.AddDays(-30)),
+                    db.ReadEventsSince(now.AddDays(-30)),
+                    _settings.Thresholds);
+                File.WriteAllText(MachineInsightsPath, markdown);
+            }
+            catch (Exception ex)
+            {
+                _logger.Log($"VIRHE konetuntemus-lokin kirjoituksessa: {ex.Message}");
+            }
+            finally
+            {
+                Volatile.Write(ref _insightsWriteRunning, 0);
             }
         });
     }
@@ -548,6 +698,7 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
         try
         {
             _events?.Info("App", "Sovellus suljettiin siististi");
+            _lastState.MarkCleanShutdown();
         }
         catch
         {

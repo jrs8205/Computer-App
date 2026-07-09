@@ -28,6 +28,30 @@ public sealed class DashboardViewModel : INotifyPropertyChanged
     public string RamLoad { get => _ramLoad; private set => Set(ref _ramLoad, value, nameof(RamLoad)); }
     public string RamUsed { get => _ramUsed; private set => Set(ref _ramUsed, value, nameof(RamUsed)); }
 
+    private string _summaryTitle = "Koneen tila: —";
+    private string _summaryObservations = "Kerätään tietoja…";
+    private string _summaryRecommendation = "";
+    private ThresholdState _summaryState;
+
+    /// <summary>"Koneen tila: X · Riskitaso: Y" (RiskAnalyzer, luku 19).</summary>
+    public string SummaryTitle { get => _summaryTitle; private set => Set(ref _summaryTitle, value, nameof(SummaryTitle)); }
+
+    public string SummaryObservations { get => _summaryObservations; private set => Set(ref _summaryObservations, value, nameof(SummaryObservations)); }
+
+    public string SummaryRecommendation { get => _summaryRecommendation; private set => Set(ref _summaryRecommendation, value, nameof(SummaryRecommendation)); }
+
+    /// <summary>Kokonaistila tilapisteen väriä varten (StateBrush-konvertteri).</summary>
+    public ThresholdState SummaryState { get => _summaryState; private set => SetState(ref _summaryState, value, nameof(SummaryState)); }
+
+    /// <summary>Vie riskianalyysin tuloksen tilapaneeliin.</summary>
+    public void ApplySummary(RiskAssessment assessment)
+    {
+        SummaryTitle = $"Koneen tila: {assessment.Status}  ·  Riskitaso: {assessment.RiskLevel}";
+        SummaryState = assessment.Level;
+        SummaryObservations = string.Join("\n", assessment.Observations.Select(o => "•  " + o));
+        SummaryRecommendation = assessment.Recommendation is { } r ? $"Suositus: {r}" : "";
+    }
+
     private ThresholdState _cpuTempState, _gpuTempState, _gpuHotspotState, _ramLoadState;
 
     public ThresholdState CpuTempState { get => _cpuTempState; private set => SetState(ref _cpuTempState, value, nameof(CpuTempState)); }
