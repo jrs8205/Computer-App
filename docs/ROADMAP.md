@@ -63,6 +63,9 @@ Specissä `docs/superpowers/specs/2026-07-08-fan-labels-tray-icon-design.md`:
       mittarikaari + sykeviiva, exe + tray
 - [x] Automaattikäynnistys Windowsin mukana (Task Scheduler /RL HIGHEST —
       käynnistyy adminina ilman UAC-kyselyä)
+- [x] Autostart käynnistää suoraan trayhin (9.7.2026): ajastettu tehtävä antaa
+      `--tray`-argumentin → pääikkunaa ei näytetä, vain overlay avautuu;
+      sovellus päivittää tehtävän exe-polun ja argumentit käynnistyessään
 
 ## ✅ Vaihe 3 — Lokitus (SQLite) (VALMIS 8.7.2026)
 
@@ -95,10 +98,20 @@ Specissä `docs/superpowers/specs/2026-07-08-thresholds-design.md`:
 - [x] Todennettu päästä päähän lasketulla rajalla (WARNING-tapahtuma,
       oranssi korttiarvo ja overlay-reunus)
 
-## ⏭️ Vaihe 5 — Windows Event Log
+## ✅ Vaihe 5 — Windows Event Log (VALMIS 9.7.2026)
 
-- [ ] Kernel-Power 41, WHEA-Logger, näyttöajurivirheet, levy/NTFS/NVMe, BugCheck
-      (`System.Diagnostics.Eventing.Reader`, luvut 18 ja 32)
+Specissä `docs/superpowers/specs/2026-07-09-windows-event-log-design.md`:
+
+- [x] System-lokin rautatapahtumat events-tauluun (Kernel-Power 41,
+      EventLog 6008, BugCheck 1001, WHEA-Logger, Display/nvlddmkm-TDR,
+      disk/Ntfs/storahci/stornvme) — `System.Diagnostics.Eventing.Reader`,
+      luvut 18 ja 32
+- [x] `WindowsEventClassifier` (puhdas logiikka, TDD) + `WindowsEventCollector`
+      (kirjanmerkki EventRecordID:llä meta-tauluun → ei duplikaatteja)
+- [x] Skannaus käynnistyksessä ja 5 min välein taustasäikeessä; tapahtuman
+      oma aikaleima → asettuu sensorihistorian aikajanalle
+- [x] Todennettu: 30 pv:n lokissa vain informatiivisia rivejä → 0 kirjausta
+      (oikein, vertailtu Get-WinEventillä), kirjanmerkki eteni
 
 ## ⏭️ Vaihe 6 — Riskianalyysi
 

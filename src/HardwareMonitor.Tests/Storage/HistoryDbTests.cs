@@ -76,6 +76,22 @@ public sealed class HistoryDbTests : IDisposable
     }
 
     [Fact]
+    public void GetMeta_PuuttuvaAvain_PalauttaaNull()
+    {
+        Assert.Null(_db.GetMeta("windows_last_record_id"));
+    }
+
+    [Fact]
+    public void SetMeta_TallentaaJaKorvaaArvon()
+    {
+        _db.SetMeta("windows_last_record_id", "123");
+        Assert.Equal("123", _db.GetMeta("windows_last_record_id"));
+
+        _db.SetMeta("windows_last_record_id", "456");
+        Assert.Equal("456", _db.GetMeta("windows_last_record_id"));
+    }
+
+    [Fact]
     public void EventLogService_KirjoittaaOikeallaTasolla()
     {
         var service = new EventLogService(_db);

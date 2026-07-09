@@ -87,6 +87,11 @@ public sealed class HistoryDb : IDisposable
             message TEXT NOT NULL
         );
         CREATE INDEX IF NOT EXISTS idx_events_ts ON events(ts);
+
+        CREATE TABLE IF NOT EXISTS meta (
+            key TEXT PRIMARY KEY,
+            value TEXT NOT NULL
+        );
         """);
 
     /// <summary>Kirjoittaa koosteen lapsiriveineen yhtenä transaktiona.</summary>
@@ -242,6 +247,33 @@ public sealed class HistoryDb : IDisposable
             }
 
             return result;
+        }
+    }
+
+    /// <summary>Avain–arvo-tila (esim. Windows-lokin lukukirjanmerkki).</summary>
+    public string? GetMeta(string key)
+    {
+        lock (_lock)
+        {
+            using var cmd = _connection.CreateCommand();
+            cmd.CommandText = "SELECT value FROM meta WHERE key = $key;";
+            cmd.Parameters.AddWithValue("$key", key);
+            return cmd.ExecuteScalar() as string;
+        }
+    }
+
+    public void SetMeta(string key, string value)
+    {
+        lock (_lock)
+        {
+            using var cmd = _connection.CreateCommand();
+            cmd.CommandText = """
+                INSERT INTO meta (key, value) VALUES ($key, $value)
+                ON CONFLICT(key) DO UPDATE SET value = excluded.value;
+                """;
+            cmd.Parameters.AddWithValue("$key", key);
+            cmd.Parameters.AddWithValue("$value", value);
+            cmd.ExecuteNonQuery();
         }
     }
 

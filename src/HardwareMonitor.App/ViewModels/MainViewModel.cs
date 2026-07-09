@@ -8,6 +8,7 @@ using HardwareMonitor.Core.Metrics;
 using HardwareMonitor.Core.Sensors;
 using HardwareMonitor.Core.Settings;
 using HardwareMonitor.Core.Storage;
+using HardwareMonitor.Core.WindowsEvents;
 
 namespace HardwareMonitor.App.ViewModels;
 
@@ -30,6 +31,8 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
     private readonly ThresholdMonitor _thresholdMonitor;
     private HistoryDb? _historyDb;
     private EventLogService? _events;
+    private WindowsEventCollector? _windowsEvents;
+    private int _windowsScanRunning;
     private int _rowsLogged;
 
     private string _status = "Käynnistetään sensorit…";
@@ -279,6 +282,10 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
                 _events = new EventLogService(_historyDb);
                 _events.Info("App", "Sovellus käynnistyi");
                 _logger.Log($"Historia-kanta: {_historyDb.DbPath}");
+
+                // Vaihe 5: Windowsin System-lokin rautatapahtumat events-tauluun.
+                _windowsEvents = new WindowsEventCollector(new SystemEventReader(), _historyDb);
+                ScanWindowsEventsInBackground();
             }
             catch (Exception ex)
             {
@@ -358,6 +365,13 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
             }
 
             _tickCount++;
+
+            // Windows-lokin uudelleenskannaus 5 minuutin välein.
+            if (_tickCount % 300 == 0)
+            {
+                ScanWindowsEventsInBackground();
+            }
+
             Status =
                 $"Päivitetty {DateTime.Now:HH:mm:ss}  —  " +
                 $"{_sensorIndex.Count} sensoria, {Hardware.Count} laitetta  " +
@@ -370,6 +384,39 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
             Status = $"Virhe päivityksessä: {ex.Message}";
             _logger.Log($"VIRHE päivityksessä: {ex}");
         }
+    }
+
+    /// <summary>
+    /// Skannaa Windowsin System-lokin taustasäikeessä (luku voi kestää
+    /// sekunteja). Päällekkäiset skannaukset estetään lipulla.
+    /// </summary>
+    private void ScanWindowsEventsInBackground()
+    {
+        if (_windowsEvents is not { } collector ||
+            Interlocked.CompareExchange(ref _windowsScanRunning, 1, 0) != 0)
+        {
+            return;
+        }
+
+        Task.Run(() =>
+        {
+            try
+            {
+                int written = collector.Scan();
+                if (written > 0)
+                {
+                    _logger.Log($"Windows-loki: {written} uutta rautatapahtumaa kirjattu.");
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.Log($"VIRHE Windows-lokin luvussa: {ex.Message}");
+            }
+            finally
+            {
+                Volatile.Write(ref _windowsScanRunning, 0);
+            }
+        });
     }
 
     private void BuildTree(IReadOnlyList<HardwareGroup> groups)
