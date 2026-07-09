@@ -88,6 +88,25 @@ public sealed class SettingsViewModel
 
     public NumericFieldViewModel OverlayFontSize { get; }
 
+    private static readonly string[] LanguageByIndex = { "", "fi", "en" };
+
+    /// <summary>Kieli-ComboBoxin indeksi: 0 = automaattinen, 1 = fi, 2 = en. Vaikuttaa uudelleenkäynnistyksessä.</summary>
+    public int LanguageIndex
+    {
+        get => Math.Max(0, Array.IndexOf(LanguageByIndex, _settings.Language));
+        set
+        {
+            if (value < 0 || value >= LanguageByIndex.Length
+                || _settings.Language == LanguageByIndex[value])
+            {
+                return;
+            }
+
+            _settings.Language = LanguageByIndex[value];
+            _save();
+        }
+    }
+
     /// <summary>Palauttaa raja-arvot ja kestot oletuksiin. Viite säilyy!</summary>
     public void ResetThresholds()
     {

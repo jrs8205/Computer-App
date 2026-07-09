@@ -16,6 +16,8 @@
     <!-- NU1701: LiveCharts2:n SkiaSharp.Views.WPF on net462-kohdennettu mutta
          toimii .NET 8 -WPF:ssä (todennettu ajossa) — vaimennetaan restore-varoitus. -->
     <NoWarn>$(NoWarn);NU1701</NoWarn>
+    <!-- Lokalisointi: neutraali resurssikieli on suomi, englanti satelliittina. -->
+    <NeutralLanguage>fi</NeutralLanguage>
   </PropertyGroup>
 
   <ItemGroup>

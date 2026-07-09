@@ -1,4 +1,7 @@
+using System.Globalization;
 using System.Windows;
+using HardwareMonitor.Core.Localization;
+using HardwareMonitor.Core.Settings;
 
 namespace HardwareMonitor.App;
 
@@ -13,6 +16,14 @@ public partial class App : Application
     protected override void OnStartup(StartupEventArgs e)
     {
         base.OnStartup(e);
+
+        // Kieli asetuksista ennen ikkunoiden luontia; DefaultThreadCurrentUICulture
+        // kattaa myös taustasäikeet (raportit, analyysit, insights).
+        AppSettings settings = new SettingsService().Load();
+        CultureInfo ui = LanguageResolver.Resolve(
+            settings.Language, CultureInfo.InstalledUICulture);
+        CultureInfo.DefaultThreadCurrentUICulture = ui;
+        Thread.CurrentThread.CurrentUICulture = ui;
 
         bool startInTray = e.Args.Contains(TrayArgument, StringComparer.OrdinalIgnoreCase);
 

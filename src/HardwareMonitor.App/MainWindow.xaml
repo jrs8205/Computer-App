@@ -411,6 +411,19 @@
                                 <CheckBox Content="Hälytysilmoitukset" IsChecked="{Binding AlertNotificationsEnabled}"
                                           Foreground="White" Margin="0,2"
                                           ToolTip="Näytä ilmoitus ilmaisinalueella, kun varoitus- tai kriittinen raja ylittyy" />
+                                <StackPanel Orientation="Horizontal" Margin="0,8,0,2">
+                                    <TextBlock Text="Kieli / Language" Foreground="#E0E0E0" Width="120"
+                                               VerticalAlignment="Center" />
+                                    <ComboBox SelectedIndex="{Binding SettingsPage.LanguageIndex}" Width="130"
+                                              VerticalAlignment="Center">
+                                        <ComboBoxItem Content="Automaattinen" />
+                                        <ComboBoxItem Content="Suomi" />
+                                        <ComboBoxItem Content="English" />
+                                    </ComboBox>
+                                    <TextBlock Style="{StaticResource NoteText}"
+                                               Text="vaikuttaa uudelleenkäynnistyksen jälkeen"
+                                               VerticalAlignment="Center" Margin="8,0,0,0" />
+                                </StackPanel>
                             </StackPanel>
                         </GroupBox>
 

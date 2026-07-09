@@ -78,6 +78,9 @@ public sealed class AppSettings
     /// <summary>Käyttäjän omat nimet tuulettimille: sensorin Identifier -> nimi.</summary>
     public Dictionary<string, string> FanLabels { get; set; } = new();
 
+    /// <summary>UI-kieli: "" = automaattinen (Windowsin kielestä), "fi", "en".</summary>
+    public string Language { get; set; } = "";
+
     /// <summary>Pienennä- ja sulje-nappi vievät ilmaisinalueelle; mittaus jatkuu taustalla.</summary>
     public bool MinimizeToTray { get; set; } = true;
 

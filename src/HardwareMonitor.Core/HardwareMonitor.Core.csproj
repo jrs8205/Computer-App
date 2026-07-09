@@ -5,6 +5,8 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <LangVersion>latest</LangVersion>
+    <!-- Lokalisointi: neutraali resurssikieli on suomi, englanti satelliittina. -->
+    <NeutralLanguage>fi</NeutralLanguage>
   </PropertyGroup>
 
   <ItemGroup>
