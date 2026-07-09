@@ -3,6 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:app="clr-namespace:HardwareMonitor.App"
         xmlns:vm="clr-namespace:HardwareMonitor.App.ViewModels"
+        xmlns:lvc="clr-namespace:LiveChartsCore.SkiaSharpView.WPF;assembly=LiveChartsCore.SkiaSharpView.WPF"
         Title="Windows 11 Hardware Monitor — sensoritestaus (PoC)"
         Height="760" Width="960"
         Background="#1E1E1E"
@@ -492,6 +493,59 @@
                         </GroupBox>
                     </StackPanel>
                 </ScrollViewer>
+            </TabItem>
+
+            <TabItem Header="Historia">
+                <DockPanel>
+                    <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="16,12,16,4">
+                        <TextBlock Text="Aikaväli" Foreground="#BDBDBD" VerticalAlignment="Center"
+                                   Margin="0,0,8,0" />
+                        <ComboBox SelectedIndex="{Binding History.RangeIndex}" Width="90"
+                                  VerticalAlignment="Center">
+                            <ComboBoxItem Content="1 h" />
+                            <ComboBoxItem Content="24 h" />
+                            <ComboBoxItem Content="7 pv" />
+                            <ComboBoxItem Content="30 pv" />
+                        </ComboBox>
+                        <TextBlock Text="Graafit päivittyvät automaattisesti minuutin välein"
+                                   Foreground="#9E9E9E" FontStyle="Italic"
+                                   VerticalAlignment="Center" Margin="16,0,0,0" />
+                    </StackPanel>
+                    <ScrollViewer VerticalScrollBarVisibility="Auto">
+                        <StackPanel Margin="16,4,16,16">
+                            <TextBlock Text="Lämpötilat (°C)" FontSize="15" FontWeight="Bold"
+                                       Foreground="#4FC3F7" Margin="0,8,0,4" />
+                            <lvc:CartesianChart Series="{Binding History.TempSeries}"
+                                                XAxes="{Binding History.TempXAxes}"
+                                                YAxes="{Binding History.TempYAxes}"
+                                                LegendPosition="Right"
+                                                LegendTextPaint="{Binding History.LegendPaint}"
+                                                TooltipTextPaint="{Binding History.TooltipTextPaint}"
+                                                TooltipBackgroundPaint="{Binding History.TooltipBackgroundPaint}"
+                                                Height="280" />
+                            <TextBlock Text="Kuormat (%)" FontSize="15" FontWeight="Bold"
+                                       Foreground="#4FC3F7" Margin="0,16,0,4" />
+                            <lvc:CartesianChart Series="{Binding History.LoadSeries}"
+                                                XAxes="{Binding History.LoadXAxes}"
+                                                YAxes="{Binding History.LoadYAxes}"
+                                                LegendPosition="Right"
+                                                LegendTextPaint="{Binding History.LegendPaint}"
+                                                TooltipTextPaint="{Binding History.TooltipTextPaint}"
+                                                TooltipBackgroundPaint="{Binding History.TooltipBackgroundPaint}"
+                                                Height="240" />
+                            <TextBlock Text="Tuulettimet (RPM)" FontSize="15" FontWeight="Bold"
+                                       Foreground="#4FC3F7" Margin="0,16,0,4" />
+                            <lvc:CartesianChart Series="{Binding History.FanSeries}"
+                                                XAxes="{Binding History.FanXAxes}"
+                                                YAxes="{Binding History.FanYAxes}"
+                                                LegendPosition="Right"
+                                                LegendTextPaint="{Binding History.LegendPaint}"
+                                                TooltipTextPaint="{Binding History.TooltipTextPaint}"
+                                                TooltipBackgroundPaint="{Binding History.TooltipBackgroundPaint}"
+                                                Height="240" />
+                        </StackPanel>
+                    </ScrollViewer>
+                </DockPanel>
             </TabItem>
         </TabControl>
     </DockPanel>
