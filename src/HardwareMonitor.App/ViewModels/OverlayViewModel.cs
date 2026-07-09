@@ -171,11 +171,18 @@ public sealed class OverlayViewModel : INotifyPropertyChanged
         {
             foreach (FanMetrics fan in m.Fans)
             {
+                string name = settings.FanLabels.TryGetValue(fan.Identifier, out string? label)
+                              && label.Length > 0 ? label : fan.Name;
                 if (fan.Rpm is { } rpm and > 0)
                 {
-                    string name = settings.FanLabels.TryGetValue(fan.Identifier, out string? label)
-                                  && label.Length > 0 ? label : fan.Name;
                     sb.AppendLine($"{name}  {rpm,4:0} RPM");
+                }
+                else if (fan.Identifier.Contains("gpu", StringComparison.OrdinalIgnoreCase))
+                {
+                    // Puolipassiivinen GPU pysäyttää tuulettimensa idlessä — näytetään
+                    // silti, jotta pysähdys erottuu vikatilasta (käyttäjän toive).
+                    // Tyhjät emolevyn liittimet (aina 0 RPM) pysyvät piilossa.
+                    sb.AppendLine($"{name} — 0 RPM");
                 }
             }
         }
