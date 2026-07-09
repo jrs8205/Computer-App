@@ -16,7 +16,7 @@ public sealed class SensorViewModel : INotifyPropertyChanged
     public SensorViewModel(SensorReading reading)
     {
         Name = reading.SensorName;
-        Type = reading.SensorType;
+        Type = Localization.UiStrings.SensorType(reading.SensorType);
         Unit = reading.Unit;
         Identifier = reading.Identifier;
         Update(reading);

@@ -100,4 +100,25 @@
   <data name="Event_AppStarted" xml:space="preserve"><value>Sovellus käynnistyi</value></data>
   <data name="Event_AppClosed" xml:space="preserve"><value>Sovellus suljettiin siististi</value></data>
   <data name="Event_LastState" xml:space="preserve"><value> — viimeisin tila {0:d.M. 'klo' HH.mm}: {1}</value></data>
+
+  <!-- Sensoripuun tyyppisarake (LHM:n SensorType-raakanimet) -->
+  <data name="SensorType_Voltage" xml:space="preserve"><value>Jännite</value></data>
+  <data name="SensorType_Current" xml:space="preserve"><value>Virta</value></data>
+  <data name="SensorType_Power" xml:space="preserve"><value>Teho</value></data>
+  <data name="SensorType_Clock" xml:space="preserve"><value>Kello</value></data>
+  <data name="SensorType_Temperature" xml:space="preserve"><value>Lämpötila</value></data>
+  <data name="SensorType_Load" xml:space="preserve"><value>Kuorma</value></data>
+  <data name="SensorType_Frequency" xml:space="preserve"><value>Taajuus</value></data>
+  <data name="SensorType_Fan" xml:space="preserve"><value>Tuuletin</value></data>
+  <data name="SensorType_Flow" xml:space="preserve"><value>Virtaus</value></data>
+  <data name="SensorType_Control" xml:space="preserve"><value>Ohjaus</value></data>
+  <data name="SensorType_Level" xml:space="preserve"><value>Taso</value></data>
+  <data name="SensorType_Factor" xml:space="preserve"><value>Kerroin</value></data>
+  <data name="SensorType_Data" xml:space="preserve"><value>Data</value></data>
+  <data name="SensorType_SmallData" xml:space="preserve"><value>Data</value></data>
+  <data name="SensorType_Throughput" xml:space="preserve"><value>Siirtonopeus</value></data>
+  <data name="SensorType_TimeSpan" xml:space="preserve"><value>Aika</value></data>
+  <data name="SensorType_Energy" xml:space="preserve"><value>Energia</value></data>
+  <data name="SensorType_Noise" xml:space="preserve"><value>Melu</value></data>
+  <data name="SensorType_Humidity" xml:space="preserve"><value>Kosteus</value></data>
 </root>

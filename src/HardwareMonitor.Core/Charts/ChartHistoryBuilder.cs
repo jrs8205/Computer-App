@@ -1,3 +1,4 @@
+using HardwareMonitor.Core.Localization;
 using HardwareMonitor.Core.Storage;
 
 namespace HardwareMonitor.Core.Charts;
@@ -32,7 +33,7 @@ public static class ChartHistoryBuilder
         {
             Series("CPU", buckets, stamps, r => r.CpuTempAvg),
             Series("GPU", buckets, stamps, r => r.GpuTempAvg),
-            Series("GPU hotspot", buckets, stamps, r => r.GpuHotspotAvg),
+            Series(Strings.Common_GpuHotspot, buckets, stamps, r => r.GpuHotspotAvg),
         };
         foreach ((string name, int occurrence, string display) in DiskKeys(rows))
         {

@@ -27,3 +27,6 @@ data/reports/
 *.log
 *.sqlite
 *.db
+
+# Paikallinen kaynnistyspikakuvake
+*.lnk

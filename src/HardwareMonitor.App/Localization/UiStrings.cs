@@ -17,6 +17,10 @@ public static class UiStrings
     private static string T(string key) =>
         Rm.GetString(key, CultureInfo.CurrentUICulture) ?? key;
 
+    /// <summary>LHM:n raa'an sensorityypin lokalisointi; tuntematon tyyppi näytetään sellaisenaan.</summary>
+    public static string SensorType(string rawType) =>
+        Rm.GetString($"SensorType_{rawType}", CultureInfo.CurrentUICulture) ?? rawType;
+
     // Ikkuna ja yläpalkki
     public static string WindowTitle => T(nameof(WindowTitle));
     public static string Top_Subtitle => T(nameof(Top_Subtitle));
