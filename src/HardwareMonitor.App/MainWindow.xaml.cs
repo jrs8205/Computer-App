@@ -124,6 +124,9 @@ public partial class MainWindow : Window
         Activate();
     }
 
+    private void ResetThresholds_Click(object sender, RoutedEventArgs e) =>
+        _viewModel.SettingsPage.ResetThresholds();
+
     private void FanName_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
     {
         if (e.ClickCount == 2 && sender is FrameworkElement { DataContext: FanRowViewModel row })

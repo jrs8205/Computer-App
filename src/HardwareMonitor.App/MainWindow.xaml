@@ -73,39 +73,11 @@
                 <WrapPanel Margin="0,10,0,0">
                     <CheckBox Content="Overlay työpöydälle" IsChecked="{Binding OverlayEnabled}"
                               Foreground="White" VerticalAlignment="Center" />
-                    <ComboBox SelectedIndex="{Binding OverlayCornerIndex}" Margin="16,0,0,0"
-                              VerticalAlignment="Center" Width="110">
-                        <ComboBoxItem Content="Vasen ylä" />
-                        <ComboBoxItem Content="Oikea ylä" />
-                        <ComboBoxItem Content="Vasen ala" />
-                        <ComboBoxItem Content="Oikea ala" />
-                    </ComboBox>
-                    <TextBlock Text="Läpinäkyvyys" Foreground="#BDBDBD" Margin="16,0,6,0"
-                               VerticalAlignment="Center" />
-                    <Slider Value="{Binding OverlayOpacity}" Minimum="0.3" Maximum="1.0"
-                            Width="90" VerticalAlignment="Center" />
-                    <CheckBox Content="CPU" IsChecked="{Binding OverlayShowCpu}" Foreground="White"
-                              Margin="16,0,0,0" VerticalAlignment="Center" />
-                    <CheckBox Content="GPU" IsChecked="{Binding OverlayShowGpu}" Foreground="White"
-                              Margin="8,0,0,0" VerticalAlignment="Center" />
-                    <CheckBox Content="RAM" IsChecked="{Binding OverlayShowRam}" Foreground="White"
-                              Margin="8,0,0,0" VerticalAlignment="Center" />
-                    <CheckBox Content="Levyt" IsChecked="{Binding OverlayShowDisks}" Foreground="White"
-                              Margin="8,0,0,0" VerticalAlignment="Center" />
-                    <CheckBox Content="Tuulettimet" IsChecked="{Binding OverlayShowFans}" Foreground="White"
-                              Margin="8,0,0,0" VerticalAlignment="Center" />
                     <CheckBox x:Name="MoveOverlayCheck" Content="Siirrä overlayta"
                               IsEnabled="{Binding OverlayEnabled}"
                               Checked="MoveOverlay_Checked" Unchecked="MoveOverlay_Unchecked"
                               Foreground="White" Margin="16,0,0,0" VerticalAlignment="Center"
                               ToolTip="Kun päällä, overlayn voi raahata hiirellä haluamaansa paikkaan" />
-                    <CheckBox Content="Pienennä trayhin" IsChecked="{Binding MinimizeToTray}"
-                              Foreground="White" Margin="16,0,0,0" VerticalAlignment="Center" />
-                    <CheckBox Content="Hälytysilmoitukset" IsChecked="{Binding AlertNotificationsEnabled}"
-                              Foreground="White" Margin="16,0,0,0" VerticalAlignment="Center"
-                              ToolTip="Näytä ilmoitus ilmaisinalueella, kun varoitus- tai kriittinen raja ylittyy" />
-                    <CheckBox Content="Käynnistä Windowsin mukana" IsChecked="{Binding AutoStart}"
-                              Foreground="White" Margin="16,0,0,0" VerticalAlignment="Center" />
                     <Button Content="Luo raportti…" Click="CreateReport_Click"
                             Margin="24,0,0,0" Padding="10,3" VerticalAlignment="Center"
                             ToolTip="Selkokielinen yhteenveto koneen kunnosta tekstitiedostona" />
@@ -333,6 +305,193 @@
                         </Style>
                     </TreeView.ItemContainerStyle>
                 </TreeView>
+            </TabItem>
+
+            <TabItem Header="Asetukset">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel Margin="16" MaxWidth="780" HorizontalAlignment="Left">
+                        <StackPanel.Resources>
+                            <Style TargetType="GroupBox">
+                                <Setter Property="Foreground" Value="#4FC3F7" />
+                                <Setter Property="Margin" Value="0,0,0,16" />
+                                <Setter Property="Padding" Value="12" />
+                            </Style>
+                            <Style x:Key="NumField" TargetType="TextBox">
+                                <Setter Property="Width" Value="70" />
+                                <Setter Property="Margin" Value="0,0,8,0" />
+                                <Setter Property="Padding" Value="4,2" />
+                                <Setter Property="Background" Value="#2D2D30" />
+                                <Setter Property="Foreground" Value="#E0E0E0" />
+                                <Setter Property="BorderBrush" Value="#3F3F46" />
+                                <Setter Property="VerticalAlignment" Value="Center" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding HasError}" Value="True">
+                                        <Setter Property="BorderBrush" Value="#F44336" />
+                                        <Setter Property="BorderThickness" Value="2" />
+                                        <Setter Property="ToolTip" Value="{Binding Error}" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                            <Style x:Key="ErrorText" TargetType="TextBlock">
+                                <Setter Property="Foreground" Value="#F44336" />
+                                <Setter Property="TextWrapping" Value="Wrap" />
+                                <Style.Triggers>
+                                    <Trigger Property="Text" Value="{x:Null}">
+                                        <Setter Property="Visibility" Value="Collapsed" />
+                                    </Trigger>
+                                    <Trigger Property="Text" Value="">
+                                        <Setter Property="Visibility" Value="Collapsed" />
+                                    </Trigger>
+                                </Style.Triggers>
+                            </Style>
+                            <Style x:Key="NoteText" TargetType="TextBlock">
+                                <Setter Property="Foreground" Value="#9E9E9E" />
+                                <Setter Property="FontStyle" Value="Italic" />
+                                <Style.Triggers>
+                                    <Trigger Property="Text" Value="{x:Null}">
+                                        <Setter Property="Visibility" Value="Collapsed" />
+                                    </Trigger>
+                                    <Trigger Property="Text" Value="">
+                                        <Setter Property="Visibility" Value="Collapsed" />
+                                    </Trigger>
+                                </Style.Triggers>
+                            </Style>
+                            <DataTemplate x:Key="ThresholdRowTemplate">
+                                <Grid Margin="0,3">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="190" />
+                                        <ColumnDefinition Width="80" />
+                                        <ColumnDefinition Width="80" />
+                                        <ColumnDefinition Width="40" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="{Binding Label}" Foreground="#E0E0E0"
+                                               VerticalAlignment="Center" />
+                                    <TextBox Grid.Column="1" Style="{StaticResource NumField}"
+                                             DataContext="{Binding Warn}" Text="{Binding Text}" />
+                                    <TextBox Grid.Column="2" Style="{StaticResource NumField}"
+                                             DataContext="{Binding Crit}" Text="{Binding Text}" />
+                                    <TextBlock Grid.Column="3" Text="{Binding Unit}" Foreground="#9E9E9E"
+                                               VerticalAlignment="Center" />
+                                    <StackPanel Grid.Column="4" VerticalAlignment="Center" Margin="8,0,0,0">
+                                        <TextBlock Style="{StaticResource ErrorText}" Text="{Binding Warn.Error}" />
+                                        <TextBlock Style="{StaticResource ErrorText}" Text="{Binding Crit.Error}" />
+                                    </StackPanel>
+                                </Grid>
+                            </DataTemplate>
+                            <DataTemplate x:Key="FieldRowTemplate">
+                                <Grid Margin="0,3">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="270" />
+                                        <ColumnDefinition Width="80" />
+                                        <ColumnDefinition Width="40" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="{Binding Label}" Foreground="#E0E0E0"
+                                               VerticalAlignment="Center" />
+                                    <TextBox Grid.Column="1" Style="{StaticResource NumField}"
+                                             DataContext="{Binding Field}" Text="{Binding Text}" />
+                                    <TextBlock Grid.Column="2" Text="{Binding Unit}" Foreground="#9E9E9E"
+                                               VerticalAlignment="Center" />
+                                    <StackPanel Grid.Column="3" VerticalAlignment="Center" Margin="8,0,0,0">
+                                        <TextBlock Style="{StaticResource ErrorText}" Text="{Binding Field.Error}" />
+                                        <TextBlock Style="{StaticResource NoteText}" Text="{Binding Note}" />
+                                    </StackPanel>
+                                </Grid>
+                            </DataTemplate>
+                        </StackPanel.Resources>
+
+                        <GroupBox Header="Yleiset">
+                            <StackPanel>
+                                <CheckBox Content="Pienennä trayhin" IsChecked="{Binding MinimizeToTray}"
+                                          Foreground="White" Margin="0,2" />
+                                <CheckBox Content="Käynnistä Windowsin mukana" IsChecked="{Binding AutoStart}"
+                                          Foreground="White" Margin="0,2" />
+                                <CheckBox Content="Hälytysilmoitukset" IsChecked="{Binding AlertNotificationsEnabled}"
+                                          Foreground="White" Margin="0,2"
+                                          ToolTip="Näytä ilmoitus ilmaisinalueella, kun varoitus- tai kriittinen raja ylittyy" />
+                            </StackPanel>
+                        </GroupBox>
+
+                        <GroupBox Header="Raja-arvot">
+                            <StackPanel>
+                                <Grid Margin="0,0,0,4">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="190" />
+                                        <ColumnDefinition Width="80" />
+                                        <ColumnDefinition Width="80" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Column="1" Text="Varoitus" Foreground="#FFB74D"
+                                               FontWeight="SemiBold" />
+                                    <TextBlock Grid.Column="2" Text="Kriittinen" Foreground="#F44336"
+                                               FontWeight="SemiBold" />
+                                </Grid>
+                                <ItemsControl ItemsSource="{Binding SettingsPage.ThresholdRows}"
+                                              ItemTemplate="{StaticResource ThresholdRowTemplate}" />
+                                <Button Content="Palauta oletusrajat" Click="ResetThresholds_Click"
+                                        HorizontalAlignment="Left" Margin="0,8,0,0" Padding="10,3"
+                                        ToolTip="Palauttaa raja-arvot ja kestot ohjelman oletuksiin" />
+                            </StackPanel>
+                        </GroupBox>
+
+                        <GroupBox Header="Kestot">
+                            <ItemsControl ItemsSource="{Binding SettingsPage.DurationRows}"
+                                          ItemTemplate="{StaticResource FieldRowTemplate}" />
+                        </GroupBox>
+
+                        <GroupBox Header="Lokitus">
+                            <ItemsControl ItemsSource="{Binding SettingsPage.LoggingRows}"
+                                          ItemTemplate="{StaticResource FieldRowTemplate}" />
+                        </GroupBox>
+
+                        <GroupBox Header="Overlay">
+                            <StackPanel>
+                                <StackPanel Orientation="Horizontal" Margin="0,2">
+                                    <TextBlock Text="Kulma" Foreground="#E0E0E0" Width="120"
+                                               VerticalAlignment="Center" />
+                                    <ComboBox SelectedIndex="{Binding OverlayCornerIndex}" Width="110"
+                                              VerticalAlignment="Center">
+                                        <ComboBoxItem Content="Vasen ylä" />
+                                        <ComboBoxItem Content="Oikea ylä" />
+                                        <ComboBoxItem Content="Vasen ala" />
+                                        <ComboBoxItem Content="Oikea ala" />
+                                    </ComboBox>
+                                </StackPanel>
+                                <StackPanel Orientation="Horizontal" Margin="0,2">
+                                    <TextBlock Text="Läpinäkyvyys" Foreground="#E0E0E0" Width="120"
+                                               VerticalAlignment="Center" />
+                                    <Slider Value="{Binding OverlayOpacity}" Minimum="0.3" Maximum="1.0"
+                                            Width="140" VerticalAlignment="Center" />
+                                </StackPanel>
+                                <StackPanel Orientation="Horizontal" Margin="0,2">
+                                    <TextBlock Text="Fonttikoko" Foreground="#E0E0E0" Width="120"
+                                               VerticalAlignment="Center" />
+                                    <TextBox Style="{StaticResource NumField}"
+                                             DataContext="{Binding SettingsPage.OverlayFontSize}"
+                                             Text="{Binding Text}" />
+                                    <TextBlock Style="{StaticResource ErrorText}"
+                                               Text="{Binding SettingsPage.OverlayFontSize.Error}"
+                                               VerticalAlignment="Center" Margin="8,0,0,0" />
+                                </StackPanel>
+                                <TextBlock Text="Näytettävät mittarit" Foreground="#E0E0E0"
+                                           Margin="0,8,0,2" />
+                                <WrapPanel>
+                                    <CheckBox Content="CPU" IsChecked="{Binding OverlayShowCpu}"
+                                              Foreground="White" Margin="0,0,12,0" />
+                                    <CheckBox Content="GPU" IsChecked="{Binding OverlayShowGpu}"
+                                              Foreground="White" Margin="0,0,12,0" />
+                                    <CheckBox Content="RAM" IsChecked="{Binding OverlayShowRam}"
+                                              Foreground="White" Margin="0,0,12,0" />
+                                    <CheckBox Content="Levyt" IsChecked="{Binding OverlayShowDisks}"
+                                              Foreground="White" Margin="0,0,12,0" />
+                                    <CheckBox Content="Tuulettimet" IsChecked="{Binding OverlayShowFans}"
+                                              Foreground="White" Margin="0,0,12,0" />
+                                </WrapPanel>
+                            </StackPanel>
+                        </GroupBox>
+                    </StackPanel>
+                </ScrollViewer>
             </TabItem>
         </TabControl>
     </DockPanel>
