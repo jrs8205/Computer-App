@@ -515,7 +515,8 @@
                         <StackPanel Margin="16,4,16,16">
                             <TextBlock Text="Lämpötilat (°C)" FontSize="15" FontWeight="Bold"
                                        Foreground="#4FC3F7" Margin="0,8,0,4" />
-                            <lvc:CartesianChart Series="{Binding History.TempSeries}"
+                            <lvc:CartesianChart Background="#252526"
+                                                Series="{Binding History.TempSeries}"
                                                 XAxes="{Binding History.TempXAxes}"
                                                 YAxes="{Binding History.TempYAxes}"
                                                 LegendPosition="Right"
@@ -525,7 +526,8 @@
                                                 Height="280" />
                             <TextBlock Text="Kuormat (%)" FontSize="15" FontWeight="Bold"
                                        Foreground="#4FC3F7" Margin="0,16,0,4" />
-                            <lvc:CartesianChart Series="{Binding History.LoadSeries}"
+                            <lvc:CartesianChart Background="#252526"
+                                                Series="{Binding History.LoadSeries}"
                                                 XAxes="{Binding History.LoadXAxes}"
                                                 YAxes="{Binding History.LoadYAxes}"
                                                 LegendPosition="Right"
@@ -535,7 +537,8 @@
                                                 Height="240" />
                             <TextBlock Text="Tuulettimet (RPM)" FontSize="15" FontWeight="Bold"
                                        Foreground="#4FC3F7" Margin="0,16,0,4" />
-                            <lvc:CartesianChart Series="{Binding History.FanSeries}"
+                            <lvc:CartesianChart Background="#252526"
+                                                Series="{Binding History.FanSeries}"
                                                 XAxes="{Binding History.FanXAxes}"
                                                 YAxes="{Binding History.FanYAxes}"
                                                 LegendPosition="Right"
