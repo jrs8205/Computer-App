@@ -61,6 +61,8 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
         Dashboard.RenameFan = RenameFan;
         _timer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
         _timer.Tick += (_, _) => Refresh();
+        SettingsPage = new SettingsViewModel(
+            _settings, () => OnOverlaySettingChanged(nameof(SettingsPage)));
     }
 
     private bool _autoStart;
@@ -121,6 +123,9 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
     public DashboardViewModel Dashboard { get; } = new();
 
     public OverlayViewModel Overlay { get; } = new();
+
+    /// <summary>Asetukset-välilehden kentät (Vaihe 8.2).</summary>
+    public SettingsViewModel SettingsPage { get; }
 
     /// <summary>Laukeaa kun mikä tahansa overlay-asetus muuttuu (tallennus + ikkunan päivitys).</summary>
     public event Action? OverlaySettingsChanged;
