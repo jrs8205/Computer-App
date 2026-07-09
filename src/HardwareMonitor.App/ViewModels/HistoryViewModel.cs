@@ -72,9 +72,9 @@ public sealed class HistoryViewModel : INotifyPropertyChanged
 
     public Axis[] FanYAxes { get; } = new[] { ValueAxis(0, null) };
 
-    public SolidColorPaint LegendPaint { get; } = new(SKColors.LightGray);
+    public SolidColorPaint LegendPaint { get; } = new(new SKColor(0xE0, 0xE0, 0xE0));
 
-    public SolidColorPaint TooltipTextPaint { get; } = new(SKColors.LightGray);
+    public SolidColorPaint TooltipTextPaint { get; } = new(SKColors.White);
 
     public SolidColorPaint TooltipBackgroundPaint { get; } = new(new SKColor(0x25, 0x25, 0x26));
 
@@ -106,6 +106,8 @@ public sealed class HistoryViewModel : INotifyPropertyChanged
             LineSmoothness = 0,
             Fill = null,
             Stroke = new SolidColorPaint(Palette[i % Palette.Length]) { StrokeThickness = 1.5f },
+            // Kokonaisluku riittää tooltippiin (käyttäjän palaute: ei desimaaleja).
+            YToolTipLabelFormatter = point => point.Coordinate.PrimaryValue.ToString("0"),
         }).ToArray();
 
     private static Axis TimeAxis(int rangeHours)
@@ -120,8 +122,8 @@ public sealed class HistoryViewModel : INotifyPropertyChanged
 
         return new DateTimeAxis(unit, d => d.ToString(format))
         {
-            LabelsPaint = new SolidColorPaint(SKColors.LightGray),
-            TextSize = 11,
+            LabelsPaint = new SolidColorPaint(new SKColor(0xE0, 0xE0, 0xE0)),
+            TextSize = 12,
             SeparatorsPaint = new SolidColorPaint(new SKColor(0x3F, 0x3F, 0x46))
             {
                 StrokeThickness = 1,
@@ -133,8 +135,8 @@ public sealed class HistoryViewModel : INotifyPropertyChanged
     {
         MinLimit = min,
         MaxLimit = max,
-        LabelsPaint = new SolidColorPaint(SKColors.LightGray),
-        TextSize = 11,
+        LabelsPaint = new SolidColorPaint(new SKColor(0xE0, 0xE0, 0xE0)),
+        TextSize = 12,
         SeparatorsPaint = new SolidColorPaint(new SKColor(0x3F, 0x3F, 0x46))
         {
             StrokeThickness = 1,

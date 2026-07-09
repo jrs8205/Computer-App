@@ -55,7 +55,13 @@ public static class ChartHistoryBuilder
                     ? label : name;
             ChartSeries series = Series(display, buckets, stamps,
                 r => r.Fans.FirstOrDefault(f => f.Name == name)?.RpmAvg);
-            if (series.Points.Any(p => p.Value is > 0))
+
+            // Sarja vain tuulettimelle joka pyörii vähintään 5 % tunnetusta
+            // ajasta — GPU-tuulettimien satunnaiset pyörähdykset eivät
+            // ansaitse omaa viivaa (käyttäjän palaute 9.7.2026).
+            int known = series.Points.Count(p => p.Value.HasValue);
+            int spinning = series.Points.Count(p => p.Value is > 0);
+            if (spinning > 0 && spinning * 20 >= known)
             {
                 fans.Add(series);
             }

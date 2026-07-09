@@ -61,8 +61,10 @@ Säännöt:
 - **Null-aukot säilyvät** (esim. kone sammuksissa) — ei nollia, jotta
   viivaan tulee katkos.
 - **Tuulettimet**: nimi mapataan `fanLabelsByRawName`-sanakirjalla
-  (raakanimi → nimilappu; puuttuva avain → raakanimi). Tuuletin jonka
-  kaikki arvot ovat null tai 0 jätetään kokonaan pois.
+  (raakanimi → nimilappu; puuttuva avain → raakanimi). Tuuletin saa
+  sarjan vain jos se pyörii vähintään 5 % tunnetuista pisteistä
+  (tiukennettu 9.7.2026 käyttäjän palautteesta: GPU-tuulettimien ja
+  Fan #7:n satunnaiset pyörähdykset toivat turhia 0-viivoja graafiin).
 - **Levysarjojen unioni**: sarja luodaan jokaiselle levynimelle joka
   esiintyy missä tahansa rivissä; riviltä puuttuva levy → null.
   Samannimiset levyt (koneessa on kaksi "Samsung SSD 860 EVO 1TB") saavat

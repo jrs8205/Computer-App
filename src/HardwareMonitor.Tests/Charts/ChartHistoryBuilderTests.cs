@@ -151,6 +151,24 @@ public class ChartHistoryBuilderTests
     }
 
     [Fact]
+    public void HarvoinPyorahtavaTuuletin_Suodattuu()
+    {
+        // GPU-tuulettimet pyörähtävät hetkeksi silloin tällöin — alle 5 %
+        // ajasta pyörivä tuuletin ei ansaitse omaa sarjaa (käyttäjän palaute).
+        SampleRow[] rows = Enumerable.Range(0, 100).Select(i =>
+            Row(i * 5, fans: new[]
+            {
+                new FanSampleValue("GPU Fan 1", i < 2 ? 1500 : 0),
+                new FanSampleValue("Fan #1", 600),
+            })).ToArray();
+
+        ChartHistory h = ChartHistoryBuilder.Build(rows, 500, NoLabels);
+
+        ChartSeries fan = Assert.Single(h.Fans);
+        Assert.Equal("Fan #1", fan.Name);
+    }
+
+    [Fact]
     public void Kuormasarjat_Loytyvat()
     {
         var rows = new[] { Row(0, cpuLoad: 10, ramLoad: 20) };

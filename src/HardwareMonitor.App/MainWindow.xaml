@@ -37,7 +37,7 @@
             <Setter Property="Margin" Value="0,0,0,8" />
         </Style>
         <Style x:Key="CardLabel" TargetType="TextBlock">
-            <Setter Property="Foreground" Value="#9E9E9E" />
+            <Setter Property="Foreground" Value="#BDBDBD" />
             <Setter Property="Margin" Value="0,2" />
         </Style>
         <Style x:Key="CardValue" TargetType="TextBlock">
@@ -58,7 +58,7 @@
                 <TextBlock Grid.Column="0" Text="{Binding Name}" Foreground="#E0E0E0" />
                 <TextBlock Grid.Column="1" Text="{Binding DisplayValue}"
                            Foreground="#A5D6A7" HorizontalAlignment="Right" Margin="0,0,20,0" />
-                <TextBlock Grid.Column="2" Text="{Binding Type}" Foreground="#9E9E9E" />
+                <TextBlock Grid.Column="2" Text="{Binding Type}" Foreground="#BDBDBD" />
             </Grid>
         </DataTemplate>
     </Window.Resources>
@@ -90,7 +90,7 @@
         </Border>
 
         <!-- Alapalkki: tila + lokipolku -->
-        <Border DockPanel.Dock="Bottom" Background="#007ACC" Padding="16,8">
+        <Border DockPanel.Dock="Bottom" Background="#004C87" Padding="16,8">
             <StackPanel>
                 <TextBlock Text="{Binding Status}" Foreground="White" FontWeight="SemiBold" />
                 <TextBlock Text="{Binding LogPath, StringFormat=Debug-loki: {0}}"
@@ -129,19 +129,19 @@
                                     </TextBlock.Style>
                                 </TextBlock>
                                 <WrapPanel Margin="24,10,0,0">
-                                    <TextBlock Text="Värien selitys:" Foreground="#8A8A8A" FontSize="11"
+                                    <TextBlock Text="Värien selitys:" Foreground="#BDBDBD" FontSize="11"
                                                Margin="0,0,10,0" VerticalAlignment="Center" />
                                     <Ellipse Width="10" Height="10" Fill="#A5D6A7" VerticalAlignment="Center" />
-                                    <TextBlock Text="kunnossa" Foreground="#8A8A8A" FontSize="11"
+                                    <TextBlock Text="kunnossa" Foreground="#BDBDBD" FontSize="11"
                                                Margin="4,0,14,0" VerticalAlignment="Center" />
                                     <Ellipse Width="10" Height="10" Fill="#FFB74D" VerticalAlignment="Center" />
-                                    <TextBlock Text="varoitusraja ylittynyt" Foreground="#8A8A8A" FontSize="11"
+                                    <TextBlock Text="varoitusraja ylittynyt" Foreground="#BDBDBD" FontSize="11"
                                                Margin="4,0,14,0" VerticalAlignment="Center" />
                                     <Ellipse Width="10" Height="10" Fill="#EF5350" VerticalAlignment="Center" />
-                                    <TextBlock Text="kriittinen raja ylittynyt" Foreground="#8A8A8A" FontSize="11"
+                                    <TextBlock Text="kriittinen raja ylittynyt" Foreground="#BDBDBD" FontSize="11"
                                                Margin="4,0,14,0" VerticalAlignment="Center" />
                                     <TextBlock Text="— samat värit korteissa, levyriveissä ja overlayn reunuksessa"
-                                               Foreground="#8A8A8A" FontSize="11" VerticalAlignment="Center" />
+                                               Foreground="#BDBDBD" FontSize="11" VerticalAlignment="Center" />
                                 </WrapPanel>
                             </StackPanel>
                         </Border>
@@ -238,7 +238,7 @@
                             <StackPanel>
                                 <TextBlock Style="{StaticResource CardTitle}" Text="Tuulettimet" />
                                 <TextBlock Text="Kaksoisklikkaa nimeä antaaksesi oman nimen"
-                                           Foreground="#616161" FontSize="11" Margin="0,0,0,6" />
+                                           Foreground="#BDBDBD" FontSize="11" Margin="0,0,0,6" />
                                 <ItemsControl ItemsSource="{Binding Fans}">
                                     <ItemsControl.ItemTemplate>
                                         <DataTemplate>
@@ -323,7 +323,7 @@
                                 <Setter Property="Padding" Value="4,2" />
                                 <Setter Property="Background" Value="#2D2D30" />
                                 <Setter Property="Foreground" Value="#E0E0E0" />
-                                <Setter Property="BorderBrush" Value="#3F3F46" />
+                                <Setter Property="BorderBrush" Value="#9E9E9E" />
                                 <Setter Property="VerticalAlignment" Value="Center" />
                                 <Style.Triggers>
                                     <DataTrigger Binding="{Binding HasError}" Value="True">
@@ -334,7 +334,7 @@
                                 </Style.Triggers>
                             </Style>
                             <Style x:Key="ErrorText" TargetType="TextBlock">
-                                <Setter Property="Foreground" Value="#F44336" />
+                                <Setter Property="Foreground" Value="#FF8A80" />
                                 <Setter Property="TextWrapping" Value="Wrap" />
                                 <Style.Triggers>
                                     <Trigger Property="Text" Value="{x:Null}">
@@ -346,7 +346,7 @@
                                 </Style.Triggers>
                             </Style>
                             <Style x:Key="NoteText" TargetType="TextBlock">
-                                <Setter Property="Foreground" Value="#9E9E9E" />
+                                <Setter Property="Foreground" Value="#BDBDBD" />
                                 <Setter Property="FontStyle" Value="Italic" />
                                 <Style.Triggers>
                                     <Trigger Property="Text" Value="{x:Null}">
@@ -372,7 +372,7 @@
                                              DataContext="{Binding Warn}" Text="{Binding Text}" />
                                     <TextBox Grid.Column="2" Style="{StaticResource NumField}"
                                              DataContext="{Binding Crit}" Text="{Binding Text}" />
-                                    <TextBlock Grid.Column="3" Text="{Binding Unit}" Foreground="#9E9E9E"
+                                    <TextBlock Grid.Column="3" Text="{Binding Unit}" Foreground="#BDBDBD"
                                                VerticalAlignment="Center" />
                                     <StackPanel Grid.Column="4" VerticalAlignment="Center" Margin="8,0,0,0">
                                         <TextBlock Style="{StaticResource ErrorText}" Text="{Binding Warn.Error}" />
@@ -392,7 +392,7 @@
                                                VerticalAlignment="Center" />
                                     <TextBox Grid.Column="1" Style="{StaticResource NumField}"
                                              DataContext="{Binding Field}" Text="{Binding Text}" />
-                                    <TextBlock Grid.Column="2" Text="{Binding Unit}" Foreground="#9E9E9E"
+                                    <TextBlock Grid.Column="2" Text="{Binding Unit}" Foreground="#BDBDBD"
                                                VerticalAlignment="Center" />
                                     <StackPanel Grid.Column="3" VerticalAlignment="Center" Margin="8,0,0,0">
                                         <TextBlock Style="{StaticResource ErrorText}" Text="{Binding Field.Error}" />
@@ -425,7 +425,7 @@
                                     </Grid.ColumnDefinitions>
                                     <TextBlock Grid.Column="1" Text="Varoitus" Foreground="#FFB74D"
                                                FontWeight="SemiBold" />
-                                    <TextBlock Grid.Column="2" Text="Kriittinen" Foreground="#F44336"
+                                    <TextBlock Grid.Column="2" Text="Kriittinen" Foreground="#FF8A80"
                                                FontWeight="SemiBold" />
                                 </Grid>
                                 <ItemsControl ItemsSource="{Binding SettingsPage.ThresholdRows}"
@@ -508,7 +508,7 @@
                             <ComboBoxItem Content="30 pv" />
                         </ComboBox>
                         <TextBlock Text="Graafit päivittyvät automaattisesti minuutin välein"
-                                   Foreground="#9E9E9E" FontStyle="Italic"
+                                   Foreground="#BDBDBD" FontStyle="Italic"
                                    VerticalAlignment="Center" Margin="16,0,0,0" />
                     </StackPanel>
                     <ScrollViewer VerticalScrollBarVisibility="Auto">
