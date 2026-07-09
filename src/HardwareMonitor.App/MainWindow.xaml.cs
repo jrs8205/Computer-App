@@ -11,19 +11,22 @@ public partial class MainWindow : Window
     private OverlayWindow? _overlay;
     private System.Windows.Forms.NotifyIcon? _trayIcon;
     private bool _reallyExiting;
+    private bool _monitoringStarted;
 
-    public MainWindow()
+    public MainWindow(bool startInTray = false)
     {
         InitializeComponent();
         DataContext = _viewModel;
         CreateTrayIcon();
 
-        Loaded += (_, _) =>
+        // Trayhin käynnistyttäessä ikkunaa ei näytetä, joten Loaded ei laukea
+        // — mittaus ja overlay on käynnistettävä heti tässä.
+        if (startInTray)
         {
-            _viewModel.Start();
-            _viewModel.OverlaySettingsChanged += ApplyOverlaySettings;
-            ApplyOverlaySettings();
-        };
+            StartMonitoring();
+        }
+
+        Loaded += (_, _) => StartMonitoring();
 
         // Pienennys -> trayhin (ikkuna piiloon), kun asetus on päällä.
         StateChanged += (_, _) =>
@@ -50,6 +53,19 @@ public partial class MainWindow : Window
             _overlay?.Close();
             _viewModel.Dispose();
         };
+    }
+
+    private void StartMonitoring()
+    {
+        if (_monitoringStarted)
+        {
+            return;
+        }
+
+        _monitoringStarted = true;
+        _viewModel.Start();
+        _viewModel.OverlaySettingsChanged += ApplyOverlaySettings;
+        ApplyOverlaySettings();
     }
 
     /// <summary>Tray-kuvake valikkoineen: Näytä / Overlay / Lopeta.</summary>

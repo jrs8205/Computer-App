@@ -288,6 +288,10 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
 
             Refresh();
             _timer.Start();
+
+            // Pidä ajastettu tehtävä ajan tasalla (exe-polku ja --tray-argumentti)
+            // taustalla, ettei schtasks-kutsu viivytä käynnistystä.
+            Task.Run(AutostartService.RefreshIfEnabled);
         }
         catch (Exception ex)
         {

@@ -30,7 +30,24 @@ public static class AutostartService
             return false;
         }
 
-        return RunSchtasks($"/Create /F /RL HIGHEST /SC ONLOGON /TN \"{TaskName}\" /TR \"\\\"{exe}\\\"\"") == 0;
+        // --tray: Windowsin mukana käynnistyttäessä pääikkuna jää trayhin
+        // ja vain overlay avautuu.
+        return RunSchtasks(
+            $"/Create /F /RL HIGHEST /SC ONLOGON /TN \"{TaskName}\" " +
+            $"/TR \"\\\"{exe}\\\" {App.TrayArgument}\"") == 0;
+    }
+
+    /// <summary>
+    /// Kirjoittaa olemassa olevan tehtävän uudelleen, jotta se osoittaa aina
+    /// nykyiseen exe-polkuun nykyisillä argumenteilla (esim. --tray lisättiin
+    /// vanhan tehtävän luonnin jälkeen). Ei tee mitään jos autostart ei ole päällä.
+    /// </summary>
+    public static void RefreshIfEnabled()
+    {
+        if (IsEnabled())
+        {
+            SetEnabled(true);
+        }
     }
 
     private static int RunSchtasks(string arguments)
