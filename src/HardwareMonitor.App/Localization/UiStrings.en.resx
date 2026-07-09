@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+
+  <!-- Window and top bar -->
+  <data name="WindowTitle" xml:space="preserve"><value>Windows 11 Hardware Monitor — sensor test (PoC)</value></data>
+  <data name="Top_Subtitle" xml:space="preserve"><value>Proof of concept — all detected sensors, values update every second</value></data>
+  <data name="Top_OverlayOnDesktop" xml:space="preserve"><value>Overlay on desktop</value></data>
+  <data name="Top_MoveOverlay" xml:space="preserve"><value>Move overlay</value></data>
+  <data name="Top_MoveOverlayTip" xml:space="preserve"><value>When enabled, drag the overlay with the mouse to any position</value></data>
+  <data name="Top_CreateReport" xml:space="preserve"><value>Create report…</value></data>
+  <data name="Top_CreateReportTip" xml:space="preserve"><value>A plain-language summary of the computer's condition as a text file</value></data>
+  <data name="Top_ExportCsv" xml:space="preserve"><value>Export CSV…</value></data>
+  <data name="Top_ExportCsvTip" xml:space="preserve"><value>The last 24 hours of sensor history as an Excel-friendly CSV</value></data>
+  <data name="Status_DebugLog" xml:space="preserve"><value>Debug log: {0}</value></data>
+
+  <!-- Tabs -->
+  <data name="Tab_AllSensors" xml:space="preserve"><value>All sensors</value></data>
+  <data name="Tab_Settings" xml:space="preserve"><value>Settings</value></data>
+  <data name="Tab_History" xml:space="preserve"><value>History</value></data>
+
+  <!-- Dashboard -->
+  <data name="Dash_ColorLegend" xml:space="preserve"><value>Color legend:</value></data>
+  <data name="Dash_LegendOk" xml:space="preserve"><value>OK</value></data>
+  <data name="Dash_LegendWarning" xml:space="preserve"><value>warning limit exceeded</value></data>
+  <data name="Dash_LegendCritical" xml:space="preserve"><value>critical limit exceeded</value></data>
+  <data name="Dash_LegendSame" xml:space="preserve"><value>— the same colors are used on cards, drive rows, and the overlay border</value></data>
+  <data name="Dash_Load" xml:space="preserve"><value>Load</value></data>
+  <data name="Dash_Temp" xml:space="preserve"><value>Temperature</value></data>
+  <data name="Dash_ClockMax" xml:space="preserve"><value>Clock (max)</value></data>
+  <data name="Dash_Power" xml:space="preserve"><value>Power</value></data>
+  <data name="Dash_RamInUse" xml:space="preserve"><value>In use</value></data>
+  <data name="Dash_Disks" xml:space="preserve"><value>Drives</value></data>
+  <data name="Dash_Fans" xml:space="preserve"><value>Fans</value></data>
+  <data name="Dash_FanHint" xml:space="preserve"><value>Double-click a name to rename it</value></data>
+  <data name="Dash_FanRenameTip" xml:space="preserve"><value>Double-click to rename</value></data>
+  <data name="Dash_InitialTitle" xml:space="preserve"><value>Machine status: —</value></data>
+  <data name="Dash_Collecting" xml:space="preserve"><value>Collecting data…</value></data>
+  <data name="Dash_SummaryTitle" xml:space="preserve"><value>Machine status: {0}  ·  Risk level: {1}</value></data>
+  <data name="Dash_Recommendation" xml:space="preserve"><value>Recommendation: {0}</value></data>
+
+  <!-- Settings -->
+  <data name="Set_GroupGeneral" xml:space="preserve"><value>General</value></data>
+  <data name="Set_MinimizeToTray" xml:space="preserve"><value>Minimize to tray</value></data>
+  <data name="Set_AutoStart" xml:space="preserve"><value>Start with Windows</value></data>
+  <data name="Set_AlertNotifications" xml:space="preserve"><value>Alert notifications</value></data>
+  <data name="Set_AlertNotificationsTip" xml:space="preserve"><value>Show a tray notification when a warning or critical limit is exceeded</value></data>
+  <data name="Set_LanguageAuto" xml:space="preserve"><value>Automatic</value></data>
+  <data name="Set_RestartNote" xml:space="preserve"><value>takes effect after restart</value></data>
+  <data name="Set_GroupThresholds" xml:space="preserve"><value>Limits</value></data>
+  <data name="Set_ColWarning" xml:space="preserve"><value>Warning</value></data>
+  <data name="Set_ColCritical" xml:space="preserve"><value>Critical</value></data>
+  <data name="Set_ResetDefaults" xml:space="preserve"><value>Restore default limits</value></data>
+  <data name="Set_ResetDefaultsTip" xml:space="preserve"><value>Restores limits and durations to the application defaults</value></data>
+  <data name="Set_GroupDurations" xml:space="preserve"><value>Durations</value></data>
+  <data name="Set_GroupLogging" xml:space="preserve"><value>Logging</value></data>
+  <data name="Set_Corner" xml:space="preserve"><value>Corner</value></data>
+  <data name="Set_CornerTopLeft" xml:space="preserve"><value>Top left</value></data>
+  <data name="Set_CornerTopRight" xml:space="preserve"><value>Top right</value></data>
+  <data name="Set_CornerBottomLeft" xml:space="preserve"><value>Bottom left</value></data>
+  <data name="Set_CornerBottomRight" xml:space="preserve"><value>Bottom right</value></data>
+  <data name="Set_Opacity" xml:space="preserve"><value>Opacity</value></data>
+  <data name="Set_FontSize" xml:space="preserve"><value>Font size</value></data>
+  <data name="Set_ShownMetrics" xml:space="preserve"><value>Metrics to show</value></data>
+  <data name="Set_RowNvme" xml:space="preserve"><value>NVMe drives</value></data>
+  <data name="Set_RowWarnSustain" xml:space="preserve"><value>Warning duration before an event</value></data>
+  <data name="Set_RowCritSustain" xml:space="preserve"><value>Critical duration before an event</value></data>
+  <data name="Set_RowCooldown" xml:space="preserve"><value>Interval between same alerts (cooldown)</value></data>
+  <data name="Set_RowFanStop" xml:space="preserve"><value>CPU limit for the fan-stop alert</value></data>
+  <data name="Set_RowInterval" xml:space="preserve"><value>Aggregation interval</value></data>
+  <data name="Set_RowIntervalNote" xml:space="preserve"><value>takes effect from the next start</value></data>
+  <data name="Set_RowRetention" xml:space="preserve"><value>History retention</value></data>
+  <data name="Unit_Days" xml:space="preserve"><value>d</value></data>
+
+  <!-- History -->
+  <data name="Hist_Range" xml:space="preserve"><value>Time range</value></data>
+  <data name="Hist_7d" xml:space="preserve"><value>7 d</value></data>
+  <data name="Hist_30d" xml:space="preserve"><value>30 d</value></data>
+  <data name="Hist_AutoRefresh" xml:space="preserve"><value>Charts refresh automatically every minute</value></data>
+  <data name="Hist_Temps" xml:space="preserve"><value>Temperatures (°C)</value></data>
+  <data name="Hist_Loads" xml:space="preserve"><value>Loads (%)</value></data>
+  <data name="Hist_Fans" xml:space="preserve"><value>Fans (RPM)</value></data>
+
+  <!-- Tray, dialogs, and status bar -->
+  <data name="Tray_Show" xml:space="preserve"><value>Show</value></data>
+  <data name="Tray_Exit" xml:space="preserve"><value>Exit</value></data>
+  <data name="Dlg_ReportFileName" xml:space="preserve"><value>SystemReport</value></data>
+  <data name="Dlg_ReportFilter" xml:space="preserve"><value>Text file (*.txt)|*.txt|Markdown (*.md)|*.md</value></data>
+  <data name="Dlg_ReportEmpty" xml:space="preserve"><value>The report cannot be created yet — no sensor data has accumulated.</value></data>
+  <data name="Dlg_CsvFileName" xml:space="preserve"><value>SensorHistory-24h</value></data>
+  <data name="Dlg_CsvEmpty" xml:space="preserve"><value>There is no history to export yet — logging is running, try again in a moment.</value></data>
+  <data name="Dlg_SaveFailed" xml:space="preserve"><value>Saving failed: {0}</value></data>
+  <data name="Status_Starting" xml:space="preserve"><value>Starting sensors…</value></data>
+  <data name="Status_StartError" xml:space="preserve"><value>Error starting sensors: {0}</value></data>
+  <data name="Status_UpdateError" xml:space="preserve"><value>Error during update: {0}</value></data>
+  <data name="Status_Line" xml:space="preserve"><value>Updated {0:HH:mm:ss}  —  {1} sensors, {2} devices  (update #{3}, log rows: {4})</value></data>
+  <data name="Event_AppStarted" xml:space="preserve"><value>Application started</value></data>
+  <data name="Event_AppClosed" xml:space="preserve"><value>Application closed cleanly</value></data>
+  <data name="Event_LastState" xml:space="preserve"><value> — last state {0:d.M. 'at' HH.mm}: {1}</value></data>
+</root>

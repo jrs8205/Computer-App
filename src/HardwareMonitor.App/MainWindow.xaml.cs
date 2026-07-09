@@ -4,6 +4,7 @@ using System.Text;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using HardwareMonitor.App.Localization;
 using HardwareMonitor.App.ViewModels;
 using HardwareMonitor.Core.Notifications;
 
@@ -99,7 +100,7 @@ public partial class MainWindow : Window
         _trayIcon.DoubleClick += (_, _) => RestoreFromTray();
 
         var menu = new System.Windows.Forms.ContextMenuStrip();
-        menu.Items.Add("Näytä", null, (_, _) => RestoreFromTray());
+        menu.Items.Add(UiStrings.Tray_Show, null, (_, _) => RestoreFromTray());
         var overlayItem = new System.Windows.Forms.ToolStripMenuItem("Overlay")
         {
             CheckOnClick = true,
@@ -108,7 +109,7 @@ public partial class MainWindow : Window
         overlayItem.CheckedChanged += (_, _) => _viewModel.OverlayEnabled = overlayItem.Checked;
         menu.Items.Add(overlayItem);
         menu.Items.Add(new System.Windows.Forms.ToolStripSeparator());
-        menu.Items.Add("Lopeta", null, (_, _) =>
+        menu.Items.Add(UiStrings.Tray_Exit, null, (_, _) =>
         {
             _reallyExiting = true;
             Close();
@@ -210,16 +211,16 @@ public partial class MainWindow : Window
     private void CreateReport_Click(object sender, RoutedEventArgs e) =>
         SaveAndOpen(
             content: _viewModel.BuildReport(),
-            fileName: $"Jarjestelmaraportti-{DateTime.Now:yyyy-MM-dd}",
-            filter: "Tekstitiedosto (*.txt)|*.txt|Markdown (*.md)|*.md",
-            emptyMessage: "Raporttia ei voi vielä luoda — sensoridataa ei ole ehtinyt kertyä.");
+            fileName: $"{UiStrings.Dlg_ReportFileName}-{DateTime.Now:yyyy-MM-dd}",
+            filter: UiStrings.Dlg_ReportFilter,
+            emptyMessage: UiStrings.Dlg_ReportEmpty);
 
     private void ExportCsv_Click(object sender, RoutedEventArgs e) =>
         SaveAndOpen(
             content: _viewModel.BuildCsv(),
-            fileName: $"Sensorihistoria-24h-{DateTime.Now:yyyy-MM-dd}",
+            fileName: $"{UiStrings.Dlg_CsvFileName}-{DateTime.Now:yyyy-MM-dd}",
             filter: "CSV (Excel) (*.csv)|*.csv",
-            emptyMessage: "Vietävää historiaa ei vielä ole — lokitus on käynnissä, yritä hetken päästä.");
+            emptyMessage: UiStrings.Dlg_CsvEmpty);
 
     /// <summary>Kysyy tallennuspaikan, kirjoittaa tiedoston ja avaa sen oletusohjelmassa.</summary>
     private void SaveAndOpen(string? content, string fileName, string filter, string emptyMessage)
@@ -251,8 +252,8 @@ public partial class MainWindow : Window
         }
         catch (Exception ex)
         {
-            MessageBox.Show(this, $"Tallennus epäonnistui: {ex.Message}", "Hardware Monitor",
-                MessageBoxButton.OK, MessageBoxImage.Error);
+            MessageBox.Show(this, string.Format(UiStrings.Dlg_SaveFailed, ex.Message),
+                "Hardware Monitor", MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }
 }

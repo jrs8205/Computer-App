@@ -3,9 +3,11 @@ using System.ComponentModel;
 using System.Globalization;
 using System.IO;
 using System.Windows.Threading;
+using HardwareMonitor.App.Localization;
 using HardwareMonitor.App.Services;
 using HardwareMonitor.Core.Analysis;
 using HardwareMonitor.Core.Charts;
+using HardwareMonitor.Core.Localization;
 using HardwareMonitor.Core.Insights;
 using HardwareMonitor.Core.Logging;
 using HardwareMonitor.Core.Metrics;
@@ -51,7 +53,7 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
     private int _historyRefreshRunning;
     private int _rowsLogged;
 
-    private string _status = "Käynnistetään sensorit…";
+    private string _status = UiStrings.Status_Starting;
     private int _tickCount;
 
     public MainViewModel()
@@ -323,14 +325,14 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
                 _historyDb = new HistoryDb();
                 _historyDb.PurgeOlderThan(DateTimeOffset.Now.AddDays(-_settings.Logging.KeepHistoryDays));
                 _events = new EventLogService(_historyDb);
-                _events.Info("App", "Sovellus käynnistyi");
+                _events.Info("App", UiStrings.Event_AppStarted);
                 _logger.Log($"Historia-kanta: {_historyDb.DbPath}");
 
                 // Vaihe 6: tunnista edellisen istunnon yllättävä päättyminen (luku 17).
                 if (_lastState.ReadPrevious() is { CleanShutdown: false } previous)
                 {
                     _previousSessionCrashed = true;
-                    string message = "Edellinen istunto päättyi yllättäen" + DescribeLastState(previous);
+                    string message = Strings.Risk_PrevSessionCrashed + DescribeLastState(previous);
                     _events.Warning("Järjestelmä", message, sensor: RiskAnalyzer.LastStateSensor);
                     _logger.Log($"[WARNING] {message}");
                 }
@@ -357,7 +359,7 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
         }
         catch (Exception ex)
         {
-            Status = $"Virhe sensorien käynnistyksessä: {ex.Message}";
+            Status = string.Format(UiStrings.Status_StartError, ex.Message);
             _logger.Log($"VIRHE käynnistyksessä: {ex}");
         }
     }
@@ -482,15 +484,15 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
             }
 
             Status =
-                $"Päivitetty {DateTime.Now:HH:mm:ss}  —  " +
-                $"{_sensorIndex.Count} sensoria, {Hardware.Count} laitetta  " +
-                $"(päivitys #{_tickCount}, lokirivejä: {Volatile.Read(ref _rowsLogged)})";
+                string.Format(UiStrings.Status_Line, DateTime.Now,
+                    _sensorIndex.Count, Hardware.Count, _tickCount,
+                    Volatile.Read(ref _rowsLogged));
 
             LogSnapshot(groups);
         }
         catch (Exception ex)
         {
-            Status = $"Virhe päivityksessä: {ex.Message}";
+            Status = string.Format(UiStrings.Status_UpdateError, ex.Message);
             _logger.Log($"VIRHE päivityksessä: {ex}");
         }
     }
@@ -593,7 +595,8 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
 
         return parts.Count == 0
             ? ""
-            : $" — viimeisin tila {state.Timestamp.ToLocalTime():d.M. 'klo' HH.mm}: {string.Join(", ", parts)}";
+            : string.Format(UiStrings.Event_LastState,
+                state.Timestamp.ToLocalTime(), string.Join(", ", parts));
     }
 
     /// <summary>Hakee 24 h tapahtumat ja huiput riskianalyysille taustalla.</summary>
@@ -840,7 +843,7 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
 
         try
         {
-            _events?.Info("App", "Sovellus suljettiin siististi");
+            _events?.Info("App", UiStrings.Event_AppClosed);
             _lastState.MarkCleanShutdown();
         }
         catch

@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Globalization;
+using HardwareMonitor.App.Localization;
 using HardwareMonitor.Core.Analysis;
 using HardwareMonitor.Core.Metrics;
 
@@ -28,8 +29,8 @@ public sealed class DashboardViewModel : INotifyPropertyChanged
     public string RamLoad { get => _ramLoad; private set => Set(ref _ramLoad, value, nameof(RamLoad)); }
     public string RamUsed { get => _ramUsed; private set => Set(ref _ramUsed, value, nameof(RamUsed)); }
 
-    private string _summaryTitle = "Koneen tila: —";
-    private string _summaryObservations = "Kerätään tietoja…";
+    private string _summaryTitle = UiStrings.Dash_InitialTitle;
+    private string _summaryObservations = UiStrings.Dash_Collecting;
     private string _summaryRecommendation = "";
     private ThresholdState _summaryState;
 
@@ -46,10 +47,13 @@ public sealed class DashboardViewModel : INotifyPropertyChanged
     /// <summary>Vie riskianalyysin tuloksen tilapaneeliin.</summary>
     public void ApplySummary(RiskAssessment assessment)
     {
-        SummaryTitle = $"Koneen tila: {assessment.Status}  ·  Riskitaso: {assessment.RiskLevel}";
+        SummaryTitle = string.Format(UiStrings.Dash_SummaryTitle,
+            assessment.Status, assessment.RiskLevel);
         SummaryState = assessment.Level;
         SummaryObservations = string.Join("\n", assessment.Observations.Select(o => "•  " + o));
-        SummaryRecommendation = assessment.Recommendation is { } r ? $"Suositus: {r}" : "";
+        SummaryRecommendation = assessment.Recommendation is { } r
+            ? string.Format(UiStrings.Dash_Recommendation, r)
+            : "";
     }
 
     private ThresholdState _cpuTempState, _gpuTempState, _gpuHotspotState, _ramLoadState;

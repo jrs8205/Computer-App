@@ -1,3 +1,5 @@
+using HardwareMonitor.App.Localization;
+using HardwareMonitor.Core.Localization;
 using HardwareMonitor.Core.Settings;
 
 namespace HardwareMonitor.App.ViewModels;
@@ -31,45 +33,45 @@ public sealed class SettingsViewModel
 
         ThresholdRows = new[]
         {
-            Pair("CPU-lämpötila", "°C", 20, 120,
+            Pair(Strings.Common_CpuTemp, "°C", 20, 120,
                 () => t.CpuWarningTemp, v => t.CpuWarningTemp = v,
                 () => t.CpuCriticalTemp, v => t.CpuCriticalTemp = v),
-            Pair("GPU-lämpötila", "°C", 20, 120,
+            Pair(Strings.Common_GpuTemp, "°C", 20, 120,
                 () => t.GpuWarningTemp, v => t.GpuWarningTemp = v,
                 () => t.GpuCriticalTemp, v => t.GpuCriticalTemp = v),
-            Pair("GPU hotspot", "°C", 20, 120,
+            Pair(Strings.Common_GpuHotspot, "°C", 20, 120,
                 () => t.GpuHotspotWarningTemp, v => t.GpuHotspotWarningTemp = v,
                 () => t.GpuHotspotCriticalTemp, v => t.GpuHotspotCriticalTemp = v),
-            Pair("NVMe-levyt", "°C", 20, 120,
+            Pair(UiStrings.Set_RowNvme, "°C", 20, 120,
                 () => t.NvmeWarningTemp, v => t.NvmeWarningTemp = v,
                 () => t.NvmeCriticalTemp, v => t.NvmeCriticalTemp = v),
-            Pair("RAM-käyttö", "%", 10, 100,
+            Pair(Strings.Common_RamLoad, "%", 10, 100,
                 () => t.RamWarningPercent, v => t.RamWarningPercent = v,
                 () => t.RamCriticalPercent, v => t.RamCriticalPercent = v),
         };
 
         DurationRows = new[]
         {
-            Row("Varoituksen kesto ennen tapahtumaa", "s", 1, 600,
+            Row(UiStrings.Set_RowWarnSustain, "s", 1, 600,
                 () => t.WarningSustainSeconds,
                 v => t.WarningSustainSeconds = (int)MathF.Round(v)),
-            Row("Kriittisen kesto ennen tapahtumaa", "s", 1, 600,
+            Row(UiStrings.Set_RowCritSustain, "s", 1, 600,
                 () => t.CriticalSustainSeconds,
                 v => t.CriticalSustainSeconds = (int)MathF.Round(v)),
-            Row("Saman hälytyksen väli (cooldown)", "min", 1, 60,
+            Row(UiStrings.Set_RowCooldown, "min", 1, 60,
                 () => t.EventCooldownMinutes,
                 v => t.EventCooldownMinutes = (int)MathF.Round(v)),
-            Row("Tuuletinpysähdyksen CPU-raja", "°C", 20, 120,
+            Row(UiStrings.Set_RowFanStop, "°C", 20, 120,
                 () => t.FanStopCpuTemp, v => t.FanStopCpuTemp = v),
         };
 
         LoggingRows = new[]
         {
-            Row("Koosteväli", "s", 1, 60,
+            Row(UiStrings.Set_RowInterval, "s", 1, 60,
                 () => _settings.Logging.SensorIntervalSeconds,
                 v => _settings.Logging.SensorIntervalSeconds = (int)MathF.Round(v),
-                "vaikuttaa seuraavasta käynnistyksestä"),
-            Row("Historian säilytys", "pv", 1, 365,
+                UiStrings.Set_RowIntervalNote),
+            Row(UiStrings.Set_RowRetention, UiStrings.Unit_Days, 1, 365,
                 () => _settings.Logging.KeepHistoryDays,
                 v => _settings.Logging.KeepHistoryDays = (int)MathF.Round(v)),
         };

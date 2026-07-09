@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+
+  <!-- Ikkuna ja yläpalkki -->
+  <data name="WindowTitle" xml:space="preserve"><value>Windows 11 Hardware Monitor — sensoritestaus (PoC)</value></data>
+  <data name="Top_Subtitle" xml:space="preserve"><value>Proof of concept — kaikki löydetyt sensorit, arvot päivittyvät 1 sekunnin välein</value></data>
+  <data name="Top_OverlayOnDesktop" xml:space="preserve"><value>Overlay työpöydälle</value></data>
+  <data name="Top_MoveOverlay" xml:space="preserve"><value>Siirrä overlayta</value></data>
+  <data name="Top_MoveOverlayTip" xml:space="preserve"><value>Kun päällä, overlayn voi raahata hiirellä haluamaansa paikkaan</value></data>
+  <data name="Top_CreateReport" xml:space="preserve"><value>Luo raportti…</value></data>
+  <data name="Top_CreateReportTip" xml:space="preserve"><value>Selkokielinen yhteenveto koneen kunnosta tekstitiedostona</value></data>
+  <data name="Top_ExportCsv" xml:space="preserve"><value>Vie CSV…</value></data>
+  <data name="Top_ExportCsvTip" xml:space="preserve"><value>Viimeisen 24 tunnin sensorihistoria Exceliin sopivana CSV:nä</value></data>
+  <data name="Status_DebugLog" xml:space="preserve"><value>Debug-loki: {0}</value></data>
+
+  <!-- Välilehdet -->
+  <data name="Tab_AllSensors" xml:space="preserve"><value>Kaikki sensorit</value></data>
+  <data name="Tab_Settings" xml:space="preserve"><value>Asetukset</value></data>
+  <data name="Tab_History" xml:space="preserve"><value>Historia</value></data>
+
+  <!-- Dashboard -->
+  <data name="Dash_ColorLegend" xml:space="preserve"><value>Värien selitys:</value></data>
+  <data name="Dash_LegendOk" xml:space="preserve"><value>kunnossa</value></data>
+  <data name="Dash_LegendWarning" xml:space="preserve"><value>varoitusraja ylittynyt</value></data>
+  <data name="Dash_LegendCritical" xml:space="preserve"><value>kriittinen raja ylittynyt</value></data>
+  <data name="Dash_LegendSame" xml:space="preserve"><value>— samat värit korteissa, levyriveissä ja overlayn reunuksessa</value></data>
+  <data name="Dash_Load" xml:space="preserve"><value>Käyttö</value></data>
+  <data name="Dash_Temp" xml:space="preserve"><value>Lämpötila</value></data>
+  <data name="Dash_ClockMax" xml:space="preserve"><value>Kello (max)</value></data>
+  <data name="Dash_Power" xml:space="preserve"><value>Teho</value></data>
+  <data name="Dash_RamInUse" xml:space="preserve"><value>Käytössä</value></data>
+  <data name="Dash_Disks" xml:space="preserve"><value>Levyt</value></data>
+  <data name="Dash_Fans" xml:space="preserve"><value>Tuulettimet</value></data>
+  <data name="Dash_FanHint" xml:space="preserve"><value>Kaksoisklikkaa nimeä antaaksesi oman nimen</value></data>
+  <data name="Dash_FanRenameTip" xml:space="preserve"><value>Kaksoisklikkaa nimetäksesi</value></data>
+  <data name="Dash_InitialTitle" xml:space="preserve"><value>Koneen tila: —</value></data>
+  <data name="Dash_Collecting" xml:space="preserve"><value>Kerätään tietoja…</value></data>
+  <data name="Dash_SummaryTitle" xml:space="preserve"><value>Koneen tila: {0}  ·  Riskitaso: {1}</value></data>
+  <data name="Dash_Recommendation" xml:space="preserve"><value>Suositus: {0}</value></data>
+
+  <!-- Asetukset -->
+  <data name="Set_GroupGeneral" xml:space="preserve"><value>Yleiset</value></data>
+  <data name="Set_MinimizeToTray" xml:space="preserve"><value>Pienennä trayhin</value></data>
+  <data name="Set_AutoStart" xml:space="preserve"><value>Käynnistä Windowsin mukana</value></data>
+  <data name="Set_AlertNotifications" xml:space="preserve"><value>Hälytysilmoitukset</value></data>
+  <data name="Set_AlertNotificationsTip" xml:space="preserve"><value>Näytä ilmoitus ilmaisinalueella, kun varoitus- tai kriittinen raja ylittyy</value></data>
+  <data name="Set_LanguageAuto" xml:space="preserve"><value>Automaattinen</value></data>
+  <data name="Set_RestartNote" xml:space="preserve"><value>vaikuttaa uudelleenkäynnistyksen jälkeen</value></data>
+  <data name="Set_GroupThresholds" xml:space="preserve"><value>Raja-arvot</value></data>
+  <data name="Set_ColWarning" xml:space="preserve"><value>Varoitus</value></data>
+  <data name="Set_ColCritical" xml:space="preserve"><value>Kriittinen</value></data>
+  <data name="Set_ResetDefaults" xml:space="preserve"><value>Palauta oletusrajat</value></data>
+  <data name="Set_ResetDefaultsTip" xml:space="preserve"><value>Palauttaa raja-arvot ja kestot ohjelman oletuksiin</value></data>
+  <data name="Set_GroupDurations" xml:space="preserve"><value>Kestot</value></data>
+  <data name="Set_GroupLogging" xml:space="preserve"><value>Lokitus</value></data>
+  <data name="Set_Corner" xml:space="preserve"><value>Kulma</value></data>
+  <data name="Set_CornerTopLeft" xml:space="preserve"><value>Vasen ylä</value></data>
+  <data name="Set_CornerTopRight" xml:space="preserve"><value>Oikea ylä</value></data>
+  <data name="Set_CornerBottomLeft" xml:space="preserve"><value>Vasen ala</value></data>
+  <data name="Set_CornerBottomRight" xml:space="preserve"><value>Oikea ala</value></data>
+  <data name="Set_Opacity" xml:space="preserve"><value>Läpinäkyvyys</value></data>
+  <data name="Set_FontSize" xml:space="preserve"><value>Fonttikoko</value></data>
+  <data name="Set_ShownMetrics" xml:space="preserve"><value>Näytettävät mittarit</value></data>
+  <data name="Set_RowNvme" xml:space="preserve"><value>NVMe-levyt</value></data>
+  <data name="Set_RowWarnSustain" xml:space="preserve"><value>Varoituksen kesto ennen tapahtumaa</value></data>
+  <data name="Set_RowCritSustain" xml:space="preserve"><value>Kriittisen kesto ennen tapahtumaa</value></data>
+  <data name="Set_RowCooldown" xml:space="preserve"><value>Saman hälytyksen väli (cooldown)</value></data>
+  <data name="Set_RowFanStop" xml:space="preserve"><value>Tuuletinpysähdyksen CPU-raja</value></data>
+  <data name="Set_RowInterval" xml:space="preserve"><value>Koosteväli</value></data>
+  <data name="Set_RowIntervalNote" xml:space="preserve"><value>vaikuttaa seuraavasta käynnistyksestä</value></data>
+  <data name="Set_RowRetention" xml:space="preserve"><value>Historian säilytys</value></data>
+  <data name="Unit_Days" xml:space="preserve"><value>pv</value></data>
+
+  <!-- Historia -->
+  <data name="Hist_Range" xml:space="preserve"><value>Aikaväli</value></data>
+  <data name="Hist_7d" xml:space="preserve"><value>7 pv</value></data>
+  <data name="Hist_30d" xml:space="preserve"><value>30 pv</value></data>
+  <data name="Hist_AutoRefresh" xml:space="preserve"><value>Graafit päivittyvät automaattisesti minuutin välein</value></data>
+  <data name="Hist_Temps" xml:space="preserve"><value>Lämpötilat (°C)</value></data>
+  <data name="Hist_Loads" xml:space="preserve"><value>Kuormat (%)</value></data>
+  <data name="Hist_Fans" xml:space="preserve"><value>Tuulettimet (RPM)</value></data>
+
+  <!-- Tray, dialogit ja tilarivi -->
+  <data name="Tray_Show" xml:space="preserve"><value>Näytä</value></data>
+  <data name="Tray_Exit" xml:space="preserve"><value>Lopeta</value></data>
+  <data name="Dlg_ReportFileName" xml:space="preserve"><value>Jarjestelmaraportti</value></data>
+  <data name="Dlg_ReportFilter" xml:space="preserve"><value>Tekstitiedosto (*.txt)|*.txt|Markdown (*.md)|*.md</value></data>
+  <data name="Dlg_ReportEmpty" xml:space="preserve"><value>Raporttia ei voi vielä luoda — sensoridataa ei ole ehtinyt kertyä.</value></data>
+  <data name="Dlg_CsvFileName" xml:space="preserve"><value>Sensorihistoria-24h</value></data>
+  <data name="Dlg_CsvEmpty" xml:space="preserve"><value>Vietävää historiaa ei vielä ole — lokitus on käynnissä, yritä hetken päästä.</value></data>
+  <data name="Dlg_SaveFailed" xml:space="preserve"><value>Tallennus epäonnistui: {0}</value></data>
+  <data name="Status_Starting" xml:space="preserve"><value>Käynnistetään sensorit…</value></data>
+  <data name="Status_StartError" xml:space="preserve"><value>Virhe sensorien käynnistyksessä: {0}</value></data>
+  <data name="Status_UpdateError" xml:space="preserve"><value>Virhe päivityksessä: {0}</value></data>
+  <data name="Status_Line" xml:space="preserve"><value>Päivitetty {0:HH:mm:ss}  —  {1} sensoria, {2} laitetta  (päivitys #{3}, lokirivejä: {4})</value></data>
+  <data name="Event_AppStarted" xml:space="preserve"><value>Sovellus käynnistyi</value></data>
+  <data name="Event_AppClosed" xml:space="preserve"><value>Sovellus suljettiin siististi</value></data>
+  <data name="Event_LastState" xml:space="preserve"><value> — viimeisin tila {0:d.M. 'klo' HH.mm}: {1}</value></data>
+</root>

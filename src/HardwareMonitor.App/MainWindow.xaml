@@ -4,7 +4,8 @@
         xmlns:app="clr-namespace:HardwareMonitor.App"
         xmlns:vm="clr-namespace:HardwareMonitor.App.ViewModels"
         xmlns:lvc="clr-namespace:LiveChartsCore.SkiaSharpView.WPF;assembly=LiveChartsCore.SkiaSharpView.WPF"
-        Title="Windows 11 Hardware Monitor — sensoritestaus (PoC)"
+        xmlns:loc="clr-namespace:HardwareMonitor.App.Localization"
+        Title="{x:Static loc:UiStrings.WindowTitle}"
         Height="760" Width="960"
         Background="#1E1E1E"
         WindowStartupLocation="CenterScreen">
@@ -69,22 +70,22 @@
             <StackPanel>
                 <TextBlock Text="Windows 11 Hardware Monitor"
                            FontSize="20" FontWeight="Bold" Foreground="White" />
-                <TextBlock Text="Proof of concept — kaikki löydetyt sensorit, arvot päivittyvät 1 sekunnin välein"
+                <TextBlock Text="{x:Static loc:UiStrings.Top_Subtitle}"
                            Foreground="#BDBDBD" Margin="0,2,0,0" />
                 <WrapPanel Margin="0,10,0,0">
-                    <CheckBox Content="Overlay työpöydälle" IsChecked="{Binding OverlayEnabled}"
+                    <CheckBox Content="{x:Static loc:UiStrings.Top_OverlayOnDesktop}" IsChecked="{Binding OverlayEnabled}"
                               Foreground="White" VerticalAlignment="Center" />
-                    <CheckBox x:Name="MoveOverlayCheck" Content="Siirrä overlayta"
+                    <CheckBox x:Name="MoveOverlayCheck" Content="{x:Static loc:UiStrings.Top_MoveOverlay}"
                               IsEnabled="{Binding OverlayEnabled}"
                               Checked="MoveOverlay_Checked" Unchecked="MoveOverlay_Unchecked"
                               Foreground="White" Margin="16,0,0,0" VerticalAlignment="Center"
-                              ToolTip="Kun päällä, overlayn voi raahata hiirellä haluamaansa paikkaan" />
-                    <Button Content="Luo raportti…" Click="CreateReport_Click"
+                              ToolTip="{x:Static loc:UiStrings.Top_MoveOverlayTip}" />
+                    <Button Content="{x:Static loc:UiStrings.Top_CreateReport}" Click="CreateReport_Click"
                             Margin="24,0,0,0" Padding="10,3" VerticalAlignment="Center"
-                            ToolTip="Selkokielinen yhteenveto koneen kunnosta tekstitiedostona" />
-                    <Button Content="Vie CSV…" Click="ExportCsv_Click"
+                            ToolTip="{x:Static loc:UiStrings.Top_CreateReportTip}" />
+                    <Button Content="{x:Static loc:UiStrings.Top_ExportCsv}" Click="ExportCsv_Click"
                             Margin="8,0,0,0" Padding="10,3" VerticalAlignment="Center"
-                            ToolTip="Viimeisen 24 tunnin sensorihistoria Exceliin sopivana CSV:nä" />
+                            ToolTip="{x:Static loc:UiStrings.Top_ExportCsvTip}" />
                 </WrapPanel>
             </StackPanel>
         </Border>
@@ -93,7 +94,7 @@
         <Border DockPanel.Dock="Bottom" Background="#004C87" Padding="16,8">
             <StackPanel>
                 <TextBlock Text="{Binding Status}" Foreground="White" FontWeight="SemiBold" />
-                <TextBlock Text="{Binding LogPath, StringFormat=Debug-loki: {0}}"
+                <TextBlock Text="{Binding LogPath, StringFormat={x:Static loc:UiStrings.Status_DebugLog}}"
                            Foreground="#DCF3FF" FontSize="11" Margin="0,2,0,0" />
             </StackPanel>
         </Border>
@@ -129,18 +130,18 @@
                                     </TextBlock.Style>
                                 </TextBlock>
                                 <WrapPanel Margin="24,10,0,0">
-                                    <TextBlock Text="Värien selitys:" Foreground="#BDBDBD" FontSize="11"
+                                    <TextBlock Text="{x:Static loc:UiStrings.Dash_ColorLegend}" Foreground="#BDBDBD" FontSize="11"
                                                Margin="0,0,10,0" VerticalAlignment="Center" />
                                     <Ellipse Width="10" Height="10" Fill="#A5D6A7" VerticalAlignment="Center" />
-                                    <TextBlock Text="kunnossa" Foreground="#BDBDBD" FontSize="11"
+                                    <TextBlock Text="{x:Static loc:UiStrings.Dash_LegendOk}" Foreground="#BDBDBD" FontSize="11"
                                                Margin="4,0,14,0" VerticalAlignment="Center" />
                                     <Ellipse Width="10" Height="10" Fill="#FFB74D" VerticalAlignment="Center" />
-                                    <TextBlock Text="varoitusraja ylittynyt" Foreground="#BDBDBD" FontSize="11"
+                                    <TextBlock Text="{x:Static loc:UiStrings.Dash_LegendWarning}" Foreground="#BDBDBD" FontSize="11"
                                                Margin="4,0,14,0" VerticalAlignment="Center" />
                                     <Ellipse Width="10" Height="10" Fill="#EF5350" VerticalAlignment="Center" />
-                                    <TextBlock Text="kriittinen raja ylittynyt" Foreground="#BDBDBD" FontSize="11"
+                                    <TextBlock Text="{x:Static loc:UiStrings.Dash_LegendCritical}" Foreground="#BDBDBD" FontSize="11"
                                                Margin="4,0,14,0" VerticalAlignment="Center" />
-                                    <TextBlock Text="— samat värit korteissa, levyriveissä ja overlayn reunuksessa"
+                                    <TextBlock Text="{x:Static loc:UiStrings.Dash_LegendSame}"
                                                Foreground="#BDBDBD" FontSize="11" VerticalAlignment="Center" />
                                 </WrapPanel>
                             </StackPanel>
@@ -159,14 +160,14 @@
                                     <Grid.RowDefinitions>
                                         <RowDefinition /><RowDefinition /><RowDefinition /><RowDefinition />
                                     </Grid.RowDefinitions>
-                                    <TextBlock Grid.Row="0" Style="{StaticResource CardLabel}" Text="Käyttö" />
+                                    <TextBlock Grid.Row="0" Style="{StaticResource CardLabel}" Text="{x:Static loc:UiStrings.Dash_Load}" />
                                     <TextBlock Grid.Row="0" Grid.Column="1" Style="{StaticResource CardValue}" Text="{Binding CpuLoad}" />
-                                    <TextBlock Grid.Row="1" Style="{StaticResource CardLabel}" Text="Lämpötila" />
+                                    <TextBlock Grid.Row="1" Style="{StaticResource CardLabel}" Text="{x:Static loc:UiStrings.Dash_Temp}" />
                                     <TextBlock Grid.Row="1" Grid.Column="1" Style="{StaticResource CardValue}" Text="{Binding CpuTemp}"
                                                Foreground="{Binding CpuTempState, Converter={StaticResource StateBrush}}" />
-                                    <TextBlock Grid.Row="2" Style="{StaticResource CardLabel}" Text="Kello (max)" />
+                                    <TextBlock Grid.Row="2" Style="{StaticResource CardLabel}" Text="{x:Static loc:UiStrings.Dash_ClockMax}" />
                                     <TextBlock Grid.Row="2" Grid.Column="1" Style="{StaticResource CardValue}" Text="{Binding CpuClock}" />
-                                    <TextBlock Grid.Row="3" Style="{StaticResource CardLabel}" Text="Teho" />
+                                    <TextBlock Grid.Row="3" Style="{StaticResource CardLabel}" Text="{x:Static loc:UiStrings.Dash_Power}" />
                                     <TextBlock Grid.Row="3" Grid.Column="1" Style="{StaticResource CardValue}" Text="{Binding CpuPower}" />
                                 </Grid>
                             </StackPanel>
@@ -183,9 +184,9 @@
                                     <Grid.RowDefinitions>
                                         <RowDefinition /><RowDefinition /><RowDefinition /><RowDefinition /><RowDefinition />
                                     </Grid.RowDefinitions>
-                                    <TextBlock Grid.Row="0" Style="{StaticResource CardLabel}" Text="Käyttö" />
+                                    <TextBlock Grid.Row="0" Style="{StaticResource CardLabel}" Text="{x:Static loc:UiStrings.Dash_Load}" />
                                     <TextBlock Grid.Row="0" Grid.Column="1" Style="{StaticResource CardValue}" Text="{Binding GpuLoad}" />
-                                    <TextBlock Grid.Row="1" Style="{StaticResource CardLabel}" Text="Lämpötila" />
+                                    <TextBlock Grid.Row="1" Style="{StaticResource CardLabel}" Text="{x:Static loc:UiStrings.Dash_Temp}" />
                                     <TextBlock Grid.Row="1" Grid.Column="1" Style="{StaticResource CardValue}" Text="{Binding GpuTemp}"
                                                Foreground="{Binding GpuTempState, Converter={StaticResource StateBrush}}" />
                                     <TextBlock Grid.Row="2" Style="{StaticResource CardLabel}" Text="Hotspot" />
@@ -193,7 +194,7 @@
                                                Foreground="{Binding GpuHotspotState, Converter={StaticResource StateBrush}}" />
                                     <TextBlock Grid.Row="3" Style="{StaticResource CardLabel}" Text="VRAM" />
                                     <TextBlock Grid.Row="3" Grid.Column="1" Style="{StaticResource CardValue}" Text="{Binding GpuVram}" />
-                                    <TextBlock Grid.Row="4" Style="{StaticResource CardLabel}" Text="Teho" />
+                                    <TextBlock Grid.Row="4" Style="{StaticResource CardLabel}" Text="{x:Static loc:UiStrings.Dash_Power}" />
                                     <TextBlock Grid.Row="4" Grid.Column="1" Style="{StaticResource CardValue}" Text="{Binding GpuPower}" />
                                 </Grid>
                             </StackPanel>
@@ -210,10 +211,10 @@
                                     <Grid.RowDefinitions>
                                         <RowDefinition /><RowDefinition />
                                     </Grid.RowDefinitions>
-                                    <TextBlock Grid.Row="0" Style="{StaticResource CardLabel}" Text="Käyttö" />
+                                    <TextBlock Grid.Row="0" Style="{StaticResource CardLabel}" Text="{x:Static loc:UiStrings.Dash_Load}" />
                                     <TextBlock Grid.Row="0" Grid.Column="1" Style="{StaticResource CardValue}" Text="{Binding RamLoad}"
                                                Foreground="{Binding RamLoadState, Converter={StaticResource StateBrush}}" />
-                                    <TextBlock Grid.Row="1" Style="{StaticResource CardLabel}" Text="Käytössä" />
+                                    <TextBlock Grid.Row="1" Style="{StaticResource CardLabel}" Text="{x:Static loc:UiStrings.Dash_RamInUse}" />
                                     <TextBlock Grid.Row="1" Grid.Column="1" Style="{StaticResource CardValue}" Text="{Binding RamUsed}" />
                                 </Grid>
                             </StackPanel>
@@ -221,7 +222,7 @@
 
                         <Border Style="{StaticResource Card}">
                             <StackPanel>
-                                <TextBlock Style="{StaticResource CardTitle}" Text="Levyt" />
+                                <TextBlock Style="{StaticResource CardTitle}" Text="{x:Static loc:UiStrings.Dash_Disks}" />
                                 <ItemsControl ItemsSource="{Binding Disks}">
                                     <ItemsControl.ItemTemplate>
                                         <DataTemplate>
@@ -236,8 +237,8 @@
 
                         <Border Style="{StaticResource Card}">
                             <StackPanel>
-                                <TextBlock Style="{StaticResource CardTitle}" Text="Tuulettimet" />
-                                <TextBlock Text="Kaksoisklikkaa nimeä antaaksesi oman nimen"
+                                <TextBlock Style="{StaticResource CardTitle}" Text="{x:Static loc:UiStrings.Dash_Fans}" />
+                                <TextBlock Text="{x:Static loc:UiStrings.Dash_FanHint}"
                                            Foreground="#BDBDBD" FontSize="11" Margin="0,0,0,6" />
                                 <ItemsControl ItemsSource="{Binding Fans}">
                                     <ItemsControl.ItemTemplate>
@@ -249,7 +250,7 @@
                                                 </Grid.ColumnDefinitions>
                                                 <TextBlock Text="{Binding DisplayName}" Foreground="#E0E0E0"
                                                            FontFamily="Consolas"
-                                                           ToolTip="Kaksoisklikkaa nimetäksesi"
+                                                           ToolTip="{x:Static loc:UiStrings.Dash_FanRenameTip}"
                                                            MouseLeftButtonDown="FanName_MouseLeftButtonDown">
                                                     <TextBlock.Style>
                                                         <Style TargetType="TextBlock">
@@ -291,7 +292,7 @@
                 </ScrollViewer>
             </TabItem>
 
-            <TabItem Header="Kaikki sensorit">
+            <TabItem Header="{x:Static loc:UiStrings.Tab_AllSensors}">
                 <!-- Sensoripuu -->
                 <TreeView ItemsSource="{Binding Hardware}"
                           Background="#1E1E1E"
@@ -308,7 +309,7 @@
                 </TreeView>
             </TabItem>
 
-            <TabItem Header="Asetukset">
+            <TabItem Header="{x:Static loc:UiStrings.Tab_Settings}">
                 <ScrollViewer VerticalScrollBarVisibility="Auto">
                     <StackPanel Margin="16" MaxWidth="780" HorizontalAlignment="Left">
                         <StackPanel.Resources>
@@ -402,32 +403,32 @@
                             </DataTemplate>
                         </StackPanel.Resources>
 
-                        <GroupBox Header="Yleiset">
+                        <GroupBox Header="{x:Static loc:UiStrings.Set_GroupGeneral}">
                             <StackPanel>
-                                <CheckBox Content="Pienennä trayhin" IsChecked="{Binding MinimizeToTray}"
+                                <CheckBox Content="{x:Static loc:UiStrings.Set_MinimizeToTray}" IsChecked="{Binding MinimizeToTray}"
                                           Foreground="White" Margin="0,2" />
-                                <CheckBox Content="Käynnistä Windowsin mukana" IsChecked="{Binding AutoStart}"
+                                <CheckBox Content="{x:Static loc:UiStrings.Set_AutoStart}" IsChecked="{Binding AutoStart}"
                                           Foreground="White" Margin="0,2" />
-                                <CheckBox Content="Hälytysilmoitukset" IsChecked="{Binding AlertNotificationsEnabled}"
+                                <CheckBox Content="{x:Static loc:UiStrings.Set_AlertNotifications}" IsChecked="{Binding AlertNotificationsEnabled}"
                                           Foreground="White" Margin="0,2"
-                                          ToolTip="Näytä ilmoitus ilmaisinalueella, kun varoitus- tai kriittinen raja ylittyy" />
+                                          ToolTip="{x:Static loc:UiStrings.Set_AlertNotificationsTip}" />
                                 <StackPanel Orientation="Horizontal" Margin="0,8,0,2">
                                     <TextBlock Text="Kieli / Language" Foreground="#E0E0E0" Width="120"
                                                VerticalAlignment="Center" />
                                     <ComboBox SelectedIndex="{Binding SettingsPage.LanguageIndex}" Width="130"
                                               VerticalAlignment="Center">
-                                        <ComboBoxItem Content="Automaattinen" />
+                                        <ComboBoxItem Content="{x:Static loc:UiStrings.Set_LanguageAuto}" />
                                         <ComboBoxItem Content="Suomi" />
                                         <ComboBoxItem Content="English" />
                                     </ComboBox>
                                     <TextBlock Style="{StaticResource NoteText}"
-                                               Text="vaikuttaa uudelleenkäynnistyksen jälkeen"
+                                               Text="{x:Static loc:UiStrings.Set_RestartNote}"
                                                VerticalAlignment="Center" Margin="8,0,0,0" />
                                 </StackPanel>
                             </StackPanel>
                         </GroupBox>
 
-                        <GroupBox Header="Raja-arvot">
+                        <GroupBox Header="{x:Static loc:UiStrings.Set_GroupThresholds}">
                             <StackPanel>
                                 <Grid Margin="0,0,0,4">
                                     <Grid.ColumnDefinitions>
@@ -436,25 +437,25 @@
                                         <ColumnDefinition Width="80" />
                                         <ColumnDefinition Width="*" />
                                     </Grid.ColumnDefinitions>
-                                    <TextBlock Grid.Column="1" Text="Varoitus" Foreground="#FFB74D"
+                                    <TextBlock Grid.Column="1" Text="{x:Static loc:UiStrings.Set_ColWarning}" Foreground="#FFB74D"
                                                FontWeight="SemiBold" />
-                                    <TextBlock Grid.Column="2" Text="Kriittinen" Foreground="#FF8A80"
+                                    <TextBlock Grid.Column="2" Text="{x:Static loc:UiStrings.Set_ColCritical}" Foreground="#FF8A80"
                                                FontWeight="SemiBold" />
                                 </Grid>
                                 <ItemsControl ItemsSource="{Binding SettingsPage.ThresholdRows}"
                                               ItemTemplate="{StaticResource ThresholdRowTemplate}" />
-                                <Button Content="Palauta oletusrajat" Click="ResetThresholds_Click"
+                                <Button Content="{x:Static loc:UiStrings.Set_ResetDefaults}" Click="ResetThresholds_Click"
                                         HorizontalAlignment="Left" Margin="0,8,0,0" Padding="10,3"
-                                        ToolTip="Palauttaa raja-arvot ja kestot ohjelman oletuksiin" />
+                                        ToolTip="{x:Static loc:UiStrings.Set_ResetDefaultsTip}" />
                             </StackPanel>
                         </GroupBox>
 
-                        <GroupBox Header="Kestot">
+                        <GroupBox Header="{x:Static loc:UiStrings.Set_GroupDurations}">
                             <ItemsControl ItemsSource="{Binding SettingsPage.DurationRows}"
                                           ItemTemplate="{StaticResource FieldRowTemplate}" />
                         </GroupBox>
 
-                        <GroupBox Header="Lokitus">
+                        <GroupBox Header="{x:Static loc:UiStrings.Set_GroupLogging}">
                             <ItemsControl ItemsSource="{Binding SettingsPage.LoggingRows}"
                                           ItemTemplate="{StaticResource FieldRowTemplate}" />
                         </GroupBox>
@@ -462,24 +463,24 @@
                         <GroupBox Header="Overlay">
                             <StackPanel>
                                 <StackPanel Orientation="Horizontal" Margin="0,2">
-                                    <TextBlock Text="Kulma" Foreground="#E0E0E0" Width="120"
+                                    <TextBlock Text="{x:Static loc:UiStrings.Set_Corner}" Foreground="#E0E0E0" Width="120"
                                                VerticalAlignment="Center" />
                                     <ComboBox SelectedIndex="{Binding OverlayCornerIndex}" Width="110"
                                               VerticalAlignment="Center">
-                                        <ComboBoxItem Content="Vasen ylä" />
-                                        <ComboBoxItem Content="Oikea ylä" />
-                                        <ComboBoxItem Content="Vasen ala" />
-                                        <ComboBoxItem Content="Oikea ala" />
+                                        <ComboBoxItem Content="{x:Static loc:UiStrings.Set_CornerTopLeft}" />
+                                        <ComboBoxItem Content="{x:Static loc:UiStrings.Set_CornerTopRight}" />
+                                        <ComboBoxItem Content="{x:Static loc:UiStrings.Set_CornerBottomLeft}" />
+                                        <ComboBoxItem Content="{x:Static loc:UiStrings.Set_CornerBottomRight}" />
                                     </ComboBox>
                                 </StackPanel>
                                 <StackPanel Orientation="Horizontal" Margin="0,2">
-                                    <TextBlock Text="Läpinäkyvyys" Foreground="#E0E0E0" Width="120"
+                                    <TextBlock Text="{x:Static loc:UiStrings.Set_Opacity}" Foreground="#E0E0E0" Width="120"
                                                VerticalAlignment="Center" />
                                     <Slider Value="{Binding OverlayOpacity}" Minimum="0.3" Maximum="1.0"
                                             Width="140" VerticalAlignment="Center" />
                                 </StackPanel>
                                 <StackPanel Orientation="Horizontal" Margin="0,2">
-                                    <TextBlock Text="Fonttikoko" Foreground="#E0E0E0" Width="120"
+                                    <TextBlock Text="{x:Static loc:UiStrings.Set_FontSize}" Foreground="#E0E0E0" Width="120"
                                                VerticalAlignment="Center" />
                                     <TextBox Style="{StaticResource NumField}"
                                              DataContext="{Binding SettingsPage.OverlayFontSize}"
@@ -488,7 +489,7 @@
                                                Text="{Binding SettingsPage.OverlayFontSize.Error}"
                                                VerticalAlignment="Center" Margin="8,0,0,0" />
                                 </StackPanel>
-                                <TextBlock Text="Näytettävät mittarit" Foreground="#E0E0E0"
+                                <TextBlock Text="{x:Static loc:UiStrings.Set_ShownMetrics}" Foreground="#E0E0E0"
                                            Margin="0,8,0,2" />
                                 <WrapPanel>
                                     <CheckBox Content="CPU" IsChecked="{Binding OverlayShowCpu}"
@@ -497,9 +498,9 @@
                                               Foreground="White" Margin="0,0,12,0" />
                                     <CheckBox Content="RAM" IsChecked="{Binding OverlayShowRam}"
                                               Foreground="White" Margin="0,0,12,0" />
-                                    <CheckBox Content="Levyt" IsChecked="{Binding OverlayShowDisks}"
+                                    <CheckBox Content="{x:Static loc:UiStrings.Dash_Disks}" IsChecked="{Binding OverlayShowDisks}"
                                               Foreground="White" Margin="0,0,12,0" />
-                                    <CheckBox Content="Tuulettimet" IsChecked="{Binding OverlayShowFans}"
+                                    <CheckBox Content="{x:Static loc:UiStrings.Dash_Fans}" IsChecked="{Binding OverlayShowFans}"
                                               Foreground="White" Margin="0,0,12,0" />
                                 </WrapPanel>
                             </StackPanel>
@@ -508,25 +509,25 @@
                 </ScrollViewer>
             </TabItem>
 
-            <TabItem Header="Historia">
+            <TabItem Header="{x:Static loc:UiStrings.Tab_History}">
                 <DockPanel>
                     <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="16,12,16,4">
-                        <TextBlock Text="Aikaväli" Foreground="#BDBDBD" VerticalAlignment="Center"
+                        <TextBlock Text="{x:Static loc:UiStrings.Hist_Range}" Foreground="#BDBDBD" VerticalAlignment="Center"
                                    Margin="0,0,8,0" />
                         <ComboBox SelectedIndex="{Binding History.RangeIndex}" Width="90"
                                   VerticalAlignment="Center">
                             <ComboBoxItem Content="1 h" />
                             <ComboBoxItem Content="24 h" />
-                            <ComboBoxItem Content="7 pv" />
-                            <ComboBoxItem Content="30 pv" />
+                            <ComboBoxItem Content="{x:Static loc:UiStrings.Hist_7d}" />
+                            <ComboBoxItem Content="{x:Static loc:UiStrings.Hist_30d}" />
                         </ComboBox>
-                        <TextBlock Text="Graafit päivittyvät automaattisesti minuutin välein"
+                        <TextBlock Text="{x:Static loc:UiStrings.Hist_AutoRefresh}"
                                    Foreground="#BDBDBD" FontStyle="Italic"
                                    VerticalAlignment="Center" Margin="16,0,0,0" />
                     </StackPanel>
                     <ScrollViewer VerticalScrollBarVisibility="Auto">
                         <StackPanel Margin="16,4,16,16">
-                            <TextBlock Text="Lämpötilat (°C)" FontSize="15" FontWeight="Bold"
+                            <TextBlock Text="{x:Static loc:UiStrings.Hist_Temps}" FontSize="15" FontWeight="Bold"
                                        Foreground="#4FC3F7" Margin="0,8,0,4" />
                             <lvc:CartesianChart Background="#252526"
                                                 Series="{Binding History.TempSeries}"
@@ -537,7 +538,7 @@
                                                 TooltipTextPaint="{Binding History.TooltipTextPaint}"
                                                 TooltipBackgroundPaint="{Binding History.TooltipBackgroundPaint}"
                                                 Height="280" />
-                            <TextBlock Text="Kuormat (%)" FontSize="15" FontWeight="Bold"
+                            <TextBlock Text="{x:Static loc:UiStrings.Hist_Loads}" FontSize="15" FontWeight="Bold"
                                        Foreground="#4FC3F7" Margin="0,16,0,4" />
                             <lvc:CartesianChart Background="#252526"
                                                 Series="{Binding History.LoadSeries}"
@@ -548,7 +549,7 @@
                                                 TooltipTextPaint="{Binding History.TooltipTextPaint}"
                                                 TooltipBackgroundPaint="{Binding History.TooltipBackgroundPaint}"
                                                 Height="240" />
-                            <TextBlock Text="Tuulettimet (RPM)" FontSize="15" FontWeight="Bold"
+                            <TextBlock Text="{x:Static loc:UiStrings.Hist_Fans}" FontSize="15" FontWeight="Bold"
                                        Foreground="#4FC3F7" Margin="0,16,0,4" />
                             <lvc:CartesianChart Background="#252526"
                                                 Series="{Binding History.FanSeries}"
