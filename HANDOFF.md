@@ -1,4 +1,4 @@
-# HANDOFF — 9.7.2026 istunto
+# HANDOFF — 9.7.2026 aamupäivän istunto
 
 Tämä tiedosto kertoo mihin jäätiin ja miten jatketaan. Lue tämä ensin,
 sitten `docs/ROADMAP.md` (vaiheiden tila) ja tarvittaessa specit
@@ -7,10 +7,10 @@ sitten `docs/ROADMAP.md` (vaiheiden tila) ja tarvittaessa specit
 ## Tilanne yhdellä lauseella
 
 Vaiheet 1–7 ovat valmiit, testattu ja pushattu haaralle
-`claude/windows-11-program-setup-rxuyhn`; jäljellä on **Vaihe 8:
-viimeistely** (ilmoitukset, asetussivu, graafit LiveCharts2; kielituki
-fi/en, LICENSE + repon julkistus ja paketointi ihan lopuksi — käyttäjän
-päätös 8.7.2026).
+`claude/windows-11-program-setup-rxuyhn`; **sovittu jatko: Vaihe 8
+(viimeistely) illalla 9.7.2026** — ilmoitukset, asetussivu, graafit
+(LiveCharts2); kielituki fi/en, LICENSE + repon julkistus ja paketointi
+ihan lopuksi (käyttäjän päätös 8.7.2026).
 
 ## Mitä tässä istunnossa tehtiin (9.7.2026)
 
@@ -139,7 +139,8 @@ dotnet test src/HardwareMonitor.Tests/HardwareMonitor.Tests.csproj
 - **`dotnet test` EI buildaa App-projektia** — ilman `dotnet build`ia ajat
   vanhaa exeä ja "muutos ei näy".
 - **Pysäytä HardwareMonitor.exe ennen buildia** (lukitsee DLL:t). HUOM:
-  istunnon lopussa 9.7. jätettiin Debug-exe ajoon `--tray`-tilassa.
+  aamupäivän istunnon lopussa 9.7. Debug-exe jäi ajoon ikkuna näkyvissä
+  (admin, ilman --tray-lippua) — pysäytä se ennen illan ensimmäistä buildia.
 - App-csprojissa `UseWindowsForms` + `<Using Remove>` System.Windows.Forms
   ja System.Drawing — globaalit usingit törmäävät WPF-tyyppeihin.
 - Microsoft.Data.Sqlite poolaa yhteydet: HistoryDb.Dispose kutsuu ClearPool.
@@ -160,16 +161,26 @@ dotnet test src/HardwareMonitor.Tests/HardwareMonitor.Tests.csproj
   — **lue tämä istunnon alussa**, se kertoo koneen normaalitasot ja ongelmat
 - Ajastettu tehtävä: `schtasks /Query /TN HardwareMonitor /XML` (Arguments: --tray)
 
-## Seuraavat askeleet
+## Seuraavat askeleet (Vaihe 8, illalla 9.7.2026)
 
-1. **Vaihe 8 — Viimeistely**: ilmoitukset (tray-balloon/toast raja-arvo-
-   tapahtumista), asetussivu (rajat, lokitus, CSV-aikaväli), graafit
-   (LiveCharts2), kielituki fi/en (resx), LICENSE + repo julkiseksi
-   (viimeisenä), paketointi (self-contained julkaisu + ikoni).
-2. Pientä hiottavaa: fan_samples/insights käyttävät raakanimiä ("Fan #2"),
-   ei nimilappuja ("AIO-pumppu") — voisi mapata nimilaput talteen;
-   0 RPM -tuulettimet voisi suodattaa insights-taulukosta; JSON/PDF-vienti
-   (luku 20 "myöhemmin"); ylitysten kestolaskenta raporttiin.
+Ehdotettu järjestys illan istunnolle:
+
+1. **Ilmoitukset**: tray-balloon (NotifyIcon.ShowBalloonTip — ei vaadi
+   paketteja) WARNING/CRITICAL-raja-arvotapahtumista; asetus päälle/pois.
+   Tapahtumat tulevat valmiiksi `ThresholdResult.Events`-listasta
+   MainViewModel.Refreshissä.
+2. **Asetussivu**: uusi välilehti tai dialogi — raja-arvot (Thresholds),
+   lokitusasetukset, overlay-fontti; tallennus SettingsServicellä.
+   Rajojen muutos vaikuttaa heti (ThresholdMonitor lukee _s-viitettä).
+3. **Graafit**: LiveCharts2 (uusi NuGet Appiin) — lämpöhistoria
+   HistoryDb.ReadSampleRows-datasta uudelle välilehdelle.
+4. Viimeisenä (erikseen käyttäjän kanssa): kielituki fi/en (resx),
+   LICENSE + repo julkiseksi, paketointi (self-contained julkaisu).
+
+Pientä hiottavaa (sopii väliin): fan_samples/insights käyttävät raakanimiä
+("Fan #2"), ei nimilappuja ("AIO-pumppu") — voisi mapata nimilaput;
+0 RPM -tuulettimet pois insights-taulukosta; JSON/PDF-vienti (luku 20
+"myöhemmin"); ylitysten kestolaskenta raporttiin ("RAM yli 90 %: 12 min").
 
 ## Huomio testikaatumisista 9.7.
 
