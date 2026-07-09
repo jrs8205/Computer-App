@@ -173,9 +173,17 @@ Ehdotettu järjestys illan istunnolle:
    ikoni). Asetus `AlertNotificationsEnabled` (oletus true) + checkbox
    "Hälytysilmoitukset" yläpalkissa. Todennettu ajossa madalletulla rajalla
    (30 °C): toast näkyi, tilapaneeli ja overlay reagoivat; rajat palautettu.
-2. **Asetussivu**: uusi välilehti tai dialogi — raja-arvot (Thresholds),
-   lokitusasetukset, overlay-fontti; tallennus SettingsServicellä.
-   Rajojen muutos vaikuttaa heti (ThresholdMonitor lukee _s-viitettä).
+2. ~~**Asetussivu**~~ **TEHTY 9.7. illalla:** Asetukset-välilehti (spec:
+   docs/superpowers/specs/2026-07-09-settings-page-design.md, plan:
+   docs/superpowers/plans/2026-07-09-settings-page.md). Core:
+   `SettingsValidator` (TDD: fi/piste-parsinta, välit, warn<crit). App:
+   `NumericFieldViewModel` (teksti↔float + virhetila) + `SettingsViewModel`
+   (rivilistat, Palauta oletusrajat — viitteet säilyvät!). Ryhmät: Yleiset /
+   Raja-arvot / Kestot / Lokitus / Overlay; yläpalkkiin jäi vain Overlay-
+   kytkin, Siirrä overlayta ja raporttinapit. Muutos vaikuttaa heti
+   (todennettu: raja 30 → tilapaneeli Varoitus sekunneissa; fonttikoko →
+   overlay heti; "abc"/96 → virheviestit; käyttäjä testasi kaikki 7 kohtaa).
+   116 testiä. Kielivalinnalle varattu paikka Yleiset-ryhmään (resx myöh.).
 3. **Graafit**: LiveCharts2 (uusi NuGet Appiin) — lämpöhistoria
    HistoryDb.ReadSampleRows-datasta uudelle välilehdelle.
 4. Viimeisenä (erikseen käyttäjän kanssa): kielituki fi/en (resx),
