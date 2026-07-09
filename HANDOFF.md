@@ -184,8 +184,21 @@ Ehdotettu järjestys illan istunnolle:
    (todennettu: raja 30 → tilapaneeli Varoitus sekunneissa; fonttikoko →
    overlay heti; "abc"/96 → virheviestit; käyttäjä testasi kaikki 7 kohtaa).
    116 testiä. Kielivalinnalle varattu paikka Yleiset-ryhmään (resx myöh.).
-3. **Graafit**: LiveCharts2 (uusi NuGet Appiin) — lämpöhistoria
-   HistoryDb.ReadSampleRows-datasta uudelle välilehdelle.
+3. ~~**Graafit**~~ **TEHTY 9.7. illalla:** Historia-välilehti (spec + plan
+   docs/superpowers/-kansioissa). Core: `ChartHistoryBuilder` (TDD:
+   bucket-keskiarvoharvennus ~500 pisteeseen, null-aukot säilyvät,
+   samannimiset levyt "#1/#2", tuuletin näytetään vain jos pyörii ≥5 %
+   ajasta — käyttäjän palaute). App: `HistoryViewModel` + LiveCharts2
+   2.0.5 (LiveChartsCore.SkiaSharpView.WPF; NU1701 vaimennettu csprojissa).
+   Kolme graafia (lämmöt/kuormat/tuulettimet nimilapuilla), aikavälit
+   1 h/24 h/7 pv/30 pv, taustahaku + päivitys 60 s (tick % 60 == 45).
+   **GOTCHA: LiveCharts2-chartin oletustausta on VALKOINEN** — aseta
+   Background XAML:ssa, muuten tumman teeman tekstit katoavat.
+   Samalla: WCAG AAA -värikorjaus koko sovellukseen (harmaat → #BDBDBD,
+   virhetekstit → #FF8A80, alapalkki → #004C87, akselitekstit valkoiset;
+   tooltipit kokonaislukuina) ja run.ps1 -AsAdmin ei enää jätä
+   PowerShell-ikkunaa auki (buildaa ensin, käynnistää exen suoraan).
+   126 testiä läpi; käyttäjä todensi graafit, tooltipit ja värit ajossa.
 4. Viimeisenä (erikseen käyttäjän kanssa): kielituki fi/en (resx),
    LICENSE + repo julkiseksi, paketointi (self-contained julkaisu).
 
