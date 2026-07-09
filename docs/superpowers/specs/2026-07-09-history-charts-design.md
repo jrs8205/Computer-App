@@ -65,6 +65,8 @@ Säännöt:
   kaikki arvot ovat null tai 0 jätetään kokonaan pois.
 - **Levysarjojen unioni**: sarja luodaan jokaiselle levynimelle joka
   esiintyy missä tahansa rivissä; riviltä puuttuva levy → null.
+  Samannimiset levyt (koneessa on kaksi "Samsung SSD 860 EVO 1TB") saavat
+  omat sarjansa järjestysnumerolla: "… #1" ja "… #2".
 
 ## App: HistoryViewModel + XAML
 
