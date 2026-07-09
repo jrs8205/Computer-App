@@ -80,4 +80,7 @@ public sealed class AppSettings
 
     /// <summary>Pienennä- ja sulje-nappi vievät ilmaisinalueelle; mittaus jatkuu taustalla.</summary>
     public bool MinimizeToTray { get; set; } = true;
+
+    /// <summary>Balloon-ilmoitus ilmaisinalueelle WARNING/CRITICAL-raja-arvotapahtumista.</summary>
+    public bool AlertNotificationsEnabled { get; set; } = true;
 }

@@ -5,6 +5,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using HardwareMonitor.App.ViewModels;
+using HardwareMonitor.Core.Notifications;
 
 namespace HardwareMonitor.App;
 
@@ -66,9 +67,22 @@ public partial class MainWindow : Window
         }
 
         _monitoringStarted = true;
+        _viewModel.NotificationRequested += ShowTrayNotification;
         _viewModel.Start();
         _viewModel.OverlaySettingsChanged += ApplyOverlaySettings;
         ApplyOverlaySettings();
+    }
+
+    /// <summary>Balloon-ilmoitus hälytyksestä; Windows 11 näyttää sen toast-ilmoituksena.</summary>
+    private void ShowTrayNotification(TrayNotification notification)
+    {
+        _trayIcon?.ShowBalloonTip(
+            10_000,
+            notification.Title,
+            notification.Message,
+            notification.Severity == NotificationSeverity.Critical
+                ? System.Windows.Forms.ToolTipIcon.Error
+                : System.Windows.Forms.ToolTipIcon.Warning);
     }
 
     /// <summary>Tray-kuvake valikkoineen: Näytä / Overlay / Lopeta.</summary>

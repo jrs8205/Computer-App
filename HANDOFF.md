@@ -165,10 +165,14 @@ dotnet test src/HardwareMonitor.Tests/HardwareMonitor.Tests.csproj
 
 Ehdotettu järjestys illan istunnolle:
 
-1. **Ilmoitukset**: tray-balloon (NotifyIcon.ShowBalloonTip — ei vaadi
-   paketteja) WARNING/CRITICAL-raja-arvotapahtumista; asetus päälle/pois.
-   Tapahtumat tulevat valmiiksi `ThresholdResult.Events`-listasta
-   MainViewModel.Refreshissä.
+1. ~~**Ilmoitukset**~~ **TEHTY 9.7. illalla:** `Core/Notifications/
+   NotificationBuilder` (puhdas, TDD: pois päältä / ei tapahtumia / INFO →
+   null; WARNING/CRITICAL → otsikko+viesti+vakavuus; useampi yhdistetään;
+   katkaisu 255 merkkiin) → `MainViewModel.NotificationRequested` →
+   `MainWindow.ShowTrayNotification` (ShowBalloonTip 10 s, Warning/Error-
+   ikoni). Asetus `AlertNotificationsEnabled` (oletus true) + checkbox
+   "Hälytysilmoitukset" yläpalkissa. Todennettu ajossa madalletulla rajalla
+   (30 °C): toast näkyi, tilapaneeli ja overlay reagoivat; rajat palautettu.
 2. **Asetussivu**: uusi välilehti tai dialogi — raja-arvot (Thresholds),
    lokitusasetukset, overlay-fontti; tallennus SettingsServicellä.
    Rajojen muutos vaikuttaa heti (ThresholdMonitor lukee _s-viitettä).

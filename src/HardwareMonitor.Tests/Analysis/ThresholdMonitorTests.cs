@@ -135,7 +135,7 @@ public class ThresholdMonitorTests
         }
 
         Assert.Equal(ThresholdState.Critical, worst);
-        ThresholdEvent e = Assert.Single(all.Where(e => e.Component == "Tuuletin"));
+        ThresholdEvent e = Assert.Single(all, e => e.Component == "Tuuletin");
         Assert.Equal("CRITICAL", e.Level);
     }
 

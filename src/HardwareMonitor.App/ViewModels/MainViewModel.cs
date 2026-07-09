@@ -8,6 +8,7 @@ using HardwareMonitor.Core.Analysis;
 using HardwareMonitor.Core.Insights;
 using HardwareMonitor.Core.Logging;
 using HardwareMonitor.Core.Metrics;
+using HardwareMonitor.Core.Notifications;
 using HardwareMonitor.Core.Reports;
 using HardwareMonitor.Core.Sensors;
 using HardwareMonitor.Core.Settings;
@@ -123,6 +124,9 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
 
     /// <summary>Laukeaa kun mikä tahansa overlay-asetus muuttuu (tallennus + ikkunan päivitys).</summary>
     public event Action? OverlaySettingsChanged;
+
+    /// <summary>Nostetaan kun raja-arvohälytyksestä pitää näyttää tray-ilmoitus.</summary>
+    public event Action<TrayNotification>? NotificationRequested;
 
     public OverlaySettings OverlaySettings => _settings.Overlay;
 
@@ -248,6 +252,21 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
         }
     }
 
+    public bool AlertNotificationsEnabled
+    {
+        get => _settings.AlertNotificationsEnabled;
+        set
+        {
+            if (_settings.AlertNotificationsEnabled == value)
+            {
+                return;
+            }
+
+            _settings.AlertNotificationsEnabled = value;
+            OnOverlaySettingChanged(nameof(AlertNotificationsEnabled));
+        }
+    }
+
     public bool OverlayShowFans
     {
         get => _settings.Overlay.ShowFans;
@@ -355,6 +374,14 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
             _latestMetrics = metrics;
             _latestStates = thresholds.States;
             _latestAssessment = assessment;
+
+            // Vaihe 8: balloon-ilmoitus ilmaisinalueelle hälytyksistä.
+            TrayNotification? notification =
+                NotificationBuilder.Build(thresholds.Events, _settings.AlertNotificationsEnabled);
+            if (notification is not null)
+            {
+                NotificationRequested?.Invoke(notification);
+            }
 
             foreach (ThresholdEvent alert in thresholds.Events)
             {

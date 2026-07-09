@@ -101,6 +101,9 @@
                               ToolTip="Kun päällä, overlayn voi raahata hiirellä haluamaansa paikkaan" />
                     <CheckBox Content="Pienennä trayhin" IsChecked="{Binding MinimizeToTray}"
                               Foreground="White" Margin="16,0,0,0" VerticalAlignment="Center" />
+                    <CheckBox Content="Hälytysilmoitukset" IsChecked="{Binding AlertNotificationsEnabled}"
+                              Foreground="White" Margin="16,0,0,0" VerticalAlignment="Center"
+                              ToolTip="Näytä ilmoitus ilmaisinalueella, kun varoitus- tai kriittinen raja ylittyy" />
                     <CheckBox Content="Käynnistä Windowsin mukana" IsChecked="{Binding AutoStart}"
                               Foreground="White" Margin="16,0,0,0" VerticalAlignment="Center" />
                     <Button Content="Luo raportti…" Click="CreateReport_Click"
