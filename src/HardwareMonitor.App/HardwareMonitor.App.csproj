@@ -13,6 +13,9 @@
     <RootNamespace>HardwareMonitor.App</RootNamespace>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <ApplicationIcon>Assets\app.ico</ApplicationIcon>
+    <!-- NU1701: LiveCharts2:n SkiaSharp.Views.WPF on net462-kohdennettu mutta
+         toimii .NET 8 -WPF:ssä (todennettu ajossa) — vaimennetaan restore-varoitus. -->
+    <NoWarn>$(NoWarn);NU1701</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
@@ -29,6 +32,10 @@
   <ItemGroup>
     <!-- app.ico Resource-itemina, jotta tray-kuvake voi ladata sen pack-URIsta. -->
     <Resource Include="Assets\app.ico" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="LiveChartsCore.SkiaSharpView.WPF" Version="2.0.5" />
   </ItemGroup>
 
 </Project>

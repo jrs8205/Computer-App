@@ -5,6 +5,7 @@ using System.IO;
 using System.Windows.Threading;
 using HardwareMonitor.App.Services;
 using HardwareMonitor.Core.Analysis;
+using HardwareMonitor.Core.Charts;
 using HardwareMonitor.Core.Insights;
 using HardwareMonitor.Core.Logging;
 using HardwareMonitor.Core.Metrics;
@@ -47,6 +48,7 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
     private int _windowsScanRunning;
     private int _analysisRefreshRunning;
     private int _insightsWriteRunning;
+    private int _historyRefreshRunning;
     private int _rowsLogged;
 
     private string _status = "Käynnistetään sensorit…";
@@ -63,6 +65,7 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
         _timer.Tick += (_, _) => Refresh();
         SettingsPage = new SettingsViewModel(
             _settings, () => OnOverlaySettingChanged(nameof(SettingsPage)));
+        History.RefreshRequested += RefreshHistoryInBackground;
     }
 
     private bool _autoStart;
@@ -126,6 +129,9 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
 
     /// <summary>Asetukset-välilehden kentät (Vaihe 8.2).</summary>
     public SettingsViewModel SettingsPage { get; }
+
+    /// <summary>Historia-välilehden graafit (Vaihe 8.3).</summary>
+    public HistoryViewModel History { get; } = new();
 
     /// <summary>Laukeaa kun mikä tahansa overlay-asetus muuttuu (tallennus + ikkunan päivitys).</summary>
     public event Action? OverlaySettingsChanged;
@@ -332,6 +338,7 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
                 // Vaihe 5: Windowsin System-lokin rautatapahtumat events-tauluun.
                 _windowsEvents = new WindowsEventCollector(new SystemEventReader(), _historyDb);
                 ScanWindowsEventsInBackground();
+                RefreshHistoryInBackground();
                 RefreshAnalysisCachesInBackground();
                 WriteMachineInsightsInBackground();
             }
@@ -466,6 +473,12 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
             if (_tickCount % 1800 == 60)
             {
                 WriteMachineInsightsInBackground();
+            }
+
+            // Historiagraafien data minuutin välein (offset ettei osu muihin töihin).
+            if (_tickCount % 60 == 45)
+            {
+                RefreshHistoryInBackground();
             }
 
             Status =
@@ -753,6 +766,57 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
         {
             LogGroup(sub, indent + 1);
         }
+    }
+
+    /// <summary>Hakee historiagraafien datan taustalla; päällekkäisyys estetty.</summary>
+    private void RefreshHistoryInBackground()
+    {
+        if (_historyDb is not { } db
+            || Interlocked.Exchange(ref _historyRefreshRunning, 1) == 1)
+        {
+            return;
+        }
+
+        int hours = History.RangeHours;
+        Task.Run(() =>
+        {
+            try
+            {
+                IReadOnlyList<SampleRow> rows =
+                    db.ReadSampleRows(DateTimeOffset.Now.AddHours(-hours));
+                ChartHistory history =
+                    ChartHistoryBuilder.Build(rows, 500, BuildFanLabelMap());
+                System.Windows.Application.Current?.Dispatcher.InvokeAsync(
+                    () => History.Apply(history, hours));
+            }
+            catch (Exception ex)
+            {
+                _logger.Log($"VIRHE historiagraafien haussa: {ex.Message}");
+            }
+            finally
+            {
+                Interlocked.Exchange(ref _historyRefreshRunning, 0);
+            }
+        });
+    }
+
+    /// <summary>Tuulettimen raakanimi → käyttäjän nimilappu (graafien selitteisiin).</summary>
+    private Dictionary<string, string> BuildFanLabelMap()
+    {
+        var map = new Dictionary<string, string>();
+        if (_latestMetrics is { } m)
+        {
+            foreach (FanMetrics fan in m.Fans)
+            {
+                if (_settings.FanLabels.TryGetValue(fan.Identifier, out string? label)
+                    && label.Length > 0)
+                {
+                    map[fan.Name] = label;
+                }
+            }
+        }
+
+        return map;
     }
 
     private void OnOverlaySettingChanged(string propertyName)
