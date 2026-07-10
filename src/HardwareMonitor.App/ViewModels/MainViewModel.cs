@@ -41,6 +41,14 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
     private HistoryDb? _historyDb;
     private EventLogService? _events;
     private WindowsEventCollector? _windowsEvents;
+
+    /// <summary>Viimeisin sensoriluenta konetuntemus-lokin kokoonpano-osiota varten.</summary>
+    private IReadOnlyList<HardwareGroup>? _latestGroups;
+
+    /// <summary>Esim. "Windows 11 (build 26200)" — build ≥ 22000 on Windows 11.</summary>
+    private static readonly string OsDescriptionText =
+        $"Windows {(Environment.OSVersion.Version.Build >= 22000 ? 11 : 10)} " +
+        $"(build {Environment.OSVersion.Version.Build})";
     private bool _previousSessionCrashed;
     private IReadOnlyList<EventRow> _recentEvents = Array.Empty<EventRow>();
     private SampleStats? _dayStats;
@@ -369,6 +377,7 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
         try
         {
             IReadOnlyList<HardwareGroup> groups = _sensorService.Read();
+            _latestGroups = groups;
 
             KeyMetrics metrics = KeyMetricsService.Extract(groups);
             Dashboard.Update(metrics, _settings.FanLabels);
@@ -648,7 +657,10 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
                 DateTimeOffset now = DateTimeOffset.Now;
                 string markdown = MachineInsightsBuilder.Build(new MachineInsightsInput(
                     now,
-                    MachineSpecReader.Read(Array.Empty<HardwareGroup>(), "", ""),
+                    MachineSpecReader.Read(
+                        _latestGroups ?? Array.Empty<HardwareGroup>(),
+                        OsDescriptionText,
+                        _settings.InsightsNotes),
                     db.GetSampleStats(now.AddDays(-30)),
                     db.GetSampleStats(now.AddDays(-7)),
                     db.ReadEventsSince(now.AddDays(-30)),
