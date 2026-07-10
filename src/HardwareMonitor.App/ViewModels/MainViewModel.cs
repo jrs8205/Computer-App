@@ -654,11 +654,18 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
         {
             try
             {
+                // Käynnistyskirjoitus voi ehtiä ennen ensimmäistä sensoriluentaa —
+                // odotetaan hetki, ettei kokoonpano-osio jää tyhjäksi ("—").
+                for (int i = 0; i < 30 && Volatile.Read(ref _latestGroups) is null; i++)
+                {
+                    Thread.Sleep(500);
+                }
+
                 DateTimeOffset now = DateTimeOffset.Now;
                 string markdown = MachineInsightsBuilder.Build(new MachineInsightsInput(
                     now,
                     MachineSpecReader.Read(
-                        _latestGroups ?? Array.Empty<HardwareGroup>(),
+                        Volatile.Read(ref _latestGroups) ?? Array.Empty<HardwareGroup>(),
                         OsDescriptionText,
                         _settings.InsightsNotes),
                     db.GetSampleStats(now.AddDays(-30)),
