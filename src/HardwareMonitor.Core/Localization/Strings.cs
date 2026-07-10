@@ -141,6 +141,8 @@ public static class Strings
     // MachineInsightsBuilder
     public static string Insights_Title => T(nameof(Insights_Title));
     public static string Insights_Intro => T(nameof(Insights_Intro));
+    public static string Insights_AiIntroHeading => T(nameof(Insights_AiIntroHeading));
+    public static string Insights_AiIntroBody => T(nameof(Insights_AiIntroBody));
     public static string Insights_NotEnoughData => T(nameof(Insights_NotEnoughData));
     public static string Insights_LevelsHeading => T(nameof(Insights_LevelsHeading));
     public static string Insights_LevelsTableHeader => T(nameof(Insights_LevelsTableHeader));

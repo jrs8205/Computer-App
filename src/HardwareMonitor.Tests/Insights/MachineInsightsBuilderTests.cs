@@ -99,6 +99,24 @@ public class MachineInsightsBuilderTests
     }
 
     [Fact]
+    public void SisaltaaJohdannonTekoalylle()
+    {
+        string md = Build();
+
+        Assert.Contains("## Johdanto tekoälylle", md);
+        Assert.Contains("LibreHardwareMonitor", md);
+        Assert.Contains("vianetsinnästä", md);
+    }
+
+    [Fact]
+    public void JohdantoNakyyMyosIlmanDataa()
+    {
+        string md = Build(stats: Stats(count: 0));
+
+        Assert.Contains("## Johdanto tekoälylle", md);
+    }
+
+    [Fact]
     public void IlmanDataa_KertooEttaDataaKertyyVasta()
     {
         string md = Build(stats: Stats(count: 0));

@@ -26,6 +26,7 @@ public static class MachineInsightsBuilder
         sb.AppendLine();
         sb.AppendLine(string.Format(Strings.Insights_Intro, now).ReplaceLineEndings());
         sb.AppendLine();
+        AppendAiIntro(sb);
 
         if (stats.SampleCount == 0)
         {
@@ -39,6 +40,14 @@ public static class MachineInsightsBuilder
         AppendInsights(sb, stats, limits, whea, crashes, winDisk);
 
         return sb.ToString();
+    }
+
+    private static void AppendAiIntro(StringBuilder sb)
+    {
+        sb.AppendLine(Strings.Insights_AiIntroHeading);
+        sb.AppendLine();
+        sb.AppendLine(Strings.Insights_AiIntroBody.ReplaceLineEndings());
+        sb.AppendLine();
     }
 
     private static void AppendLevels(StringBuilder sb, SampleStats stats, ThresholdSettings limits)
