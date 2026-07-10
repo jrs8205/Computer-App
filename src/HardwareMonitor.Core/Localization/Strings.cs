@@ -156,6 +156,8 @@ public static class Strings
     public static string Insights_TrendFall => T(nameof(Insights_TrendFall));
     public static string Insights_TrendsNone => T(nameof(Insights_TrendsNone));
     public static string Insights_TrendsNotEnough => T(nameof(Insights_TrendsNotEnough));
+    public static string Insights_RecentEventsHeading => T(nameof(Insights_RecentEventsHeading));
+    public static string Insights_RecentEventLine => T(nameof(Insights_RecentEventLine));
     public static string Insights_NotEnoughData => T(nameof(Insights_NotEnoughData));
     public static string Insights_LevelsHeading => T(nameof(Insights_LevelsHeading));
     public static string Insights_LevelsTableHeader => T(nameof(Insights_LevelsTableHeader));

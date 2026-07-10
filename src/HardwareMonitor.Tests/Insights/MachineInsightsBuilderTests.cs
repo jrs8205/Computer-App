@@ -215,6 +215,47 @@ public class MachineInsightsBuilderTests
     }
 
     [Fact]
+    public void ViimeisimmatTapahtumatListataanUusinEnsin()
+    {
+        var events = new EventRow[]
+        {
+            new(Now.AddDays(-2), "WARNING", "CPU", "CPU Package", 88, 85, "vanhempi"),
+            new(Now.AddDays(-1), "CRITICAL", "GPU", "GPU Core", 97, 95, "uudempi"),
+            new(Now.AddDays(-3), "INFO", "App", null, null, null, "info-ohitetaan"),
+        };
+
+        string md = Build(events: events);
+
+        Assert.Contains("### Viimeisimmät varoitus- ja kriittiset tapahtumat", md);
+        Assert.Contains("CRITICAL: uudempi", md);
+        Assert.Contains("WARNING: vanhempi", md);
+        Assert.DoesNotContain("info-ohitetaan", md);
+        Assert.True(md.IndexOf("uudempi") < md.IndexOf("vanhempi"));
+    }
+
+    [Fact]
+    public void TapahtumalistassaEnintaanKymmenenRivia()
+    {
+        EventRow[] events = Enumerable.Range(0, 15)
+            .Select(i => new EventRow(Now.AddHours(-i), "WARNING", "CPU", "CPU Package",
+                88, 85, $"tapahtuma-{i}"))
+            .ToArray();
+
+        string md = Build(events: events);
+
+        Assert.Contains("tapahtuma-0", md);
+        Assert.Contains("tapahtuma-9", md);
+        Assert.DoesNotContain("tapahtuma-10", md);
+        Assert.DoesNotContain("tapahtuma-14", md);
+    }
+
+    [Fact]
+    public void IlmanTapahtumiaListaaEiNayteta()
+    {
+        Assert.DoesNotContain("Viimeisimmät varoitus", Build());
+    }
+
+    [Fact]
     public void IlmanDataa_KertooEttaDataaKertyyVasta()
     {
         string md = Build(stats: Stats(count: 0));

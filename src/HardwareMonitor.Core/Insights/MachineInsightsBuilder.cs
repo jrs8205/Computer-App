@@ -39,6 +39,7 @@ public static class MachineInsightsBuilder
         AppendTrends(sb, stats, stats7d);
         (int whea, int crashes, int thresholds, int gpuDriver, int winDisk) = CountEvents(events);
         AppendEvents(sb, whea, crashes, thresholds, gpuDriver, winDisk);
+        AppendRecentEvents(sb, events);
         AppendInsights(sb, stats, limits, whea, crashes, winDisk);
 
         return sb.ToString();
@@ -238,6 +239,30 @@ public static class MachineInsightsBuilder
         sb.AppendLine(string.Format(Strings.Insights_EventThresholds, thresholds));
         sb.AppendLine(string.Format(Strings.Insights_EventGpuDriver, gpuDriver));
         sb.AppendLine(string.Format(Strings.Insights_EventWinDisk, winDisk));
+        sb.AppendLine();
+    }
+
+    private static void AppendRecentEvents(StringBuilder sb, IReadOnlyList<EventRow> events)
+    {
+        var recent = events
+            .Where(e => e.Level != "INFO")
+            .OrderByDescending(e => e.Timestamp)
+            .Take(10)
+            .ToList();
+        if (recent.Count == 0)
+        {
+            return;
+        }
+
+        sb.AppendLine(Strings.Insights_RecentEventsHeading);
+        sb.AppendLine();
+        foreach (EventRow e in recent)
+        {
+            // Aikaleima paikallisajassa — kannassa aika on UTC-offsetilla.
+            sb.AppendLine(string.Format(
+                Strings.Insights_RecentEventLine, e.Timestamp.ToLocalTime(), e.Level, e.Message));
+        }
+
         sb.AppendLine();
     }
 

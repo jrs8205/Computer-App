@@ -171,6 +171,8 @@ temperatures, performance, cooling or troubleshooting.</value></data>
   <data name="Insights_TrendFall" xml:space="preserve"><value>- {0}: average has fallen ({1} → {2})</value></data>
   <data name="Insights_TrendsNone" xml:space="preserve"><value>- No significant changes.</value></data>
   <data name="Insights_TrendsNotEnough" xml:space="preserve"><value>- Not enough data from the last 7 days for comparison yet.</value></data>
+  <data name="Insights_RecentEventsHeading" xml:space="preserve"><value>### Latest warning and critical events</value></data>
+  <data name="Insights_RecentEventLine" xml:space="preserve"><value>- {0:d.M.yyyy 'at' HH.mm} — {1}: {2}</value></data>
   <data name="Insights_NotEnoughData" xml:space="preserve"><value>Not enough data yet — history accumulates while the application is running.</value></data>
   <data name="Insights_LevelsHeading" xml:space="preserve"><value>## Normal levels and peaks (30 days)</value></data>
   <data name="Insights_LevelsTableHeader" xml:space="preserve"><value>| Metric | Average | Peak | Warning limit |</value></data>
