@@ -21,9 +21,23 @@ public class MachineInsightsBuilderTests
         Disks: new[] { new DiskStat("970 EVO Plus", 55, diskMax) },
         Fans: new[] { new FanStat("AIO-pumppu", 1948, 1990) });
 
+    private static MachineSpec Spec(string notes = "") => new(
+        "Intel Core i9-9900K", "NVIDIA GeForce RTX 2060",
+        "ASUS ROG STRIX Z390-F GAMING", 64,
+        new[] { "970 EVO Plus" }, "Windows 11 (build 26200)", notes);
+
     private static string Build(
-        SampleStats? stats = null, IReadOnlyList<EventRow>? events = null) =>
-        MachineInsightsBuilder.Build(Now, stats ?? Stats(), events ?? Array.Empty<EventRow>(), Limits);
+        SampleStats? stats = null,
+        IReadOnlyList<EventRow>? events = null,
+        SampleStats? stats7d = null,
+        MachineSpec? spec = null) =>
+        MachineInsightsBuilder.Build(new MachineInsightsInput(
+            Now,
+            spec ?? Spec(),
+            stats ?? Stats(),
+            stats7d ?? stats ?? Stats(),
+            events ?? Array.Empty<EventRow>(),
+            Limits));
 
     [Fact]
     public void SisaltaaOtsikonJaNormaalitasot()

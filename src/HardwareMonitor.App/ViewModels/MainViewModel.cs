@@ -646,11 +646,13 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
             try
             {
                 DateTimeOffset now = DateTimeOffset.Now;
-                string markdown = MachineInsightsBuilder.Build(
+                string markdown = MachineInsightsBuilder.Build(new MachineInsightsInput(
                     now,
+                    MachineSpecReader.Read(Array.Empty<HardwareGroup>(), "", ""),
                     db.GetSampleStats(now.AddDays(-30)),
+                    db.GetSampleStats(now.AddDays(-7)),
                     db.ReadEventsSince(now.AddDays(-30)),
-                    _settings.Thresholds);
+                    _settings.Thresholds));
                 File.WriteAllText(MachineInsightsPath, markdown);
             }
             catch (Exception ex)

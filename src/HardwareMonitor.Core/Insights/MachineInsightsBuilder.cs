@@ -17,12 +17,10 @@ public static class MachineInsightsBuilder
     private static readonly HashSet<string> WindowsDiskProviders =
         new(StringComparer.OrdinalIgnoreCase) { "disk", "Ntfs", "storahci", "stornvme" };
 
-    public static string Build(
-        DateTimeOffset now,
-        SampleStats stats,
-        IReadOnlyList<EventRow> events,
-        ThresholdSettings limits)
+    public static string Build(MachineInsightsInput input)
     {
+        (DateTimeOffset now, MachineSpec _, SampleStats stats, SampleStats _,
+            IReadOnlyList<EventRow> events, ThresholdSettings limits) = input;
         var sb = new StringBuilder();
         sb.AppendLine(Strings.Insights_Title);
         sb.AppendLine();
