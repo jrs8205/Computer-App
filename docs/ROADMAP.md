@@ -156,10 +156,19 @@ vaatimus 9.7.2026: vientien pitää olla selkokielisiä, ei konedataa.
 
 ## ⏭️ Vaihe 8 — Viimeistely
 
-- [ ] Ilmoitukset, asetussivu, graafit (LiveCharts2) — tray icon ja autostart
-      tehtiin jo Vaihe 2.6:ssa
-- [ ] **Kielituki fi/en**: UI-tekstit resx-resursseihin, kielivalinta asetuksiin
-      (nyt kaikki tekstit kovakoodattua suomea)
+- [x] Ilmoitukset, asetussivu, graafit (LiveCharts2) — tray icon ja autostart
+      tehtiin jo Vaihe 2.6:ssa (valmis 9.7.2026: `NotificationBuilder`,
+      Asetukset-välilehti + `SettingsValidator`, Historia-välilehti +
+      `ChartHistoryBuilder`; WCAG AAA -värit)
+- [x] **Kielituki fi/en** (valmis 9.7.2026): resx (neutraali fi + en-satelliitti),
+      käsintehdyt accessorit (`Strings`/`UiStrings`), kielivalinta asetuksissa,
+      `LanguageResolver`
+- [x] **machine-insights.md v2** (valmis 10.7.2026, spec
+      `docs/superpowers/specs/2026-07-10-machine-insights-v2-design.md`):
+      "anna tekoälychatille" -tiedosto — johdanto AI:lle, koneen kokoonpano
+      (`MachineSpecReader`; Virtual Memory -ryhmä ohitetaan RAM-laskennassa),
+      trendit 7 pv vs 30 pv, 10 viimeisintä WARNING/CRITICAL-tapahtumaa,
+      käyttäjän lisätiedot (`InsightsNotes`-asetus). Todennettu ajossa.
 - [ ] **Julkaisukuntoon**: LICENSE-tiedosto (oma koodi esim. MIT; LibreHardwareMonitorLib
       on MPL-2.0 — mainittava READMEssä), englanninkielinen README-osio, repo julkiseksi
 - [ ] Paketointi/asennin (self-contained julkaisu, autostart-polun päivitys
