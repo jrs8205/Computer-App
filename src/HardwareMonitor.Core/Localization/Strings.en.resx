@@ -166,6 +166,11 @@ temperatures, performance, cooling or troubleshooting.</value></data>
   <data name="Insights_SpecDisks" xml:space="preserve"><value>- Drives: {0}</value></data>
   <data name="Insights_SpecOs" xml:space="preserve"><value>- Operating system: {0}</value></data>
   <data name="Insights_SpecNotes" xml:space="preserve"><value>- User notes: {0}</value></data>
+  <data name="Insights_TrendsHeading" xml:space="preserve"><value>## Trends (7 days vs 30 days)</value></data>
+  <data name="Insights_TrendRise" xml:space="preserve"><value>- {0}: average has risen ({1} → {2})</value></data>
+  <data name="Insights_TrendFall" xml:space="preserve"><value>- {0}: average has fallen ({1} → {2})</value></data>
+  <data name="Insights_TrendsNone" xml:space="preserve"><value>- No significant changes.</value></data>
+  <data name="Insights_TrendsNotEnough" xml:space="preserve"><value>- Not enough data from the last 7 days for comparison yet.</value></data>
   <data name="Insights_NotEnoughData" xml:space="preserve"><value>Not enough data yet — history accumulates while the application is running.</value></data>
   <data name="Insights_LevelsHeading" xml:space="preserve"><value>## Normal levels and peaks (30 days)</value></data>
   <data name="Insights_LevelsTableHeader" xml:space="preserve"><value>| Metric | Average | Peak | Warning limit |</value></data>

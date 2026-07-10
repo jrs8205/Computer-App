@@ -162,6 +162,59 @@ public class MachineInsightsBuilderTests
     }
 
     [Fact]
+    public void TrendiNaytetaan_KunLampoNoussutSelvasti()
+    {
+        SampleStats s7 = Stats() with { CpuTemp = new MetricStat(56, 82) };
+
+        string md = Build(stats7d: s7);
+
+        Assert.Contains("## Trendit (7 pv vs 30 pv)", md);
+        Assert.Contains("CPU-lämpötila: keskiarvo noussut (52 °C → 56 °C)", md);
+    }
+
+    [Fact]
+    public void PieniMuutosEiNayTrendeissa()
+    {
+        SampleStats s7 = Stats() with { CpuTemp = new MetricStat(54, 82) };
+
+        string md = Build(stats7d: s7);
+
+        Assert.Contains("Ei merkittäviä muutoksia", md);
+        Assert.DoesNotContain("noussut", md);
+    }
+
+    [Fact]
+    public void LaskenutKeskiarvoNaytetaanLaskuna()
+    {
+        SampleStats s7 = Stats() with { RamLoad = new MetricStat(20, 71) };
+
+        string md = Build(stats7d: s7);
+
+        Assert.Contains("RAM-käyttö: keskiarvo laskenut (35 % → 20 %)", md);
+    }
+
+    [Fact]
+    public void Ilman7pvDataaTodetaanPuute()
+    {
+        string md = Build(stats7d: Stats(count: 0));
+
+        Assert.Contains("7 päivän vertailudataa", md);
+    }
+
+    [Fact]
+    public void LevytrendiVerrataanNimenMukaan()
+    {
+        SampleStats s7 = Stats() with
+        {
+            Disks = new[] { new DiskStat("970 EVO Plus", 60, 62) },
+        };
+
+        string md = Build(stats7d: s7);
+
+        Assert.Contains("970 EVO Plus: keskiarvo noussut (55 °C → 60 °C)", md);
+    }
+
+    [Fact]
     public void IlmanDataa_KertooEttaDataaKertyyVasta()
     {
         string md = Build(stats: Stats(count: 0));

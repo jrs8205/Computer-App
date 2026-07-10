@@ -151,6 +151,11 @@ public static class Strings
     public static string Insights_SpecDisks => T(nameof(Insights_SpecDisks));
     public static string Insights_SpecOs => T(nameof(Insights_SpecOs));
     public static string Insights_SpecNotes => T(nameof(Insights_SpecNotes));
+    public static string Insights_TrendsHeading => T(nameof(Insights_TrendsHeading));
+    public static string Insights_TrendRise => T(nameof(Insights_TrendRise));
+    public static string Insights_TrendFall => T(nameof(Insights_TrendFall));
+    public static string Insights_TrendsNone => T(nameof(Insights_TrendsNone));
+    public static string Insights_TrendsNotEnough => T(nameof(Insights_TrendsNotEnough));
     public static string Insights_NotEnoughData => T(nameof(Insights_NotEnoughData));
     public static string Insights_LevelsHeading => T(nameof(Insights_LevelsHeading));
     public static string Insights_LevelsTableHeader => T(nameof(Insights_LevelsTableHeader));

@@ -19,7 +19,7 @@ public static class MachineInsightsBuilder
 
     public static string Build(MachineInsightsInput input)
     {
-        (DateTimeOffset now, MachineSpec spec, SampleStats stats, SampleStats _,
+        (DateTimeOffset now, MachineSpec spec, SampleStats stats, SampleStats stats7d,
             IReadOnlyList<EventRow> events, ThresholdSettings limits) = input;
         var sb = new StringBuilder();
         sb.AppendLine(Strings.Insights_Title);
@@ -36,6 +36,7 @@ public static class MachineInsightsBuilder
         }
 
         AppendLevels(sb, stats, limits);
+        AppendTrends(sb, stats, stats7d);
         (int whea, int crashes, int thresholds, int gpuDriver, int winDisk) = CountEvents(events);
         AppendEvents(sb, whea, crashes, thresholds, gpuDriver, winDisk);
         AppendInsights(sb, stats, limits, whea, crashes, winDisk);
@@ -135,6 +136,70 @@ public static class MachineInsightsBuilder
     {
         string limit = warnLimit is { } w ? $"{w:0} {unit}" : "—";
         sb.AppendLine($"| {label} | {Fmt(stat.Avg, unit)} | {Fmt(stat.Max, unit)} | {limit} |");
+    }
+
+    private const double TempTrendThreshold = 3;
+    private const double PercentTrendThreshold = 10;
+
+    private static void AppendTrends(StringBuilder sb, SampleStats stats30, SampleStats stats7)
+    {
+        sb.AppendLine(Strings.Insights_TrendsHeading);
+        sb.AppendLine();
+
+        if (stats7.SampleCount == 0)
+        {
+            sb.AppendLine(Strings.Insights_TrendsNotEnough);
+            sb.AppendLine();
+            return;
+        }
+
+        var lines = new List<string>();
+        AddTrend(lines, Strings.Common_CpuTemp,
+            stats7.CpuTemp.Avg, stats30.CpuTemp.Avg, "°C", TempTrendThreshold);
+        AddTrend(lines, Strings.Insights_CpuLoad,
+            stats7.CpuLoad.Avg, stats30.CpuLoad.Avg, "%", PercentTrendThreshold);
+        AddTrend(lines, Strings.Common_GpuTemp,
+            stats7.GpuTemp.Avg, stats30.GpuTemp.Avg, "°C", TempTrendThreshold);
+        AddTrend(lines, Strings.Common_GpuHotspot,
+            stats7.GpuHotspot.Avg, stats30.GpuHotspot.Avg, "°C", TempTrendThreshold);
+        AddTrend(lines, Strings.Common_RamLoad,
+            stats7.RamLoad.Avg, stats30.RamLoad.Avg, "%", PercentTrendThreshold);
+        foreach (DiskStat disk7 in stats7.Disks)
+        {
+            DiskStat? disk30 = stats30.Disks.FirstOrDefault(d => d.Name == disk7.Name);
+            if (disk30 is not null)
+            {
+                AddTrend(lines, disk7.Name,
+                    disk7.TempAvg, disk30.TempAvg, "°C", TempTrendThreshold);
+            }
+        }
+
+        if (lines.Count == 0)
+        {
+            sb.AppendLine(Strings.Insights_TrendsNone);
+        }
+        else
+        {
+            foreach (string line in lines)
+            {
+                sb.AppendLine(line);
+            }
+        }
+
+        sb.AppendLine();
+    }
+
+    private static void AddTrend(
+        List<string> lines, string label,
+        double? avg7, double? avg30, string unit, double threshold)
+    {
+        if (avg7 is not { } a7 || avg30 is not { } a30 || Math.Abs(a7 - a30) < threshold)
+        {
+            return;
+        }
+
+        string format = a7 > a30 ? Strings.Insights_TrendRise : Strings.Insights_TrendFall;
+        lines.Add(string.Format(format, label, Fmt(a30, unit), Fmt(a7, unit)));
     }
 
     private static (int Whea, int Crashes, int Thresholds, int GpuDriver, int WinDisk)

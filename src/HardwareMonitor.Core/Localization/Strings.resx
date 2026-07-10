@@ -166,6 +166,11 @@ vianetsinnästä.</value></data>
   <data name="Insights_SpecDisks" xml:space="preserve"><value>- Levyt: {0}</value></data>
   <data name="Insights_SpecOs" xml:space="preserve"><value>- Käyttöjärjestelmä: {0}</value></data>
   <data name="Insights_SpecNotes" xml:space="preserve"><value>- Käyttäjän lisätiedot: {0}</value></data>
+  <data name="Insights_TrendsHeading" xml:space="preserve"><value>## Trendit (7 pv vs 30 pv)</value></data>
+  <data name="Insights_TrendRise" xml:space="preserve"><value>- {0}: keskiarvo noussut ({1} → {2})</value></data>
+  <data name="Insights_TrendFall" xml:space="preserve"><value>- {0}: keskiarvo laskenut ({1} → {2})</value></data>
+  <data name="Insights_TrendsNone" xml:space="preserve"><value>- Ei merkittäviä muutoksia.</value></data>
+  <data name="Insights_TrendsNotEnough" xml:space="preserve"><value>- 7 päivän vertailudataa ei ole vielä riittävästi.</value></data>
   <data name="Insights_NotEnoughData" xml:space="preserve"><value>Ei vielä riittävästi dataa — historia karttuu ohjelman ollessa käynnissä.</value></data>
   <data name="Insights_LevelsHeading" xml:space="preserve"><value>## Normaalitasot ja huiput (30 pv)</value></data>
   <data name="Insights_LevelsTableHeader" xml:space="preserve"><value>| Mittari | Keskiarvo | Huippu | Varoitusraja |</value></data>
