@@ -18,16 +18,22 @@ public static class MachineSpecReader
 
         foreach (HardwareGroup group in groups)
         {
+            // LHM:n nimissä voi olla häntävälilyöntejä (esim. "Samsung SSD 860 EVO 1TB ").
+            string name = group.Name.Trim();
             switch (group.HardwareType)
             {
-                case "Cpu": cpu ??= group.Name; break;
-                case "Motherboard": motherboard ??= group.Name; break;
-                case "Storage": disks.Add(group.Name); break;
-                case "Memory": ramGb ??= ReadRamTotalGb(group); break;
+                // Myös "Virtual Memory" -ryhmän sensorit ovat nimeltään "Memory Used"/
+                // "Memory Available" — vain fyysinen muistiryhmä kelpaa RAM-laskentaan.
+                case "Memory" when !name.Contains("Virtual", StringComparison.OrdinalIgnoreCase):
+                    ramGb ??= ReadRamTotalGb(group);
+                    break;
+                case "Cpu": cpu ??= name; break;
+                case "Motherboard": motherboard ??= name; break;
+                case "Storage": disks.Add(name); break;
                 default:
                     if (group.HardwareType.StartsWith("Gpu", StringComparison.Ordinal))
                     {
-                        gpu ??= group.Name;
+                        gpu ??= name;
                     }
 
                     break;

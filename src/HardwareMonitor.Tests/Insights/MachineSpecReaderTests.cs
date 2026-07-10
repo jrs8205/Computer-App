@@ -53,6 +53,43 @@ public class MachineSpecReaderTests
     }
 
     [Fact]
+    public void VirtualMemoryRyhmaOhitetaanRamLaskennassa()
+    {
+        // LHM:ssä myös "Virtual Memory" -ryhmän sensorit ovat nimeltään
+        // "Memory Used"/"Memory Available" — vain fyysinen ryhmä kelpaa.
+        var groups = new[]
+        {
+            Group("Virtual Memory", "Memory",
+                Data("Virtual Memory", "Memory Used", 20.6f),
+                Data("Virtual Memory", "Memory Available", 47.3f)),
+            Group("Memory", "Memory",
+                Data("Memory", "Memory Used", 17.1f),
+                Data("Memory", "Memory Available", 46.8f)),
+        };
+
+        MachineSpec spec = MachineSpecReader.Read(groups, "", "");
+
+        Assert.Equal(64, spec.RamTotalGb); // 17.1 + 46.8 = 63.9 → 64, EI 68
+    }
+
+    [Fact]
+    public void LaitenimienYlimaaraisetValilyonnitSiivotaan()
+    {
+        // LHM:n levynimissä voi olla häntävälilyönti ("Samsung SSD 860 EVO 1TB ").
+        var groups = new[]
+        {
+            Group("Samsung SSD 860 EVO 1TB ", "Storage"),
+            Group("Samsung SSD 860 EVO 1TB ", "Storage"),
+        };
+
+        MachineSpec spec = MachineSpecReader.Read(groups, "", "");
+
+        Assert.Equal(
+            new[] { "Samsung SSD 860 EVO 1TB", "Samsung SSD 860 EVO 1TB" },
+            spec.DiskNames);
+    }
+
+    [Fact]
     public void PuuttuvatLaitteet_PalauttaaNullitJaTyhjanLevylistan()
     {
         MachineSpec spec = MachineSpecReader.Read(
