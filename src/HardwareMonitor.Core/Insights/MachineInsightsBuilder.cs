@@ -19,7 +19,7 @@ public static class MachineInsightsBuilder
 
     public static string Build(MachineInsightsInput input)
     {
-        (DateTimeOffset now, MachineSpec _, SampleStats stats, SampleStats _,
+        (DateTimeOffset now, MachineSpec spec, SampleStats stats, SampleStats _,
             IReadOnlyList<EventRow> events, ThresholdSettings limits) = input;
         var sb = new StringBuilder();
         sb.AppendLine(Strings.Insights_Title);
@@ -27,6 +27,7 @@ public static class MachineInsightsBuilder
         sb.AppendLine(string.Format(Strings.Insights_Intro, now).ReplaceLineEndings());
         sb.AppendLine();
         AppendAiIntro(sb);
+        AppendSpec(sb, spec);
 
         if (stats.SampleCount == 0)
         {
@@ -48,6 +49,41 @@ public static class MachineInsightsBuilder
         sb.AppendLine();
         sb.AppendLine(Strings.Insights_AiIntroBody.ReplaceLineEndings());
         sb.AppendLine();
+    }
+
+    private static void AppendSpec(StringBuilder sb, MachineSpec spec)
+    {
+        sb.AppendLine(Strings.Insights_SpecHeading);
+        sb.AppendLine();
+        sb.AppendLine(string.Format(Strings.Insights_SpecCpu, spec.CpuName ?? "—"));
+        sb.AppendLine(string.Format(Strings.Insights_SpecGpu, spec.GpuName ?? "—"));
+        sb.AppendLine(string.Format(
+            Strings.Insights_SpecMotherboard, spec.MotherboardName ?? "—"));
+        sb.AppendLine(string.Format(
+            Strings.Insights_SpecRam, spec.RamTotalGb is { } gb ? $"{gb} GB" : "—"));
+        sb.AppendLine(string.Format(Strings.Insights_SpecDisks, FormatDisks(spec.DiskNames)));
+        sb.AppendLine(string.Format(
+            Strings.Insights_SpecOs,
+            string.IsNullOrWhiteSpace(spec.OsDescription) ? "—" : spec.OsDescription));
+        if (!string.IsNullOrWhiteSpace(spec.UserNotes))
+        {
+            sb.AppendLine(string.Format(Strings.Insights_SpecNotes, spec.UserNotes.Trim()));
+        }
+
+        sb.AppendLine();
+    }
+
+    /// <summary>Samannimiset levyt ryhmitellään: "2 × Samsung SSD 860 EVO 1TB".</summary>
+    private static string FormatDisks(IReadOnlyList<string> names)
+    {
+        if (names.Count == 0)
+        {
+            return "—";
+        }
+
+        return string.Join("; ", names
+            .GroupBy(n => n)
+            .Select(g => g.Count() > 1 ? $"{g.Count()} × {g.Key}" : g.Key));
     }
 
     private static void AppendLevels(StringBuilder sb, SampleStats stats, ThresholdSettings limits)

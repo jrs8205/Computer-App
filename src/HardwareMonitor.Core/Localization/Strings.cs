@@ -143,6 +143,14 @@ public static class Strings
     public static string Insights_Intro => T(nameof(Insights_Intro));
     public static string Insights_AiIntroHeading => T(nameof(Insights_AiIntroHeading));
     public static string Insights_AiIntroBody => T(nameof(Insights_AiIntroBody));
+    public static string Insights_SpecHeading => T(nameof(Insights_SpecHeading));
+    public static string Insights_SpecCpu => T(nameof(Insights_SpecCpu));
+    public static string Insights_SpecGpu => T(nameof(Insights_SpecGpu));
+    public static string Insights_SpecMotherboard => T(nameof(Insights_SpecMotherboard));
+    public static string Insights_SpecRam => T(nameof(Insights_SpecRam));
+    public static string Insights_SpecDisks => T(nameof(Insights_SpecDisks));
+    public static string Insights_SpecOs => T(nameof(Insights_SpecOs));
+    public static string Insights_SpecNotes => T(nameof(Insights_SpecNotes));
     public static string Insights_NotEnoughData => T(nameof(Insights_NotEnoughData));
     public static string Insights_LevelsHeading => T(nameof(Insights_LevelsHeading));
     public static string Insights_LevelsTableHeader => T(nameof(Insights_LevelsTableHeader));

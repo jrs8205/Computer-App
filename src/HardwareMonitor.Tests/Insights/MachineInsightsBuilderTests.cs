@@ -117,6 +117,51 @@ public class MachineInsightsBuilderTests
     }
 
     [Fact]
+    public void KokoonpanoListaaKomponentit()
+    {
+        string md = Build();
+
+        Assert.Contains("## Koneen kokoonpano", md);
+        Assert.Contains("i9-9900K", md);
+        Assert.Contains("RTX 2060", md);
+        Assert.Contains("Z390-F", md);
+        Assert.Contains("64 GB", md);
+        Assert.Contains("Windows 11", md);
+    }
+
+    [Fact]
+    public void SamannimisetLevytRyhmitellaan()
+    {
+        MachineSpec spec = Spec() with
+        {
+            DiskNames = new[] { "860 EVO", "860 EVO", "970 EVO Plus" },
+        };
+
+        string md = Build(spec: spec);
+
+        Assert.Contains("2 × 860 EVO", md);
+        Assert.Contains("970 EVO Plus", md);
+    }
+
+    [Fact]
+    public void LisatiedotMukanaVainKunAsetettu()
+    {
+        Assert.DoesNotContain("lisätiedot", Build(), StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("AIO-vesijäähdytys", Build(spec: Spec(notes: "AIO-vesijäähdytys")));
+    }
+
+    [Fact]
+    public void PuuttuvaKokoonpanotietoNaytetaanViivana()
+    {
+        var spec = new MachineSpec(null, null, null, null, Array.Empty<string>(), "", "");
+
+        string md = Build(spec: spec);
+
+        Assert.Contains("- Suoritin: —", md);
+        Assert.Contains("- Levyt: —", md);
+    }
+
+    [Fact]
     public void IlmanDataa_KertooEttaDataaKertyyVasta()
     {
         string md = Build(stats: Stats(count: 0));

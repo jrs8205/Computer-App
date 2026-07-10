@@ -158,6 +158,14 @@ limit is the application's alert threshold — a momentary peak near the
 limit does not necessarily indicate a problem if the average is low.
 Use this file as context when the user asks about this machine's
 temperatures, performance, cooling or troubleshooting.</value></data>
+  <data name="Insights_SpecHeading" xml:space="preserve"><value>## Machine configuration</value></data>
+  <data name="Insights_SpecCpu" xml:space="preserve"><value>- CPU: {0}</value></data>
+  <data name="Insights_SpecGpu" xml:space="preserve"><value>- GPU: {0}</value></data>
+  <data name="Insights_SpecMotherboard" xml:space="preserve"><value>- Motherboard: {0}</value></data>
+  <data name="Insights_SpecRam" xml:space="preserve"><value>- RAM: {0}</value></data>
+  <data name="Insights_SpecDisks" xml:space="preserve"><value>- Drives: {0}</value></data>
+  <data name="Insights_SpecOs" xml:space="preserve"><value>- Operating system: {0}</value></data>
+  <data name="Insights_SpecNotes" xml:space="preserve"><value>- User notes: {0}</value></data>
   <data name="Insights_NotEnoughData" xml:space="preserve"><value>Not enough data yet — history accumulates while the application is running.</value></data>
   <data name="Insights_LevelsHeading" xml:space="preserve"><value>## Normal levels and peaks (30 days)</value></data>
   <data name="Insights_LevelsTableHeader" xml:space="preserve"><value>| Metric | Average | Peak | Warning limit |</value></data>

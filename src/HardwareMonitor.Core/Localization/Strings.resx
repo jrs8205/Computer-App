@@ -158,6 +158,14 @@ hälytysraja — hetkellinen huippu lähellä rajaa ei vielä tarkoita ongelmaa,
 jos keskiarvo on matala. Käytä tätä tiedostoa kontekstina, kun käyttäjä
 kysyy koneensa lämpötiloista, suorituskyvystä, jäähdytyksestä tai
 vianetsinnästä.</value></data>
+  <data name="Insights_SpecHeading" xml:space="preserve"><value>## Koneen kokoonpano</value></data>
+  <data name="Insights_SpecCpu" xml:space="preserve"><value>- Suoritin: {0}</value></data>
+  <data name="Insights_SpecGpu" xml:space="preserve"><value>- Näytönohjain: {0}</value></data>
+  <data name="Insights_SpecMotherboard" xml:space="preserve"><value>- Emolevy: {0}</value></data>
+  <data name="Insights_SpecRam" xml:space="preserve"><value>- RAM: {0}</value></data>
+  <data name="Insights_SpecDisks" xml:space="preserve"><value>- Levyt: {0}</value></data>
+  <data name="Insights_SpecOs" xml:space="preserve"><value>- Käyttöjärjestelmä: {0}</value></data>
+  <data name="Insights_SpecNotes" xml:space="preserve"><value>- Käyttäjän lisätiedot: {0}</value></data>
   <data name="Insights_NotEnoughData" xml:space="preserve"><value>Ei vielä riittävästi dataa — historia karttuu ohjelman ollessa käynnissä.</value></data>
   <data name="Insights_LevelsHeading" xml:space="preserve"><value>## Normaalitasot ja huiput (30 pv)</value></data>
   <data name="Insights_LevelsTableHeader" xml:space="preserve"><value>| Mittari | Keskiarvo | Huippu | Varoitusraja |</value></data>
