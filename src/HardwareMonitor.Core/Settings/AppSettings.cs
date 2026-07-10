@@ -86,4 +86,7 @@ public sealed class AppSettings
 
     /// <summary>Balloon-ilmoitus ilmaisinalueelle WARNING/CRITICAL-raja-arvotapahtumista.</summary>
     public bool AlertNotificationsEnabled { get; set; } = true;
+
+    /// <summary>Käyttäjän omat lisätiedot koneesta machine-insights.md:n kokoonpanoon.</summary>
+    public string InsightsNotes { get; set; } = "";
 }

@@ -50,6 +50,8 @@
   <data name="Set_AlertNotificationsTip" xml:space="preserve"><value>Näytä ilmoitus ilmaisinalueella, kun varoitus- tai kriittinen raja ylittyy</value></data>
   <data name="Set_LanguageAuto" xml:space="preserve"><value>Automaattinen</value></data>
   <data name="Set_RestartNote" xml:space="preserve"><value>vaikuttaa uudelleenkäynnistyksen jälkeen</value></data>
+  <data name="Set_InsightsNotes" xml:space="preserve"><value>Omat lisätiedot koneesta</value></data>
+  <data name="Set_InsightsNotesTip" xml:space="preserve"><value>liitetään konetuntemus-lokiin (machine-insights.md), jonka voi antaa tekoälychatille</value></data>
   <data name="Set_GroupThresholds" xml:space="preserve"><value>Raja-arvot</value></data>
   <data name="Set_ColWarning" xml:space="preserve"><value>Varoitus</value></data>
   <data name="Set_ColCritical" xml:space="preserve"><value>Kriittinen</value></data>

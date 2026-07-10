@@ -66,6 +66,8 @@ public static class UiStrings
     public static string Set_AlertNotificationsTip => T(nameof(Set_AlertNotificationsTip));
     public static string Set_LanguageAuto => T(nameof(Set_LanguageAuto));
     public static string Set_RestartNote => T(nameof(Set_RestartNote));
+    public static string Set_InsightsNotes => T(nameof(Set_InsightsNotes));
+    public static string Set_InsightsNotesTip => T(nameof(Set_InsightsNotesTip));
     public static string Set_GroupThresholds => T(nameof(Set_GroupThresholds));
     public static string Set_ColWarning => T(nameof(Set_ColWarning));
     public static string Set_ColCritical => T(nameof(Set_ColCritical));

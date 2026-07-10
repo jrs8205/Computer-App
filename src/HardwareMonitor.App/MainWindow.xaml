@@ -425,6 +425,20 @@
                                                Text="{x:Static loc:UiStrings.Set_RestartNote}"
                                                VerticalAlignment="Center" Margin="8,0,0,0" />
                                 </StackPanel>
+                                <StackPanel Margin="0,8,0,2">
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="{x:Static loc:UiStrings.Set_InsightsNotes}" Foreground="#E0E0E0"
+                                                   VerticalAlignment="Center" />
+                                        <TextBlock Style="{StaticResource NoteText}"
+                                                   Text="{x:Static loc:UiStrings.Set_InsightsNotesTip}"
+                                                   VerticalAlignment="Center" Margin="8,0,0,0" />
+                                    </StackPanel>
+                                    <TextBox Text="{Binding SettingsPage.InsightsNotes, UpdateSourceTrigger=LostFocus}"
+                                             AcceptsReturn="True" TextWrapping="Wrap" MinHeight="48" Width="520"
+                                             HorizontalAlignment="Left" Margin="0,4,0,0" Padding="4,2"
+                                             Background="#2D2D30" Foreground="#E0E0E0" BorderBrush="#9E9E9E"
+                                             CaretBrush="#E0E0E0" />
+                                </StackPanel>
                             </StackPanel>
                         </GroupBox>
 

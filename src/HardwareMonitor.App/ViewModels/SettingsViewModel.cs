@@ -109,6 +109,22 @@ public sealed class SettingsViewModel
         }
     }
 
+    /// <summary>Käyttäjän lisätiedot koneesta — liitetään machine-insights.md:n kokoonpanoon.</summary>
+    public string InsightsNotes
+    {
+        get => _settings.InsightsNotes;
+        set
+        {
+            if (_settings.InsightsNotes == value)
+            {
+                return;
+            }
+
+            _settings.InsightsNotes = value;
+            _save();
+        }
+    }
+
     /// <summary>Palauttaa raja-arvot ja kestot oletuksiin. Viite säilyy!</summary>
     public void ResetThresholds()
     {

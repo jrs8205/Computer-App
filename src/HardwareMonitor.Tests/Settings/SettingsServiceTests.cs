@@ -86,6 +86,20 @@ public sealed class SettingsServiceTests : IDisposable
     }
 
     [Fact]
+    public void InsightsNotes_OletusTyhjaJaTallennusSailyy()
+    {
+        var service = new SettingsService(_dir);
+        AppSettings defaults = service.Load();
+        Assert.Equal("", defaults.InsightsNotes);
+
+        defaults.InsightsNotes = "AIO-vesijäähdytys, näyttö 3440x1440";
+        service.Save(defaults);
+
+        Assert.Equal("AIO-vesijäähdytys, näyttö 3440x1440",
+            new SettingsService(_dir).Load().InsightsNotes);
+    }
+
+    [Fact]
     public void Load_VioittunutTiedosto_PalauttaaOletuksetEikaHeitaPoikkeusta()
     {
         Directory.CreateDirectory(_dir);

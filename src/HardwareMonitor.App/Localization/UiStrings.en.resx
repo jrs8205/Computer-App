@@ -50,6 +50,8 @@
   <data name="Set_AlertNotificationsTip" xml:space="preserve"><value>Show a tray notification when a warning or critical limit is exceeded</value></data>
   <data name="Set_LanguageAuto" xml:space="preserve"><value>Automatic</value></data>
   <data name="Set_RestartNote" xml:space="preserve"><value>takes effect after restart</value></data>
+  <data name="Set_InsightsNotes" xml:space="preserve"><value>Your notes about this machine</value></data>
+  <data name="Set_InsightsNotesTip" xml:space="preserve"><value>included in the machine insights log (machine-insights.md) that you can give to an AI chat</value></data>
   <data name="Set_GroupThresholds" xml:space="preserve"><value>Limits</value></data>
   <data name="Set_ColWarning" xml:space="preserve"><value>Warning</value></data>
   <data name="Set_ColCritical" xml:space="preserve"><value>Critical</value></data>
