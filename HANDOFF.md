@@ -105,12 +105,18 @@ Todennettu ajossa: nappi kopioi 3693 merkkiä tuoretta sisältöä + vahvistus.
   CloseApplications sulkee ajossa olevan sovelluksen Restart Managerilla
   SIISTISTI (todennettu: CleanShutdown säilyy true).
 
-## Seuraavaksi (ei mitään kesken — ideoita)
+## Seuraavaksi (ei mitään pakollista kesken — ideoita)
 
-1. Aito code signing (Trusted Signing ~10 $/kk tai Certum OSS -varmenne).
+1. **Aito code signing** (Azure Trusted Signing ~10 $/kk tai Certum OSS
+   -varmenne) → poistaisi SmartScreen-varoituksen "tuntematon julkaisija".
+   TÄMÄ on selkein aiemmissa istunnoissa puhuttu avoin kohta; muuta
+   pakollista ei ole. Vaatii tilin/varmenteen hankinnan ja henkilöllisyyden
+   varmennuksen (päiviä).
 2. ROADMAPin jatkokehitysideat (PresentMon/FPS-mittaus ym.).
-3. Events-taulussa on yhä vanhoja testihälytyksiä (raja 30 °C) — dataa,
-   ei bugi; voi siivota käyttäjän pyynnöstä.
+3. (valinnainen) Muodollinen lisenssitarkastus ennen laajaa jakelua
+   (kirjattu THIRD-PARTY-NOTICES.md:hen).
+4. (valinnainen) Events-taulussa on yhä vanhoja testihälytyksiä (raja 30 °C)
+   — dataa, ei bugi; voi siivota käyttäjän pyynnöstä.
 
 ## Build- ja ajokomennot + sudenkuopat
 
