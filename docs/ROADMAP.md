@@ -184,6 +184,12 @@ vaatimus 9.7.2026: vientien pitää olla selkokielisiä, ei konedataa.
 - [x] Repo julkiseksi (12.7.2026) + exet allekirjoitettu itse allekirjoitetulla
       varmenteella (aito code signing — Trusted Signing / Certum —
       jatkokehitysideana SmartScreeniä varten)
+- [x] **Toinen bugitarkastus + v1.0.1** (12.7.2026): 12 löydöstä korjattu
+      (autostartin ACL-tarkistus, kolmansien lisenssit pakettiin, levy-
+      tunnisteet, graafien reunat, lokin sukupolvi ym.). 196 testiä.
+- [x] **AI-raportin napit + v1.0.2** (12.7.2026): yläpalkkiin "Kopioi
+      AI-raportti" ja "Tallenna AI-raportti…" — konetuntemus-loki oli
+      aiemmin vain automaattisesti levylle, ei UI:sta saatavissa.
 
 ---
 

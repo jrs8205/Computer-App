@@ -86,6 +86,12 @@
                     <Button Content="{x:Static loc:UiStrings.Top_ExportCsv}" Click="ExportCsv_Click"
                             Margin="8,0,0,0" Padding="10,3" VerticalAlignment="Center"
                             ToolTip="{x:Static loc:UiStrings.Top_ExportCsvTip}" />
+                    <Button Content="{x:Static loc:UiStrings.Top_CopyInsights}" Click="CopyInsights_Click"
+                            Margin="8,0,0,0" Padding="10,3" VerticalAlignment="Center"
+                            ToolTip="{x:Static loc:UiStrings.Top_CopyInsightsTip}" />
+                    <Button Content="{x:Static loc:UiStrings.Top_SaveInsights}" Click="SaveInsights_Click"
+                            Margin="8,0,0,0" Padding="10,3" VerticalAlignment="Center"
+                            ToolTip="{x:Static loc:UiStrings.Top_SaveInsightsTip}" />
                 </WrapPanel>
             </StackPanel>
         </Border>

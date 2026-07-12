@@ -15,6 +15,10 @@
   <data name="Top_CreateReportTip" xml:space="preserve"><value>Selkokielinen yhteenveto koneen kunnosta tekstitiedostona</value></data>
   <data name="Top_ExportCsv" xml:space="preserve"><value>Vie CSV…</value></data>
   <data name="Top_ExportCsvTip" xml:space="preserve"><value>Viimeisen 24 tunnin sensorihistoria Exceliin sopivana CSV:nä</value></data>
+  <data name="Top_CopyInsights" xml:space="preserve"><value>Kopioi AI-raportti</value></data>
+  <data name="Top_CopyInsightsTip" xml:space="preserve"><value>Kopioi koneen tuntemus-yhteenveto leikepöydälle liitettäväksi tekoälychattiin</value></data>
+  <data name="Top_SaveInsights" xml:space="preserve"><value>Tallenna AI-raportti…</value></data>
+  <data name="Top_SaveInsightsTip" xml:space="preserve"><value>Tallenna koneen tuntemus-yhteenveto Markdown-tiedostona</value></data>
   <data name="Status_DebugLog" xml:space="preserve"><value>Debug-loki: {0}</value></data>
 
   <!-- Välilehdet -->
@@ -94,6 +98,10 @@
   <data name="Dlg_ReportEmpty" xml:space="preserve"><value>Raporttia ei voi vielä luoda — sensoridataa ei ole ehtinyt kertyä.</value></data>
   <data name="Dlg_CsvFileName" xml:space="preserve"><value>Sensorihistoria-24h</value></data>
   <data name="Dlg_CsvEmpty" xml:space="preserve"><value>Vietävää historiaa ei vielä ole — lokitus on käynnissä, yritä hetken päästä.</value></data>
+  <data name="Dlg_InsightsFileName" xml:space="preserve"><value>konetuntemus</value></data>
+  <data name="Dlg_InsightsFilter" xml:space="preserve"><value>Markdown (*.md)|*.md|Tekstitiedosto (*.txt)|*.txt</value></data>
+  <data name="Dlg_InsightsEmpty" xml:space="preserve"><value>AI-raporttia ei voi vielä luoda — sensoridataa ei ole ehtinyt kertyä.</value></data>
+  <data name="Dlg_InsightsCopied" xml:space="preserve"><value>AI-raportti kopioitu leikepöydälle. Liitä se tekoälychattiin (Ctrl+V).</value></data>
   <data name="Dlg_SaveFailed" xml:space="preserve"><value>Tallennus epäonnistui: {0}</value></data>
   <data name="Status_Starting" xml:space="preserve"><value>Käynnistetään sensorit…</value></data>
   <data name="Status_StartError" xml:space="preserve"><value>Virhe sensorien käynnistyksessä: {0}</value></data>

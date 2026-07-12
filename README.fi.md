@@ -23,9 +23,11 @@ tekoälyavustajalle luettava konetuntemus-loki.
 - **Kaatumisselvitys**: yllättäen päättynyt istunto tunnistetaan ja
   viimeisimmät arvot ennen katkoa kirjataan.
 - **Raportit**: selkokielinen tekstiraportti ja suomalais-Excel-CSV.
-- **machine-insights.md**: jatkuvasti päivittyvä yhteenveto koneen
-  normaalitasoista, trendeistä ja tapahtumista — annettavaksi kontekstina
-  mille tahansa AI-avustajalle.
+- **AI-raportti**: jatkuvasti päivittyvä yhteenveto koneen normaalitasoista,
+  trendeistä ja tapahtumista. Yläpalkin napit **Kopioi AI-raportti**
+  (leikepöydälle) ja **Tallenna AI-raportti…** (`machine-insights.md`) tuovat
+  sen suoraan liitettäväksi mihin tahansa tekoälychattiin. Kirjoitetaan myös
+  automaattisesti polkuun `%LOCALAPPDATA%\HardwareMonitor\machine-insights.md`.
 - **Kielet**: suomi ja englanti (fi/en). Kaikki UI-tekstit WCAG AAA
   -kontrastilla.
 

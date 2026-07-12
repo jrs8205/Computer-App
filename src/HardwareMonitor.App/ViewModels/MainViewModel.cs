@@ -655,9 +655,34 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
         "HardwareMonitor",
         "machine-insights.md");
 
+    /// <summary>
+    /// Rakentaa konetuntemus-lokin tuoreesta datasta, tai null jos historia-
+    /// kantaa ei ole. Käytetään sekä taustakirjoituksessa että yläpalkin
+    /// "AI-raportti"-napeissa (kopioi/tallenna).
+    /// </summary>
+    public string? BuildMachineInsights()
+    {
+        if (_historyDb is not { } db)
+        {
+            return null;
+        }
+
+        DateTimeOffset now = DateTimeOffset.Now;
+        return MachineInsightsBuilder.Build(new MachineInsightsInput(
+            now,
+            MachineSpecReader.Read(
+                Volatile.Read(ref _latestGroups) ?? Array.Empty<HardwareGroup>(),
+                OsDescriptionText,
+                _settings.InsightsNotes),
+            db.GetSampleStats(now.AddDays(-30)),
+            db.GetSampleStats(now.AddDays(-7)),
+            db.ReadEventsSince(now.AddDays(-30)),
+            _settings.Thresholds));
+    }
+
     private void WriteMachineInsightsInBackground()
     {
-        if (_historyDb is not { } db ||
+        if (_historyDb is null ||
             Interlocked.CompareExchange(ref _insightsWriteRunning, 1, 0) != 0)
         {
             return;
@@ -674,18 +699,10 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
                     Thread.Sleep(500);
                 }
 
-                DateTimeOffset now = DateTimeOffset.Now;
-                string markdown = MachineInsightsBuilder.Build(new MachineInsightsInput(
-                    now,
-                    MachineSpecReader.Read(
-                        Volatile.Read(ref _latestGroups) ?? Array.Empty<HardwareGroup>(),
-                        OsDescriptionText,
-                        _settings.InsightsNotes),
-                    db.GetSampleStats(now.AddDays(-30)),
-                    db.GetSampleStats(now.AddDays(-7)),
-                    db.ReadEventsSince(now.AddDays(-30)),
-                    _settings.Thresholds));
-                File.WriteAllText(MachineInsightsPath, markdown);
+                if (BuildMachineInsights() is { } markdown)
+                {
+                    File.WriteAllText(MachineInsightsPath, markdown);
+                }
             }
             catch (Exception ex)
             {

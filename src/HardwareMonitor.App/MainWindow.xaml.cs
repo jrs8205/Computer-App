@@ -254,6 +254,37 @@ public partial class MainWindow : Window
             filter: "CSV (Excel) (*.csv)|*.csv",
             emptyMessage: UiStrings.Dlg_CsvEmpty);
 
+    /// <summary>Kopioi konetuntemus-lokin leikepöydälle tekoälychattiin liitettäväksi.</summary>
+    private void CopyInsights_Click(object sender, RoutedEventArgs e)
+    {
+        if (_viewModel.BuildMachineInsights() is not { } content)
+        {
+            MessageBox.Show(this, UiStrings.Dlg_InsightsEmpty, "Hardware Monitor",
+                MessageBoxButton.OK, MessageBoxImage.Information);
+            return;
+        }
+
+        try
+        {
+            Clipboard.SetText(content);
+            MessageBox.Show(this, UiStrings.Dlg_InsightsCopied, "Hardware Monitor",
+                MessageBoxButton.OK, MessageBoxImage.Information);
+        }
+        catch (Exception ex)
+        {
+            // Leikepöytä voi olla toisen prosessin varaama — kerrotaan syy.
+            MessageBox.Show(this, string.Format(UiStrings.Dlg_SaveFailed, ex.Message),
+                "Hardware Monitor", MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+    }
+
+    private void SaveInsights_Click(object sender, RoutedEventArgs e) =>
+        SaveAndOpen(
+            content: _viewModel.BuildMachineInsights(),
+            fileName: $"{UiStrings.Dlg_InsightsFileName}-{DateTime.Now:yyyy-MM-dd}",
+            filter: UiStrings.Dlg_InsightsFilter,
+            emptyMessage: UiStrings.Dlg_InsightsEmpty);
+
     /// <summary>Kysyy tallennuspaikan, kirjoittaa tiedoston ja avaa sen oletusohjelmassa.</summary>
     private void SaveAndOpen(string? content, string fileName, string filter, string emptyMessage)
     {

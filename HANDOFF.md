@@ -1,26 +1,37 @@
-# HANDOFF — 12.7.2026 istunnon päätös: v1.0.1 julkaistu, repo julkinen
+# HANDOFF — 12.7.2026 istunnon päätös: v1.0.2 julkaistu, repo julkinen
 
 Tämä tiedosto kertoo mihin jäätiin ja miten jatketaan. Lue tämä ensin,
 sitten `docs/review-triage.md` ja `docs/ROADMAP.md`.
 
 ## Tilanne yhdellä lauseella
 
-**Projekti on julkaisukunnossa eikä aktiivista työtä ole kesken**: v1.0.1
-julkaistu GitHubiin (ensimmäisen katselmoinnin 26 + toisen katselmoinnin
-12 löydöstä kaikki korjattu TDD:llä, 196 testiä), repo on JULKINEN,
+**Projekti on julkaisukunnossa eikä aktiivista työtä ole kesken**: v1.0.2
+julkaistu GitHubiin (2 bugitarkastusta = 38 löydöstä korjattu TDD:llä,
+196 testiä; lisäksi AI-raportin napit yläpalkkiin), repo JULKINEN,
 README kaksikielinen, exet allekirjoitettu, lisenssitekstit paketissa ja
 git-historia puhdistettu (vain käyttäjä Contributors-listassa).
+
+## Uusinta (v1.0.2): AI-raportin napit
+
+Konetuntemus-loki (machine-insights.md) oli aiemmin VAIN automaattisesti
+levylle kirjoitettava (käynnistys + 30 min välein), ei UI:sta saatavissa
+— käyttäjä ei löytänyt mistä sen luo. Lisätty yläpalkkiin "Luo raportti"/
+"Vie CSV" -nappien viereen: **"Kopioi AI-raportti"** (leikepöydälle) ja
+**"Tallenna AI-raportti…"** (.md, SaveFileDialog + avaus). Molemmat
+käyttävät `MainViewModel.BuildMachineInsights()` — sama sisältö kuin
+taustakirjoitus, mutta tuoreena napin painalluksella. Lokalisoitu fi/en.
+Todennettu ajossa: nappi kopioi 3693 merkkiä tuoretta sisältöä + vahvistus.
 
 ## Julkaisun tila
 
 - **Repo**: https://github.com/jrs8205/Computer-App — JULKINEN.
   **main = julkaisuhaara** (sama kärki kuin työhaara
   `claude/windows-11-program-setup-rxuyhn`). About-osio + topicit asetettu.
-- **Release**: v1.0.1, liitteenä allekirjoitettu
-  `HardwareMonitor-Setup-1.0.1.exe` (self-contained; sisältää LICENSE.txt
-  + THIRD-PARTY-NOTICES.md). v1.0.0 jää historiaan.
-- **Asennettuna koneella**: `C:\Program Files\Hardware Monitor` (v1.0.1,
-  allekirjoitettu, ajossa tray-tilassa; autostart-tehtävä HighestAvailable).
+- **Release**: v1.0.2, liitteenä allekirjoitettu
+  `HardwareMonitor-Setup-1.0.2.exe` (self-contained; sisältää LICENSE.txt
+  + THIRD-PARTY-NOTICES.md). v1.0.0/v1.0.1 jäävät historiaan.
+- **Asennettuna koneella**: `C:\Program Files\Hardware Monitor` (v1.0.2,
+  allekirjoitettu; autostart-tehtävä HighestAvailable).
 - **README.md = englanti** (julkinen etusivu), **README.fi.md = suomi**,
   ristiinlinkitetty. About-osiossa EI AI-mainintoja (käyttäjän päätös).
 - **Autostart-turvasääntö v1.0.1**: korotus vain Program Files -juurten

@@ -28,9 +28,11 @@ documentation (`docs/`) is in Finnish by design.
   last known sensor values before the cut are recorded.
 - **Reports**: plain-language text report and CSV export (Finnish Excel
   conventions).
-- **machine-insights.md**: a continuously regenerated summary of your
-  machine's normal levels, trends and events — ready to paste into any AI
-  chat as context.
+- **AI report**: a continuously regenerated summary of your machine's normal
+  levels, trends and events. The top-bar buttons **Copy AI report** (to the
+  clipboard) and **Save AI report…** (as `machine-insights.md`) let you paste
+  it straight into any AI chat as context. It is also written automatically
+  to `%LOCALAPPDATA%\HardwareMonitor\machine-insights.md`.
 - All UI text colors meet **WCAG AAA** contrast.
 
 ## Installation

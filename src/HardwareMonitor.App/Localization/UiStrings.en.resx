@@ -15,6 +15,10 @@
   <data name="Top_CreateReportTip" xml:space="preserve"><value>A plain-language summary of the computer's condition as a text file</value></data>
   <data name="Top_ExportCsv" xml:space="preserve"><value>Export CSV…</value></data>
   <data name="Top_ExportCsvTip" xml:space="preserve"><value>The last 24 hours of sensor history as an Excel-friendly CSV</value></data>
+  <data name="Top_CopyInsights" xml:space="preserve"><value>Copy AI report</value></data>
+  <data name="Top_CopyInsightsTip" xml:space="preserve"><value>Copy the machine-insights summary to the clipboard to paste into an AI chat</value></data>
+  <data name="Top_SaveInsights" xml:space="preserve"><value>Save AI report…</value></data>
+  <data name="Top_SaveInsightsTip" xml:space="preserve"><value>Save the machine-insights summary as a Markdown file</value></data>
   <data name="Status_DebugLog" xml:space="preserve"><value>Debug log: {0}</value></data>
 
   <!-- Tabs -->
@@ -94,6 +98,10 @@
   <data name="Dlg_ReportEmpty" xml:space="preserve"><value>The report cannot be created yet — no sensor data has accumulated.</value></data>
   <data name="Dlg_CsvFileName" xml:space="preserve"><value>SensorHistory-24h</value></data>
   <data name="Dlg_CsvEmpty" xml:space="preserve"><value>There is no history to export yet — logging is running, try again in a moment.</value></data>
+  <data name="Dlg_InsightsFileName" xml:space="preserve"><value>machine-insights</value></data>
+  <data name="Dlg_InsightsFilter" xml:space="preserve"><value>Markdown (*.md)|*.md|Text file (*.txt)|*.txt</value></data>
+  <data name="Dlg_InsightsEmpty" xml:space="preserve"><value>The AI report cannot be created yet — no sensor data has accumulated.</value></data>
+  <data name="Dlg_InsightsCopied" xml:space="preserve"><value>AI report copied to the clipboard. Paste it into an AI chat (Ctrl+V).</value></data>
   <data name="Dlg_SaveFailed" xml:space="preserve"><value>Saving failed: {0}</value></data>
   <data name="Status_Starting" xml:space="preserve"><value>Starting sensors…</value></data>
   <data name="Status_StartError" xml:space="preserve"><value>Error starting sensors: {0}</value></data>

@@ -31,6 +31,10 @@ public static class UiStrings
     public static string Top_CreateReportTip => T(nameof(Top_CreateReportTip));
     public static string Top_ExportCsv => T(nameof(Top_ExportCsv));
     public static string Top_ExportCsvTip => T(nameof(Top_ExportCsvTip));
+    public static string Top_CopyInsights => T(nameof(Top_CopyInsights));
+    public static string Top_CopyInsightsTip => T(nameof(Top_CopyInsightsTip));
+    public static string Top_SaveInsights => T(nameof(Top_SaveInsights));
+    public static string Top_SaveInsightsTip => T(nameof(Top_SaveInsightsTip));
     public static string Status_DebugLog => T(nameof(Status_DebugLog));
 
     // Välilehdet
@@ -110,6 +114,10 @@ public static class UiStrings
     public static string Dlg_ReportEmpty => T(nameof(Dlg_ReportEmpty));
     public static string Dlg_CsvFileName => T(nameof(Dlg_CsvFileName));
     public static string Dlg_CsvEmpty => T(nameof(Dlg_CsvEmpty));
+    public static string Dlg_InsightsFileName => T(nameof(Dlg_InsightsFileName));
+    public static string Dlg_InsightsFilter => T(nameof(Dlg_InsightsFilter));
+    public static string Dlg_InsightsEmpty => T(nameof(Dlg_InsightsEmpty));
+    public static string Dlg_InsightsCopied => T(nameof(Dlg_InsightsCopied));
     public static string Dlg_SaveFailed => T(nameof(Dlg_SaveFailed));
     public static string Status_Starting => T(nameof(Status_Starting));
     public static string Status_StartError => T(nameof(Status_StartError));
