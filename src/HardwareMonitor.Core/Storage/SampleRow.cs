@@ -1,7 +1,8 @@
 namespace HardwareMonitor.Core.Storage;
 
 public sealed record DiskSampleValue(
-    string Name, double? TempAvg, double? TempMax, double? TempMin = null);
+    string Name, double? TempAvg, double? TempMax, double? TempMin = null,
+    string Identifier = "");
 
 /// <summary>
 /// Yhden tuulettimen kooterivi. Identifier on LHM:n pysyvä tunniste —

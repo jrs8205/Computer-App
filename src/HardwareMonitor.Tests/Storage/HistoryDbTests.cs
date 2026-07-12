@@ -63,6 +63,19 @@ public sealed class HistoryDbTests : IDisposable
     }
 
     [Fact]
+    public void PurgeOlderThan_TulevaisuudenCutoff_EiPoistaMitaan()
+    {
+        // Puolustava tarkistus: virheellinen (esim. negatiivisesta retentiosta
+        // johtuva) tulevaisuuden cutoff ei saa pyyhkiä koko historiaa.
+        _db.InsertSample(Sample(Now));
+        _db.InsertSample(Sample(Now.AddDays(-10)));
+
+        _db.PurgeOlderThan(DateTimeOffset.Now.AddDays(1)); // huominen (todellinen tulevaisuus)
+
+        Assert.Equal(2, _db.CountSamples());
+    }
+
+    [Fact]
     public void InsertEvent_JaReadRecentEvents_PalauttaaUusimmatEnsin()
     {
         _db.InsertEvent(Now, "INFO", "App", null, null, null, "Sovellus käynnistyi");
@@ -278,6 +291,28 @@ public sealed class HistoryDbTests : IDisposable
         Assert.Equal(1, fan.SpinningRows);  // vain 1000 RPM -rivi pyöri
         Assert.Equal(4, fan.KnownRows);
         Assert.Equal("/gpu/fan/1", fan.Identifier);
+    }
+
+    [Fact]
+    public void ReadSampleRowsDownsampled_SamannimisetLevytEriTunnisteet_PysyvatErillaan()
+    {
+        AggregatedSample TwoDisks(DateTimeOffset ts) => Sample(ts) with
+        {
+            Disks = new[]
+            {
+                new DiskAggregate(0, "860 EVO", new MetricAggregate(30, 30, 30), 5, "/nvme/0"),
+                new DiskAggregate(1, "860 EVO", new MetricAggregate(50, 50, 50), 5, "/nvme/1"),
+            },
+        };
+        _db.InsertSample(TwoDisks(Now));
+        _db.InsertSample(TwoDisks(Now.AddSeconds(5)));
+
+        IReadOnlyList<SampleRow> rows =
+            _db.ReadSampleRowsDownsampled(Now.AddHours(-1), bucketSeconds: 60);
+
+        SampleRow row = rows.First(r => r.Disks.Count == 2);
+        Assert.Contains(row.Disks, d => d.Identifier == "/nvme/0" && d.TempAvg == 30);
+        Assert.Contains(row.Disks, d => d.Identifier == "/nvme/1" && d.TempAvg == 50);
     }
 
     [Fact]

@@ -83,6 +83,13 @@ public sealed class LastStateService
                 return;
             }
 
+            // Rinnakkaiset Task.Run-kirjoitukset voivat saapua eri järjestyksessä
+            // kuin käynnistyivät — vanhempi tila ei saa korvata uudempaa.
+            if (_current is { } current && state.Timestamp < current.Timestamp)
+            {
+                return;
+            }
+
             Save(state);
         }
     }

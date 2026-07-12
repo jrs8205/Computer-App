@@ -1,15 +1,36 @@
-# HANDOFF — 12.7.2026 istunnon päätös: v1.0.3 julkaistu, repo julkinen
+# HANDOFF — 12.7.2026 istunnon päätös: v1.0.4 julkaistu, repo julkinen
 
 Tämä tiedosto kertoo mihin jäätiin ja miten jatketaan. Lue tämä ensin,
 sitten `docs/review-triage.md` ja `docs/ROADMAP.md`.
 
 ## Tilanne yhdellä lauseella
 
-**Projekti on julkaisukunnossa eikä aktiivista työtä ole kesken**: v1.0.3
-julkaistu GitHubiin (3 bugitarkastusta = 54 löydöstä korjattu TDD:llä,
-206 testiä; AI-raportin napit yläpalkissa), repo JULKINEN, README
+**Projekti on julkaisukunnossa eikä aktiivista työtä ole kesken**: v1.0.4
+julkaistu GitHubiin (4 bugitarkastusta = 70 löydöstä korjattu TDD:llä,
+217 testiä; AI-raportin napit yläpalkissa), repo JULKINEN, README
 kaksikielinen, exet allekirjoitettu, lisenssitekstit paketissa ja
 git-historia puhdistettu (vain käyttäjä Contributors-listassa).
+
+## JULKAISU VAIN tools/release.ps1:llä (v1.0.4)
+
+Uusi `tools/release.ps1` on ainoa oikea julkaisureitti: tyhjentää publishin,
+tarkistaa että csprojin <Version> ja setup.iss:n MyAppVersion täsmäävät,
+tarkistaa että jokainen publishin kolmannen osapuolen DLL on
+THIRD-PARTY-NOTICES.md:ssä, julkaisee, allekirjoittaa app-exen, kääntää
+ISCC:llä ja allekirjoittaa setup.exen. Versio päivitetään yhä KAHTEEN
+paikkaan (csproj + setup.iss) — release.ps1 varmistaa täsmäävyyden.
+tools/install.ps1 on kehittäjän pika-asennus (poistaa vanhan tehtävän
+ennen kopiointia, asentaa tuoreeseen hakemistoon).
+
+## Uusinta (v1.0.4): neljännen katselmoinnin 16 korjausta
+
+Ks. `docs/review-triage.md` (neljäs osio). Tärkeimmät: ACL-tarkistus
+huomioi nyt omistajan (implisiittinen WRITE_DAC) ja koko asennuspuun
+(exe+DLL:t+esivanhemmat, ProtectedPaths.IsInstallTreeSecure); negatiivinen
+retention ei enää pyyhi historiaa (SettingsService clamppaa + PurgeOlderThan
+-suoja); levyn tunniste kantaan asti (migraatio); DebugLogger taustajonoon
+(ei heitä); shutdown odottaa DB-kirjoitukset; kaikki asetusarvot clampataan
+latauksessa; täydellinen THIRD-PARTY-NOTICES.
 
 ## Uusinta (v1.0.3): kolmannen katselmoinnin 16 korjausta
 
@@ -37,10 +58,10 @@ Todennettu ajossa: nappi kopioi 3693 merkkiä tuoretta sisältöä + vahvistus.
 - **Repo**: https://github.com/jrs8205/Computer-App — JULKINEN.
   **main = julkaisuhaara** (sama kärki kuin työhaara
   `claude/windows-11-program-setup-rxuyhn`). About-osio + topicit asetettu.
-- **Release**: v1.0.3, liitteenä allekirjoitettu
-  `HardwareMonitor-Setup-1.0.3.exe` (self-contained; sisältää LICENSE.txt
-  + THIRD-PARTY-NOTICES.md). v1.0.0–1.0.2 jäävät historiaan.
-- **Asennettuna koneella**: `C:\Program Files\Hardware Monitor` (v1.0.3,
+- **Release**: v1.0.4, liitteenä allekirjoitettu
+  `HardwareMonitor-Setup-1.0.4.exe` (self-contained; sisältää LICENSE.txt
+  + THIRD-PARTY-NOTICES.md). v1.0.0–1.0.3 jäävät historiaan.
+- **Asennettuna koneella**: `C:\Program Files\Hardware Monitor` (v1.0.4,
   allekirjoitettu; autostart-tehtävä HighestAvailable).
 - **README.md = englanti** (julkinen etusivu), **README.fi.md = suomi**,
   ristiinlinkitetty. About-osiossa EI AI-mainintoja (käyttäjän päätös).

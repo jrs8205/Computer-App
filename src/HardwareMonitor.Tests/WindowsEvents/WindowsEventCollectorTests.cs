@@ -39,7 +39,11 @@ public sealed class WindowsEventCollectorTests : IDisposable
 
         public DateTime? LogCreationTimeUtc { get; set; }
 
-        public DateTime? ReadLogCreationTimeUtc() => LogCreationTimeUtc;
+        /// <summary>Peräkkäiset luontiaika-arvot (tyhjennys kesken skannauksen).</summary>
+        public Queue<DateTime?>? LogCreationSequence { get; set; }
+
+        public DateTime? ReadLogCreationTimeUtc() =>
+            LogCreationSequence is { Count: > 0 } q ? q.Dequeue() : LogCreationTimeUtc;
     }
 
     [Fact]
@@ -201,6 +205,28 @@ public sealed class WindowsEventCollectorTests : IDisposable
 
         Assert.Equal("0", _db.GetMeta("windows_last_record_id"));
         Assert.Equal(newGen.Ticks.ToString(), _db.GetMeta("windows_log_created_utc"));
+    }
+
+    [Fact]
+    public void Scan_SukupolviVaihtuuKeskenSkannauksen_HylkaaTuloksen()
+    {
+        // Jos loki tyhjennetään ReadSincen aikana, luettu joukko on eri
+        // sukupolvea kuin ennen luettu — tulosta ei saa tallentaa vanhalla
+        // sukupolvella (seuraava skannaus nollaisi ja lisäisi duplikaatit).
+        var g1 = new DateTime(2026, 7, 1, 0, 0, 0, DateTimeKind.Utc);
+        var g2 = new DateTime(2026, 7, 2, 0, 0, 0, DateTimeKind.Utc);
+        _db.SetMeta("windows_log_created_utc", g1.Ticks.ToString());
+        var source = new FakeSource
+        {
+            LogCreationSequence = new Queue<DateTime?>(new DateTime?[] { g1, g2 }),
+        };
+        source.Events.Add(new WindowsLogEvent(Now,
+            "Microsoft-Windows-Kernel-Power", 41, WindowsLevel: 1, RecordId: 100));
+
+        int written = new WindowsEventCollector(source, _db).Scan();
+
+        Assert.Equal(0, written); // hylätty; ei kirjattu vanhalla sukupolvella
+        Assert.Empty(_db.ReadRecentEvents(10));
     }
 
     [Fact]

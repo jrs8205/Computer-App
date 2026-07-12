@@ -15,8 +15,8 @@ public static class CsvExporter
 {
     private const char Separator = ';';
 
-    /// <summary>Levysarake: monesko samanniminen levy rivillä + näyttönimi.</summary>
-    private sealed record DiskColumn(string Name, int Occurrence, string Display);
+    /// <summary>Levysarake: pysyvä tunniste (tai legacy nimi+esiintymä) + näyttönimi.</summary>
+    private sealed record DiskColumn(string Identifier, string Name, int Occurrence, string Display);
 
     /// <summary>Tuuletinsarake: pysyvä tunniste (avain) + näyttönimi otsikkoon.</summary>
     private sealed record FanColumn(string Identifier, string Display);
@@ -78,42 +78,93 @@ public static class CsvExporter
 
     private static List<DiskColumn> DiskColumns(IReadOnlyList<SampleRow> rows)
     {
-        // Nimen sarakemäärä = suurin esiintymämäärä yhdellä rivillä.
-        var counts = new Dictionary<string, int>();
+        // Ensisijaisesti pysyvä tunniste (samannimiset levyt eivät katoa
+        // järjestyksen vaihtuessa), vanhoille tunnisteettomille riveille
+        // nimi+esiintymä. Sarakkeen otsikko disambiguoidaan " #n".
+        var byIdentifier = new Dictionary<string, string>();
+        var legacyCounts = new Dictionary<string, int>();
         foreach (SampleRow row in rows)
         {
-            var inRow = new Dictionary<string, int>();
+            var legacyInRow = new Dictionary<string, int>();
             foreach (DiskSampleValue disk in row.Disks)
             {
-                inRow[disk.Name] = inRow.TryGetValue(disk.Name, out int n) ? n + 1 : 1;
+                if (disk.Identifier.Length > 0)
+                {
+                    byIdentifier.TryAdd(disk.Identifier, disk.Name);
+                }
+                else
+                {
+                    legacyInRow[disk.Name] = legacyInRow.TryGetValue(disk.Name, out int n) ? n + 1 : 1;
+                }
             }
 
-            foreach ((string name, int count) in inRow)
+            foreach ((string name, int count) in legacyInRow)
             {
-                counts[name] = Math.Max(counts.TryGetValue(name, out int c) ? c : 0, count);
+                legacyCounts[name] = Math.Max(
+                    legacyCounts.TryGetValue(name, out int c) ? c : 0, count);
             }
         }
 
-        var columns = new List<DiskColumn>();
-        foreach ((string name, int count) in counts)
+        var nameTotals = new Dictionary<string, int>();
+        void CountName(string n) =>
+            nameTotals[n] = (nameTotals.TryGetValue(n, out int c) ? c : 0) + 1;
+        foreach (string name in byIdentifier.Values)
+        {
+            CountName(name.Trim());
+        }
+
+        foreach ((string name, int count) in legacyCounts)
         {
             for (int i = 0; i < count; i++)
             {
-                columns.Add(new DiskColumn(name, i,
-                    count > 1 ? $"{name.Trim()} #{i + 1}" : name.Trim()));
+                CountName(name.Trim());
+            }
+        }
+
+        var used = new Dictionary<string, int>();
+        string Display(string rawName)
+        {
+            string n = rawName.Trim();
+            if (nameTotals[n] <= 1)
+            {
+                return n;
+            }
+
+            int idx = used.TryGetValue(n, out int u) ? u + 1 : 1;
+            used[n] = idx;
+            return $"{n} #{idx}";
+        }
+
+        var columns = new List<DiskColumn>();
+        foreach ((string identifier, string name) in byIdentifier)
+        {
+            columns.Add(new DiskColumn(identifier, name, 0, Display(name)));
+        }
+
+        foreach ((string name, int count) in legacyCounts)
+        {
+            for (int i = 0; i < count; i++)
+            {
+                columns.Add(new DiskColumn("", name, i, Display(name)));
             }
         }
 
         return columns;
     }
 
-    private static DiskSampleValue? Nth(
-        IReadOnlyList<DiskSampleValue> disks, string name, int occurrence)
+    private static DiskSampleValue? SelectDisk(
+        IReadOnlyList<DiskSampleValue> disks, DiskColumn column)
     {
+        if (column.Identifier.Length > 0)
+        {
+            return disks.FirstOrDefault(d => d.Identifier == column.Identifier);
+        }
+
         int seen = 0;
         foreach (DiskSampleValue disk in disks)
         {
-            if (disk.Name == name && seen++ == occurrence)
+            if (disk.Identifier.Length == 0 && disk.Name == column.Name
+                && seen++ == column.Occurrence)
             {
                 return disk;
             }
@@ -177,7 +228,7 @@ public static class CsvExporter
 
         foreach (DiskColumn column in diskColumns)
         {
-            if (Nth(row.Disks, column.Name, column.Occurrence) is { } disk)
+            if (SelectDisk(row.Disks, column) is { } disk)
             {
                 fields.Add(Num(disk.TempAvg, culture));
                 fields.Add(Num(disk.TempMax, culture));

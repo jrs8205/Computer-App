@@ -49,6 +49,16 @@ public sealed class WindowsEventCollector
 
         IReadOnlyList<WindowsLogEvent> events = _source.ReadSince(lastRecordId, MaxAge);
 
+        // Sukupolvi luetaan uudelleen luvun jälkeen: jos loki tyhjennettiin
+        // kesken skannauksen, luettu joukko on eri sukupolvea kuin alussa
+        // todettu — hylätään tulos, ettei sitä tallenneta vanhalla
+        // sukupolvella (seuraava skannaus nollaisi ja lisäisi duplikaatit).
+        string? createdAfter = _source.ReadLogCreationTimeUtc()?.Ticks.ToString();
+        if (createdAfter != createdValue)
+        {
+            return 0;
+        }
+
         var rows = new List<EventRow>();
         long maxRecordId = lastRecordId;
         foreach (WindowsLogEvent e in events)

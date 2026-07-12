@@ -6,8 +6,13 @@ public sealed record MetricAggregate(float? Min, float? Avg, float? Max)
     public static readonly MetricAggregate Empty = new(null, null, null);
 }
 
-/// <summary>Yhden levyn kooste; Index säilyttää järjestyksen samannimisillä levyillä.</summary>
-public sealed record DiskAggregate(int Index, string Name, MetricAggregate TempC, float? ActivityMaxPercent);
+/// <summary>
+/// Yhden levyn kooste; Identifier on LHM:n pysyvä laitetunniste (samannimiset
+/// levyt pysyvät erillään myös DB:ssä), Index säilyttää järjestyksen.
+/// </summary>
+public sealed record DiskAggregate(
+    int Index, string Name, MetricAggregate TempC, float? ActivityMaxPercent,
+    string Identifier = "");
 
 /// <summary>Yhden tuulettimen kooste; täsmäys pysyvällä tunnisteella.</summary>
 public sealed record FanAggregate(string Identifier, string Name, MetricAggregate Rpm);

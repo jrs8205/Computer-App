@@ -161,3 +161,44 @@ P2:t:
     muttei auennut ei enää valehtele "tallennus epäonnistui").
 14. setup.iss-resepti dokumentoi publish-kansion tyhjennyksen ennen
     julkaisua (vanhat DLL:t eivät jää installeriin).
+
+# Neljäs katselmointi (12.7.2026, v1.0.3:n jälkeen) — korjattu v1.0.4 ✅
+
+Kaikki 6 P1 + 10 P2 vahvistuivat ja korjattiin (217 testiä).
+
+P1 (julkaisuesteet):
+1. **ACL ei huomioinut omistajaa**: omistajalla on implisiittinen
+   WRITE_DAC → HasNonAdminWriteAccess vaatii nyt hallinnollisen omistajan
+   (Administrators/SYSTEM/TrustedInstaller); ei-admin-omistaja → turvaton.
+2. **Vain exe tarkistettiin, ei DLL:iä**: uusi IsInstallTreeSecure tarkistaa
+   exen, KAIKKI *.dll/*.exe, asennushakemiston JA esivanhemmat juureen asti
+   (omistaja + DACL + reparse-piste). Autostart käyttää sitä.
+3. **Tuntematon tehtäväkohde jäi voimaan**: RefreshIfEnabled poistaa
+   tehtävän myös jos kohdetta ei saada luettua (null = turvaton).
+4. **install.ps1 ohitti turvarajan**: poistaa vanhan tehtävän ENNEN
+   kopiointia ja asentaa TUOREESEEN hakemistoon (perii PF-ACL:n; /MIR ei
+   korjaisi olemassa olevaa heikkoa ACL:ää). Uusi tools/release.ps1
+   yhdistää julkaisun (tyhjä publish, versio+lisenssitarkistus,
+   allekirjoitus, ISCC).
+5. **Lisenssi-inventaario vajaa**: THIRD-PARTY-NOTICES.md kattaa nyt kaikki
+   jaettavat kirjastot (BlackSharp.Core/DiskInfoToolkit/RAMSPDToolkit-NDD
+   MPL-2.0, HidSharp Apache-2.0, OpenTK/GLWpfControl/HarfBuzzSharp/
+   Mono.Posix MIT, .NET-runtime MIT) + MPL-lähdekoodiohjeet; release.ps1
+   epäonnistuu jos publishissa on kartoittamaton DLL.
+6. **Negatiivinen retention pyyhki historian**: SettingsService clamppaa
+   kaikki arvot UI:n rajoihin; PurgeOlderThan ei poista tulevaisuuden
+   cutoffilla. Todennettu: 19433 riviä säilyi migraatiossa.
+
+P2 (robustius):
+- Levyn pysyvä tunniste DB:hen asti (identifier-sarake + migraatio,
+  cascade downsample/CSV/graafeihin; legacy name+index vanhoille).
+- Aikavälin ABA-race: pending-uusinta (24 h→7 pv→24 h hakee tuoreen).
+- Shutdown odottaa jonossa olevat DB-kirjoitukset ennen kannan sulkemista.
+- Sensorisnapshot kirjoitetaan taustasäikeellä (BlockingCollection);
+  DebugLogger ei KOSKAAN heitä sovellukseen.
+- last_state: vanhempi aikaleima ei korvaa uudempaa (lukon alla).
+- settings.json atomisesti (AtomicFile).
+- Lokisukupolvi luetaan ennen JA jälkeen tapahtumien; muutos → hylkää.
+- Autostart-operaatiot sarjallistettu (lock) + _autoStart todelliseen tilaan.
+- FanLabels kaapataan UI-säikeellä snapshotina (ei taustaenumerointia).
+- Julkaisu vain tools/release.ps1:llä (tyhjä publish -hakemisto).

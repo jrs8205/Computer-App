@@ -1,31 +1,51 @@
 # Third-party notices
 
 Hardware Monitor is licensed under GPL-3.0 (see LICENSE). It distributes
-the following third-party components, whose license texts are reproduced
-below as required by their licenses.
+the third-party components below (the redistributable managed and native
+libraries present in the self-contained publish output), whose license
+texts are reproduced further down as required by their licenses.
 
-| Component | License | Source |
-|---|---|---|
-| LibreHardwareMonitorLib | MPL-2.0 | https://github.com/LibreHardwareMonitor/LibreHardwareMonitor |
-| LiveCharts2 (LiveChartsCore.SkiaSharpView.WPF) | MIT | https://github.com/beto-rodriguez/LiveCharts2 |
-| SkiaSharp | MIT | https://github.com/mono/SkiaSharp |
-| Microsoft.Data.Sqlite | MIT | https://github.com/dotnet/efcore |
-| System.Diagnostics.EventLog | MIT | https://github.com/dotnet/runtime |
-| System.IO.FileSystem.AccessControl | MIT | https://github.com/dotnet/runtime |
-| SQLitePCLRaw | Apache-2.0 | https://github.com/ericsink/SQLitePCL.raw |
-| SQLite | Public Domain | https://sqlite.org/copyright.html |
+| Component | Version | License | Source |
+|---|---|---|---|
+| LibreHardwareMonitorLib | 0.9.6 | MPL-2.0 | https://github.com/LibreHardwareMonitor/LibreHardwareMonitor |
+| BlackSharp.Core | 1.0.x | MPL-2.0 | https://www.nuget.org/packages/BlackSharp.Core |
+| DiskInfoToolkit | 1.1.x | MPL-2.0 | https://www.nuget.org/packages/DiskInfoToolkit |
+| RAMSPDToolkit-NDD | 1.4.x | MPL-2.0 | https://www.nuget.org/packages/RAMSPDToolkit-NDD |
+| HidSharp | 2.x | Apache-2.0 | https://www.nuget.org/packages/HidSharp |
+| LiveChartsCore / .SkiaSharpView(.WPF) | 2.0.5 | MIT | https://github.com/beto-rodriguez/LiveCharts2 |
+| SkiaSharp (+ Views, HarfBuzz, native libSkiaSharp) | 2.88.x | MIT | https://github.com/mono/SkiaSharp |
+| HarfBuzzSharp (+ native libHarfBuzzSharp) | 8.3.x | MIT | https://github.com/mono/SkiaSharp |
+| OpenTK | 3.3.x | MIT | https://github.com/opentk/opentk |
+| GLWpfControl | 3.x | MIT | https://github.com/opentk/GLWpfControl |
+| Mono.Posix.NETStandard (+ native MonoPosixHelper) | 1.0.0 | MIT | https://github.com/mono/mono |
+| Microsoft.Data.Sqlite | 8.0.1 | MIT | https://github.com/dotnet/efcore |
+| System.Diagnostics.EventLog | 8.0.x | MIT | https://github.com/dotnet/runtime |
+| System.IO.FileSystem.AccessControl | 5.0.x | MIT | https://github.com/dotnet/runtime |
+| SQLitePCLRaw (core, provider, batteries_v2) | 2.x | Apache-2.0 | https://github.com/ericsink/SQLitePCL.raw |
+| SQLite (native e_sqlite3) | 3.x | Public Domain | https://sqlite.org/copyright.html |
+| .NET runtime + WPF (self-contained; System.*, Microsoft.*, Presentation*, UIAutomation*, netstandard, WindowsBase, etc.) | 8.0 | MIT | https://github.com/dotnet/runtime |
 
-The source code of the MPL-2.0-licensed LibreHardwareMonitorLib is
-available unmodified at the repository linked above.
+**Source code availability (MPL-2.0):** the Covered Software licensed under
+MPL-2.0 — LibreHardwareMonitorLib, BlackSharp.Core, DiskInfoToolkit and
+RAMSPDToolkit-NDD — is distributed here in Executable Form. The
+corresponding unmodified Source Code Form is available from each project's
+source linked above (and from the NuGet package pages), at no more than the
+cost of distribution. This application does not modify those libraries.
+
+> Note: license identifiers and versions are derived from the NuGet package
+> metadata of the current publish output. Have this reviewed in a formal
+> license audit before wide distribution.
 
 ---
 
 ## MIT License
 
 Applies to: LiveCharts2 (© Alberto Rodríguez Orozco & LiveCharts contributors),
-SkiaSharp (© Xamarin Inc., Microsoft Corporation),
-Microsoft.Data.Sqlite, System.Diagnostics.EventLog,
-System.IO.FileSystem.AccessControl (© .NET Foundation and Contributors).
+SkiaSharp / HarfBuzzSharp (© Xamarin Inc., Microsoft Corporation),
+OpenTK (© Team OpenTK), GLWpfControl (© Team OpenTK),
+Mono.Posix.NETStandard, Microsoft.Data.Sqlite,
+System.Diagnostics.EventLog, System.IO.FileSystem.AccessControl and the
+.NET runtime + WPF (© .NET Foundation and Contributors).
 
 ```
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -51,7 +71,7 @@ SOFTWARE.
 
 ## Mozilla Public License 2.0
 
-Applies to: LibreHardwareMonitorLib.
+Applies to: LibreHardwareMonitorLib, BlackSharp.Core, DiskInfoToolkit and RAMSPDToolkit-NDD.
 
 ```text
 Mozilla Public License Version 2.0
@@ -433,7 +453,7 @@ Exhibit B - "Incompatible With Secondary Licenses" Notice
 
 ## Apache License 2.0
 
-Applies to: SQLitePCLRaw (© Eric Sink et al.).
+Applies to: SQLitePCLRaw (© Eric Sink et al.) and HidSharp (© James F. Bellinger).
 
 ```text
 
@@ -639,4 +659,3 @@ Applies to: SQLitePCLRaw (© Eric Sink et al.).
    See the License for the specific language governing permissions and
    limitations under the License.
 ```
-

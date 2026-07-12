@@ -58,7 +58,10 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
     private int _analysisRefreshRunning;
     private int _insightsWriteRunning;
     private int _historyRefreshRunning;
+    private bool _historyRefreshPending;
     private int _rowsLogged;
+    private readonly object _dbWriteLock = new();
+    private readonly List<Task> _dbWrites = new();
 
     private string _status = UiStrings.Status_Starting;
     private int _tickCount;
@@ -93,18 +96,30 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
                 return;
             }
 
-            if (AutostartService.SetEnabled(value, _logger.Log))
+            // Sarjallistetaan kaikki Task Scheduler -operaatiot: taustapäivitys
+            // (RefreshIfEnabled) ja tämä muutos eivät saa ajaa yhtä aikaa.
+            lock (_autostartLock)
             {
-                _autoStart = value;
-            }
-            else
-            {
-                _logger.Log("VIRHE: automaattikäynnistyksen muutos epäonnistui (vaatii admin-oikeudet).");
+                if (AutostartService.SetEnabled(value, _logger.Log))
+                {
+                    _autoStart = value;
+                }
+                else
+                {
+                    _logger.Log("VIRHE: automaattikäynnistyksen muutos epäonnistui (vaatii admin-oikeudet).");
+                }
+
+                // Todellinen tila kannasta, ettei checkbox erkane (esim.
+                // suojaamattomasta polusta SetEnabled kieltäytyy).
+                _autoStart = AutostartService.IsEnabled();
             }
 
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(AutoStart)));
         }
     }
+
+    /// <summary>Sarjallistaa Task Scheduler -operaatiot (UI-muutos vs. taustapäivitys).</summary>
+    private readonly object _autostartLock = new();
 
     /// <summary>Jälki debug-lokiin, kun overlay sulkeutui ilman sovelluksen omaa kutsua.</summary>
     public void LogOverlayUnexpectedClose() =>
@@ -365,8 +380,25 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
             _timer.Start();
 
             // Pidä ajastettu tehtävä ajan tasalla (exe-polku ja --tray-argumentti)
-            // taustalla, ettei schtasks-kutsu viivytä käynnistystä.
-            Task.Run(() => AutostartService.RefreshIfEnabled(_logger.Log));
+            // taustalla, ettei schtasks-kutsu viivytä käynnistystä. Sarjallistettu
+            // AutoStart-checkboxin kanssa; lopuksi UI:n tila päivitetään todellisen
+            // mukaan (vaarallisen tehtävän poisto voi muuttaa tilan).
+            Task.Run(() =>
+            {
+                lock (_autostartLock)
+                {
+                    AutostartService.RefreshIfEnabled(_logger.Log);
+                    bool actual = AutostartService.IsEnabled();
+                    System.Windows.Application.Current?.Dispatcher.InvokeAsync(() =>
+                    {
+                        if (_autoStart != actual)
+                        {
+                            _autoStart = actual;
+                            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(AutoStart)));
+                        }
+                    });
+                }
+            });
         }
         catch (Exception ex)
         {
@@ -437,7 +469,7 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
             AggregatedSample? aggregate = _aggregator.Add(metrics, DateTimeOffset.Now);
             if (aggregate is not null && _historyDb is { } db)
             {
-                Task.Run(() =>
+                RunDbWrite(() =>
                 {
                     try
                     {
@@ -456,7 +488,7 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
             // "Ennen kaatumista" -tila talteen 5 s välein (luku 17).
             if (_tickCount % 5 == 0)
             {
-                Task.Run(() =>
+                RunDbWrite(() =>
                 {
                     try
                     {
@@ -831,19 +863,49 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
         }
     }
 
+    /// <summary>
+    /// Käynnistää DB-kirjoituksen taustalla ja seuraa tehtävää, jotta sammutus
+    /// voi odottaa jonossa olevat kirjoitukset valmiiksi ennen kannan
+    /// sulkemista (viimeinen kirjoitus ei saa hukkua).
+    /// </summary>
+    private void RunDbWrite(Action write)
+    {
+        var task = Task.Run(write);
+        lock (_dbWriteLock)
+        {
+            _dbWrites.RemoveAll(t => t.IsCompleted);
+            _dbWrites.Add(task);
+        }
+    }
+
     /// <summary>Graafien enimmäispistemäärä; SQL-harvennus tähtää samaan rajaan.</summary>
     private const int ChartMaxPoints = 500;
 
-    /// <summary>Hakee historiagraafien datan taustalla; päällekkäisyys estetty.</summary>
+    /// <summary>
+    /// Hakee historiagraafien datan taustalla; päällekkäisyys estetty. Jos
+    /// haku pyydetään käynnissä olevan aikana, merkitään pending ja ajetaan
+    /// uudelleen lopuksi — tämä kattaa myös ABA-vaihdon (24 h → 7 pv → 24 h),
+    /// jossa pelkkä tuntimäärän vertailu jättäisi tuloksen vanhentuneeksi.
+    /// </summary>
     private void RefreshHistoryInBackground()
     {
-        if (_historyDb is not { } db
-            || Interlocked.Exchange(ref _historyRefreshRunning, 1) == 1)
+        if (_historyDb is not { } db)
         {
             return;
         }
 
+        if (Interlocked.Exchange(ref _historyRefreshRunning, 1) == 1)
+        {
+            _historyRefreshPending = true;
+            return;
+        }
+
         int hours = History.RangeHours;
+
+        // Nimilaput kaapataan UI-säikeellä muuttumattomana snapshotina — niitä
+        // ei saa enumeroida taustalla samalla kun UI muokkaa sanakirjaa.
+        Dictionary<string, string> fanLabels = BuildFanLabelMap();
+
         Task.Run(() =>
         {
             try
@@ -864,7 +926,7 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
                 // ≥ rivimäärä pitää builderin harvennuksen pois päältä.
                 int maxPoints = Math.Max(ChartMaxPoints, rows.Count);
                 ChartHistory history =
-                    ChartHistoryBuilder.Build(rows, maxPoints, BuildFanLabelMap());
+                    ChartHistoryBuilder.Build(rows, maxPoints, fanLabels);
                 System.Windows.Application.Current?.Dispatcher.InvokeAsync(() =>
                 {
                     // Vanhentuneen aikavälin tulosta ei sovelleta: valitsin
@@ -881,11 +943,12 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
             }
             finally
             {
+                bool pending = _historyRefreshPending;
+                _historyRefreshPending = false;
                 Interlocked.Exchange(ref _historyRefreshRunning, 0);
 
-                // Jos käyttäjä vaihtoi aikaväliä haun aikana, vaihto olisi
-                // muuten hukkunut vartiointiin — haetaan uusi alue heti.
-                if (History.RangeHours != hours)
+                // Jos aikaväli vaihtui haun aikana (myös ABA), haetaan uudelleen.
+                if (pending || History.RangeHours != hours)
                 {
                     RefreshHistoryInBackground();
                 }
@@ -950,8 +1013,26 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
         {
         }
 
+        // Odota jonossa olevat DB-kirjoitukset (sample, last_state) valmiiksi
+        // ENNEN kannan sulkemista — viimeinen kirjoitus ei saa hukkua siihen,
+        // että yhteys suljetaan sen odottaessa lukkoa.
+        Task[] pending;
+        lock (_dbWriteLock)
+        {
+            pending = _dbWrites.ToArray();
+        }
+
+        try
+        {
+            Task.WaitAll(pending, TimeSpan.FromSeconds(3));
+        }
+        catch
+        {
+        }
+
         _historyDb?.Dispose();
         _sensorService.Dispose();
+        _logger.Dispose(); // tyhjentää taustalokijonon
     }
 
     private static readonly PropertyChangedEventArgs StatusChangedArgs = new(nameof(Status));

@@ -112,6 +112,41 @@ public sealed class SettingsServiceTests : IDisposable
     }
 
     [Fact]
+    public void Load_NegatiivinenRetention_ClampataanOletusrajoihin()
+    {
+        // {"Logging":{"KeepHistoryDays":-1}} on syntaktisesti kelvollinen, mutta
+        // negatiivinen retention tekisi purge-cutoffista tulevaisuuden → koko
+        // historia poistuisi. Arvo pitää clampata sallittuun väliin (1–365).
+        Directory.CreateDirectory(_dir);
+        File.WriteAllText(Path.Combine(_dir, "settings.json"),
+            """{"Logging":{"KeepHistoryDays":-1,"SensorIntervalSeconds":0}}""");
+        var service = new SettingsService(_dir);
+
+        AppSettings settings = service.Load();
+
+        Assert.InRange(settings.Logging.KeepHistoryDays, 1, 365);
+        Assert.InRange(settings.Logging.SensorIntervalSeconds, 1, 60);
+    }
+
+    [Fact]
+    public void Load_RajojenUlkopuolisetArvot_Clampataan()
+    {
+        Directory.CreateDirectory(_dir);
+        File.WriteAllText(Path.Combine(_dir, "settings.json"), """
+            {"Overlay":{"Opacity":5.0,"FontSize":999},
+             "Thresholds":{"CpuWarningTemp":5,"WarningSustainSeconds":-5}}
+            """);
+        var service = new SettingsService(_dir);
+
+        AppSettings s = service.Load();
+
+        Assert.InRange(s.Overlay.Opacity, 0.1, 1.0);
+        Assert.InRange(s.Overlay.FontSize, 8.0, 32.0);
+        Assert.InRange(s.Thresholds.CpuWarningTemp, 20f, 120f); // 5 → oletus 85
+        Assert.True(s.Thresholds.WarningSustainSeconds >= 1);
+    }
+
+    [Fact]
     public void Load_NulliksiAsetetutSisaoliot_TaydennetaanOletuksilla()
     {
         // Syntaktisesti kelvollinen JSON voi asettaa sisäoliot nulliksi;

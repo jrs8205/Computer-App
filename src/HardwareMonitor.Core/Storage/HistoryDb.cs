@@ -66,7 +66,8 @@ public sealed class HistoryDb : IDisposable
             disk_index INTEGER NOT NULL,
             name TEXT NOT NULL,
             temp_avg REAL, temp_max REAL, temp_min REAL,
-            activity_max REAL
+            activity_max REAL,
+            identifier TEXT NOT NULL DEFAULT ''
         );
         CREATE INDEX IF NOT EXISTS idx_disk_samples ON disk_samples(sample_id);
 
@@ -136,6 +137,29 @@ public sealed class HistoryDb : IDisposable
                 }
             }
         }
+
+        // Levyn tunniste (TEXT) — vanhat rivit saavat tyhjän tunnisteen ja
+        // täsmätään legacy-avaimella (name + disk_index) lukupolussa.
+        if (!ColumnExists("disk_samples", "identifier"))
+        {
+            Execute("ALTER TABLE disk_samples ADD COLUMN identifier TEXT NOT NULL DEFAULT '';");
+        }
+    }
+
+    private bool ColumnExists(string table, string column)
+    {
+        using var cmd = _connection.CreateCommand();
+        cmd.CommandText = $"PRAGMA table_info({table});";
+        using SqliteDataReader reader = cmd.ExecuteReader();
+        while (reader.Read())
+        {
+            if (reader.GetString(1).Equals(column, StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /// <summary>Kirjoittaa koosteen lapsiriveineen yhtenä transaktiona.</summary>
@@ -192,8 +216,8 @@ public sealed class HistoryDb : IDisposable
                 using var diskCmd = _connection.CreateCommand();
                 diskCmd.Transaction = tx;
                 diskCmd.CommandText = """
-                    INSERT INTO disk_samples (sample_id, disk_index, name, temp_avg, temp_max, temp_min, activity_max)
-                    VALUES ($id, $ix, $name, $tavg, $tmax, $tmin, $act);
+                    INSERT INTO disk_samples (sample_id, disk_index, name, temp_avg, temp_max, temp_min, activity_max, identifier)
+                    VALUES ($id, $ix, $name, $tavg, $tmax, $tmin, $act, $ident);
                     """;
                 diskCmd.Parameters.AddWithValue("$id", sampleId);
                 diskCmd.Parameters.AddWithValue("$ix", disk.Index);
@@ -201,6 +225,7 @@ public sealed class HistoryDb : IDisposable
                 diskCmd.Parameters.AddWithValue("$tavg", (object?)disk.TempC.Avg ?? DBNull.Value);
                 diskCmd.Parameters.AddWithValue("$tmax", (object?)disk.TempC.Max ?? DBNull.Value);
                 diskCmd.Parameters.AddWithValue("$tmin", (object?)disk.TempC.Min ?? DBNull.Value);
+                diskCmd.Parameters.AddWithValue("$ident", disk.Identifier);
                 diskCmd.Parameters.AddWithValue("$act", (object?)disk.ActivityMaxPercent ?? DBNull.Value);
                 diskCmd.ExecuteNonQuery();
             }
@@ -247,6 +272,14 @@ public sealed class HistoryDb : IDisposable
     /// <summary>Poistaa rajaa vanhemmat koosteet (cascade lapsiriveihin) ja tapahtumat.</summary>
     public void PurgeOlderThan(DateTimeOffset cutoff)
     {
+        // Puolustava tarkistus: tulevaisuuteen osoittava cutoff (esim.
+        // virheellisestä negatiivisesta retentiosta) poistaisi KAIKEN — ei
+        // koskaan pyyhitä nykyhetkeä uudempaa rajaa käyttäen.
+        if (cutoff > DateTimeOffset.Now)
+        {
+            return;
+        }
+
         lock (_lock)
         {
             using var cmd = _connection.CreateCommand();
@@ -469,7 +502,7 @@ public sealed class HistoryDb : IDisposable
             using (var diskCmd = _connection.CreateCommand())
             {
                 diskCmd.CommandText = """
-                    SELECT d.sample_id, d.name, d.temp_avg, d.temp_max, d.temp_min
+                    SELECT d.sample_id, d.name, d.temp_avg, d.temp_max, d.temp_min, d.identifier
                     FROM disk_samples d JOIN samples s ON s.id = d.sample_id
                     WHERE s.ts >= $since ORDER BY d.disk_index;
                     """;
@@ -487,7 +520,8 @@ public sealed class HistoryDb : IDisposable
                         r.GetString(1),
                         r.IsDBNull(2) ? null : r.GetDouble(2),
                         r.IsDBNull(3) ? null : r.GetDouble(3),
-                        r.IsDBNull(4) ? null : r.GetDouble(4)));
+                        r.IsDBNull(4) ? null : r.GetDouble(4),
+                        Identifier: r.GetString(5)));
                 }
             }
 
@@ -584,12 +618,16 @@ public sealed class HistoryDb : IDisposable
             var disksByBucket = new Dictionary<long, List<DiskSampleValue>>();
             using (var diskCmd = _connection.CreateCommand())
             {
+                // Ryhmittely tunnisteella (+ legacy disk_index vanhoille tyhjä-
+                // tunnisteisille riveille), jotta samannimiset levyt eivät
+                // sulaudu vaikka järjestys vaihtuisi.
                 diskCmd.CommandText = """
-                    SELECT s.ts / $bucket, d.name,
-                        AVG(d.temp_avg), MAX(d.temp_max), MIN(d.temp_min)
+                    SELECT s.ts / $bucket, MIN(d.name),
+                        AVG(d.temp_avg), MAX(d.temp_max), MIN(d.temp_min), d.identifier
                     FROM disk_samples d JOIN samples s ON s.id = d.sample_id
                     WHERE s.ts >= $since
-                    GROUP BY s.ts / $bucket, d.disk_index, d.name
+                    GROUP BY s.ts / $bucket, d.identifier,
+                        CASE WHEN d.identifier = '' THEN d.disk_index ELSE -1 END
                     ORDER BY s.ts / $bucket, d.disk_index;
                     """;
                 diskCmd.Parameters.AddWithValue("$since", cutoff);
@@ -604,7 +642,8 @@ public sealed class HistoryDb : IDisposable
                     }
 
                     list.Add(new DiskSampleValue(
-                        r.GetString(1), Opt(r, 2), Opt(r, 3), Opt(r, 4)));
+                        r.GetString(1), Opt(r, 2), Opt(r, 3), Opt(r, 4),
+                        Identifier: r.GetString(5)));
                 }
             }
 
@@ -798,7 +837,7 @@ public sealed class HistoryDb : IDisposable
         using (var diskCmd = _connection.CreateCommand())
         {
             diskCmd.CommandText = """
-                SELECT name, temp_avg, temp_max, temp_min FROM disk_samples
+                SELECT name, temp_avg, temp_max, temp_min, identifier FROM disk_samples
                 WHERE sample_id = $id ORDER BY disk_index;
                 """;
             diskCmd.Parameters.AddWithValue("$id", id);
@@ -806,7 +845,8 @@ public sealed class HistoryDb : IDisposable
             while (r.Read())
             {
                 disks.Add(new DiskSampleValue(
-                    r.GetString(0), Opt(r, 1), Opt(r, 2), Opt(r, 3)));
+                    r.GetString(0), Opt(r, 1), Opt(r, 2), Opt(r, 3),
+                    Identifier: r.GetString(4)));
             }
         }
 

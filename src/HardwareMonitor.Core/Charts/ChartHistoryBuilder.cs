@@ -36,10 +36,10 @@ public static class ChartHistoryBuilder
             Series("GPU", buckets, stamps, gapAfter, rows, r => r.GpuTempAvg),
             Series(Strings.Common_GpuHotspot, buckets, stamps, gapAfter, rows, r => r.GpuHotspotAvg),
         };
-        foreach ((string name, int occurrence, string display) in DiskKeys(rows))
+        foreach (DiskSeriesKey key in DiskKeys(rows))
         {
-            temps.Add(Series(display, buckets, stamps, gapAfter, rows,
-                r => Nth(r.Disks, name, occurrence)?.TempAvg));
+            temps.Add(Series(key.Display, buckets, stamps, gapAfter, rows,
+                r => SelectDisk(r.Disks, key)?.TempAvg));
         }
 
         var loads = new List<ChartSeries>
@@ -210,13 +210,24 @@ public static class ChartHistoryBuilder
         return new ChartSeries(name, points);
     }
 
-    private static DiskSampleValue? Nth(
-        IReadOnlyList<DiskSampleValue> disks, string name, int occurrence)
+    /// <summary>Levysarjan avain: pysyvä tunniste, tai legacy nimi+esiintymä (tyhjätunnisteiset vanhat rivit).</summary>
+    private sealed record DiskSeriesKey(
+        string Identifier, string Name, int LegacyOccurrence, string Display);
+
+    private static DiskSampleValue? SelectDisk(
+        IReadOnlyList<DiskSampleValue> disks, DiskSeriesKey key)
     {
+        if (key.Identifier.Length > 0)
+        {
+            return disks.FirstOrDefault(d => d.Identifier == key.Identifier);
+        }
+
+        // Legacy: nimi + esiintymä tyhjätunnisteisten levyjen joukossa.
         int seen = 0;
         foreach (DiskSampleValue disk in disks)
         {
-            if (disk.Name == name && seen++ == occurrence)
+            if (disk.Identifier.Length == 0 && disk.Name == key.Name
+                && seen++ == key.LegacyOccurrence)
             {
                 return disk;
             }
@@ -225,31 +236,80 @@ public static class ChartHistoryBuilder
         return null;
     }
 
-    /// <summary>Levyavaimet: (nimi, monesko samanniminen); näyttönimi trimmattuna, duplikaateille " #n".</summary>
-    private static IEnumerable<(string Name, int Occurrence, string Display)> DiskKeys(
-        IReadOnlyList<SampleRow> rows)
+    /// <summary>
+    /// Levyavaimet: ensisijaisesti pysyvä tunniste (samannimiset levyt pysyvät
+    /// erillään myös järjestyksen vaihtuessa), vanhoille tunnisteettomille
+    /// riveille nimi+esiintymä. Näyttönimi trimmattuna; samannimiset " #n".
+    /// </summary>
+    private static IEnumerable<DiskSeriesKey> DiskKeys(IReadOnlyList<SampleRow> rows)
     {
-        var counts = new Dictionary<string, int>();
+        // Kerää tunnisteelliset levyt (tunniste → nimi) ja legacy-levyt
+        // (nimi → suurin esiintymämäärä yhdellä rivillä).
+        var byIdentifier = new Dictionary<string, string>();
+        var legacyCounts = new Dictionary<string, int>();
         foreach (SampleRow row in rows)
         {
-            var inRow = new Dictionary<string, int>();
+            var legacyInRow = new Dictionary<string, int>();
             foreach (DiskSampleValue disk in row.Disks)
             {
-                inRow[disk.Name] = inRow.TryGetValue(disk.Name, out int n) ? n + 1 : 1;
+                if (disk.Identifier.Length > 0)
+                {
+                    byIdentifier.TryAdd(disk.Identifier, disk.Name);
+                }
+                else
+                {
+                    legacyInRow[disk.Name] = legacyInRow.TryGetValue(disk.Name, out int n) ? n + 1 : 1;
+                }
             }
 
-            foreach ((string name, int count) in inRow)
+            foreach ((string name, int count) in legacyInRow)
             {
-                counts[name] = Math.Max(counts.TryGetValue(name, out int c) ? c : 0, count);
+                legacyCounts[name] = Math.Max(
+                    legacyCounts.TryGetValue(name, out int c) ? c : 0, count);
             }
         }
 
-        foreach ((string name, int count) in counts)
+        // Näyttönimen disambiguointi: montako sarjaa jakaa saman nimen.
+        var nameTotals = new Dictionary<string, int>();
+        void CountName(string name) =>
+            nameTotals[name] = (nameTotals.TryGetValue(name, out int c) ? c : 0) + 1;
+        foreach (string name in byIdentifier.Values)
+        {
+            CountName(name.Trim());
+        }
+
+        foreach ((string name, int count) in legacyCounts)
         {
             for (int i = 0; i < count; i++)
             {
-                yield return (name, i,
-                    count > 1 ? $"{name.Trim()} #{i + 1}" : name.Trim());
+                CountName(name.Trim());
+            }
+        }
+
+        var used = new Dictionary<string, int>();
+        string Display(string rawName)
+        {
+            string n = rawName.Trim();
+            if (nameTotals[n] <= 1)
+            {
+                return n;
+            }
+
+            int idx = used.TryGetValue(n, out int u) ? u + 1 : 1;
+            used[n] = idx;
+            return $"{n} #{idx}";
+        }
+
+        foreach ((string identifier, string name) in byIdentifier)
+        {
+            yield return new DiskSeriesKey(identifier, name, 0, Display(name));
+        }
+
+        foreach ((string name, int count) in legacyCounts)
+        {
+            for (int i = 0; i < count; i++)
+            {
+                yield return new DiskSeriesKey("", name, i, Display(name));
             }
         }
     }

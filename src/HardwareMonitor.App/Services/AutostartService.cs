@@ -69,16 +69,18 @@ public static class AutostartService
         }
 
         // Turvasiivous: jos olemassa oleva tehtävä osoittaa suojaamattomaan
-        // polkuun (vanhemman version luoma korotettu tehtävä käyttäjän
-        // kirjoitettavassa polussa tai kohteen ACL on sittemmin muuttunut),
-        // se on korotusreitti — poistetaan se, ettei sitä jätetä aktiiviseksi.
+        // polkuun TAI kohdetta ei saada luettua (tuntematon = turvaton), se on
+        // mahdollinen korotusreitti — poistetaan se, ettei sitä jätetä
+        // aktiiviseksi. Vanhemman version luoma korotettu tehtävä käyttäjän
+        // kirjoitettavassa polussa on juuri tämä uhka.
         string? existingTarget = ReadExistingTaskTarget();
-        if (existingTarget is not null && !IsInProtectedDirectory(existingTarget))
+        if (existingTarget is null || !IsInProtectedDirectory(existingTarget))
         {
             RunSchtasks($"/Delete /F /TN \"{TaskName}\"");
             log?.Invoke(
-                "Poistettiin autostart-tehtävä, joka osoitti suojaamattomaan " +
-                "polkuun (mahdollinen korotusreitti).");
+                "Poistettiin autostart-tehtävä, jonka kohde ei ollut varmasti " +
+                "suojattu (tuntematon tai suojaamaton polku, mahdollinen " +
+                "korotusreitti).");
         }
 
         // Luo uudelleen nykyisestä exestä (SetEnabled kieltäytyy, jos nykyinen
@@ -109,29 +111,21 @@ public static class AutostartService
         return m.Groups[1].Value.Trim().Trim('"');
     }
 
-    /// <summary>
-    /// Suojattu = Program Files -juurten alla JA hakemiston sekä exen ACL ei
-    /// salli tavallisen käyttäjän kirjoitusta. Windows-juurta ei hyväksytä:
-    /// sen alla on käyttäjäkirjoitettavia polkuja (esim. C:\Windows\Temp),
-    /// eikä sovellusta koskaan asenneta sinne.
-    /// </summary>
-    private static bool IsInProtectedDirectory(string path)
+    private static readonly string[] ProtectedRoots =
     {
-        bool underProtectedRoot = ProtectedPaths.IsUnderAny(path, new[]
-        {
-            Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles),
-            Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86),
-        });
-        if (!underProtectedRoot)
-        {
-            return false;
-        }
+        Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles),
+        Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86),
+    };
 
-        string? directory = Path.GetDirectoryName(path);
-        return directory is not null
-            && !ProtectedPaths.HasNonAdminWriteAccess(directory)
-            && !ProtectedPaths.HasNonAdminWriteAccess(path);
-    }
+    /// <summary>
+    /// Suojattu = Program Files -juurten alla JA koko asennuspuu (exe, kaikki
+    /// ladattavat DLL:t, hakemisto ja esivanhemmat) on hallinnollisesti
+    /// omistettu eikä salli ei-hallinnollista kirjoitusta. Windows-juurta ei
+    /// hyväksytä (sen alla on käyttäjäkirjoitettavia polkuja), eikä pelkkä
+    /// exe riitä (muokattu DLL latautuisi korotettuna).
+    /// </summary>
+    private static bool IsInProtectedDirectory(string path) =>
+        ProtectedPaths.IsInstallTreeSecure(path, ProtectedRoots);
 
     private static int RunSchtasks(string arguments)
     {

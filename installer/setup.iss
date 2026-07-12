@@ -1,12 +1,10 @@
 ; Hardware Monitorin asennusohjelma (Inno Setup 6).
 ;
-; Rakennus (korotettu PowerShell repojuuressa):
-;   # TYHJENNÄ publish ensin: dotnet publish -o EI siivoa vanhentuneita
-;   # tiedostoja, ja alla oleva [Files]-wildcard paketoisi ne muuten mukaan.
-;   Remove-Item publish -Recurse -Force -ErrorAction SilentlyContinue
-;   dotnet publish src\HardwareMonitor.App\HardwareMonitor.App.csproj `
-;       -c Release -r win-x64 --self-contained true -o publish
-;   & "$env:LOCALAPPDATA\Programs\Inno Setup 6\ISCC.exe" installer\setup.iss
+; Rakennus: käytä AINA .\tools\release.ps1 -skriptiä. Se tyhjentää publishin,
+; julkaisee, tarkistaa versiot ja lisenssit, allekirjoittaa exet ja kääntää
+; tämän. Älä aja dotnet publishia käsin olemassa olevaan publish-hakemistoon —
+; vanhentuneet tiedostot päätyisivät alla olevan [Files]-wildcardin kautta
+; asennukseen.
 ;
 ; Tuloste: installer\Output\HardwareMonitor-Setup-<versio>.exe
 ;
@@ -15,7 +13,7 @@
 ; Käyttäjän data (%LOCALAPPDATA%\HardwareMonitor) säilyy poistossa.
 
 #define MyAppName "Hardware Monitor"
-#define MyAppVersion "1.0.3"
+#define MyAppVersion "1.0.4"
 #define MyAppPublisher "jrs8205"
 #define MyAppURL "https://github.com/jrs8205/Computer-App"
 #define MyAppExeName "HardwareMonitor.exe"

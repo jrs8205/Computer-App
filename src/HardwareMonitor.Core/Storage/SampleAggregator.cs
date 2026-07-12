@@ -105,7 +105,8 @@ public sealed class SampleAggregator
                 Index: i,
                 Name: keyOrder[i].Name,
                 TempC: ToAggregate(readings.Select(d => d.TemperatureC)),
-                ActivityMaxPercent: activities.Count == 0 ? null : activities.Max()));
+                ActivityMaxPercent: activities.Count == 0 ? null : activities.Max(),
+                Identifier: readings[0].Identifier));
         }
 
         return result;

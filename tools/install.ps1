@@ -49,15 +49,26 @@ dotnet publish (Join-Path $repoRoot 'src\HardwareMonitor.App\HardwareMonitor.App
     -c Release -r win-x64 --self-contained true -o $publishDir --nologo -v quiet
 if ($LASTEXITCODE -ne 0) { throw 'dotnet publish epäonnistui.' }
 
-Write-Host "2/4 Kopioidaan kansioon $installDir..."
-# /MIR poistaa asennuskansiosta vanhentuneet tiedostot; robocopyn koodit 0–7 = onnistui.
+# Poista vanha autostart-tehtävä ENNEN kopiointia: se voi osoittaa vanhaan
+# tai heikkoon polkuun ja käynnistyä kirjautuessa ennen kuin sovelluksen oma
+# tarkistus ehtii siivota sen. Luodaan uudelleen vasta onnistuneen asennuksen
+# jälkeen (jos oli käytössä).
+schtasks /Query /TN $taskName > $null 2>&1
+$autostartWasEnabled = ($LASTEXITCODE -eq 0)
+schtasks /Delete /F /TN $taskName 2>$null | Out-Null
+$global:LASTEXITCODE = 0
+
+Write-Host "2/4 Asennetaan tuoreeseen kansioon $installDir..."
+# Poista koko asennushakemisto ensin, jotta se luodaan uudelleen ja PERII
+# Program Filesin vahvan ACL:n. robocopy /MIR ei korjaisi jo olemassa olevan
+# heikon hakemiston käyttöoikeuksia (mahdollinen korotusreitti).
+if (Test-Path $installDir) { Remove-Item $installDir -Recurse -Force }
 robocopy $publishDir $installDir /MIR /NJH /NJS /NDL /NFL | Out-Null
 if ($LASTEXITCODE -ge 8) { throw "robocopy epäonnistui (koodi $LASTEXITCODE)." }
 $global:LASTEXITCODE = 0
 
-Write-Host '3/4 Päivitetään autostart-tehtävä (jos käytössä)...'
-schtasks /Query /TN $taskName > $null 2>&1
-if ($LASTEXITCODE -eq 0) {
+Write-Host '3/4 Päivitetään autostart-tehtävä (jos oli käytössä)...'
+if ($autostartWasEnabled) {
     # Suojatusta polusta korotus on turvallinen — sama sääntö kuin sovelluksessa.
     # HUOM: sisemmät lainausmerkit backtickillä ILMAN kenoviivaa — PowerShell
     # escapaa ne itse natiivikutsussa (kenoviivat päätyisivät literaaleina schtasksille).

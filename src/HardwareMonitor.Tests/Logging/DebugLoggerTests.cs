@@ -19,9 +19,10 @@ public sealed class DebugLoggerTests : IDisposable
     [Fact]
     public void Log_KirjoittaaAikaleimallisenRivin()
     {
-        var logger = new DebugLogger(_dir);
+        using var logger = new DebugLogger(_dir);
 
         logger.Log("testirivi");
+        logger.Flush();
 
         string[] lines = File.ReadAllLines(logger.LogPath);
         string line = Assert.Single(lines);
@@ -33,9 +34,10 @@ public sealed class DebugLoggerTests : IDisposable
     [Fact]
     public void LogBatch_KirjoittaaKaikkiRivitAikaleimoineen()
     {
-        var logger = new DebugLogger(_dir);
+        using var logger = new DebugLogger(_dir);
 
         logger.LogBatch(new[] { "eka", "toka", "kolmas" });
+        logger.Flush();
 
         string[] lines = File.ReadAllLines(logger.LogPath);
         Assert.Equal(3, lines.Length);
@@ -47,9 +49,10 @@ public sealed class DebugLoggerTests : IDisposable
     [Fact]
     public void LogBatch_TyhjaLista_EiLuoTiedostoa()
     {
-        var logger = new DebugLogger(_dir);
+        using var logger = new DebugLogger(_dir);
 
         logger.LogBatch(Array.Empty<string>());
+        logger.Flush();
 
         Assert.False(File.Exists(logger.LogPath));
     }
@@ -57,13 +60,15 @@ public sealed class DebugLoggerTests : IDisposable
     [Fact]
     public void Log_RajanYlittyessa_KiertaaLokinVanhaksi()
     {
-        var logger = new DebugLogger(_dir, maxLogBytes: 200);
+        using var logger = new DebugLogger(_dir, maxLogBytes: 200);
         string oldPath = Path.Combine(_dir, "debug.old.log");
 
         for (int i = 0; i < 20; i++)
         {
             logger.Log($"täyterivi {i} — kasvatetaan tiedostoa yli rajan");
         }
+
+        logger.Flush();
 
         Assert.True(File.Exists(oldPath), "vanhaa lokia ei syntynyt");
         Assert.True(new FileInfo(logger.LogPath).Length < 200 + 100,
@@ -73,12 +78,14 @@ public sealed class DebugLoggerTests : IDisposable
     [Fact]
     public void Log_ToinenKierto_KorvaaAiemmanVanhanLokin()
     {
-        var logger = new DebugLogger(_dir, maxLogBytes: 200);
+        using var logger = new DebugLogger(_dir, maxLogBytes: 200);
 
         for (int i = 0; i < 60; i++)
         {
             logger.Log($"täyterivi {i} — kasvatetaan tiedostoa yli rajan monta kertaa");
         }
+
+        logger.Flush();
 
         // Kierto ei saa kaatua siihen, että debug.old.log on jo olemassa.
         Assert.True(File.Exists(Path.Combine(_dir, "debug.old.log")));

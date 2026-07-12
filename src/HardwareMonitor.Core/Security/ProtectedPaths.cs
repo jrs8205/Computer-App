@@ -56,13 +56,17 @@ public static class ProtectedPaths
         | FileSystemRights.ChangePermissions
         | FileSystemRights.TakeOwnership;
 
+    private static bool IsAdminSid(SecurityIdentifier? sid) =>
+        sid is not null && Array.Exists(AdminSids, s => s.Equals(sid));
+
     /// <summary>
     /// True, jos joku muu kuin hallinnollinen taho (admin/SYSTEM/
     /// TrustedInstaller) voi kirjoittaa polkuun — eli polusta EI saa
-    /// käynnistää korotettua tehtävää. Allowlist-periaate: mikä tahansa
-    /// kirjoitus-ACE, jonka SID ei ole varmasti hallinnollinen (esim.
-    /// käyttäjän oma SID, Users, mukautettu ryhmä), tekee polusta turvattoman.
-    /// Virhetilanteessa (polku puuttuu, ACL ei luettavissa) turvaton.
+    /// käynnistää korotettua tehtävää. Turvattomuus todetaan jos:
+    /// (a) omistaja ei ole hallinnollinen (omistajalla on implisiittinen
+    /// WRITE_DAC → voi myöntää itselleen kirjoituksen), TAI (b) DACL:ssa on
+    /// kirjoitus-ACE ei-hallinnolliselle SID:lle. Virhetilanteessa (polku
+    /// puuttuu, ACL ei luettavissa) turvaton.
     /// </summary>
     public static bool HasNonAdminWriteAccess(string path)
     {
@@ -71,6 +75,14 @@ public static class ProtectedPaths
             FileSystemSecurity security = Directory.Exists(path)
                 ? new DirectoryInfo(path).GetAccessControl()
                 : new FileInfo(path).GetAccessControl();
+
+            // Omistaja: ei-hallinnollinen omistaja voi WRITE_DAC:illa avata
+            // itselleen kirjoituksen, joten se tekee polusta turvattoman.
+            if (security.GetOwner(typeof(SecurityIdentifier)) is not SecurityIdentifier owner
+                || !IsAdminSid(owner))
+            {
+                return true;
+            }
 
             foreach (FileSystemAccessRule rule in
                      security.GetAccessRules(true, true, typeof(SecurityIdentifier)))
@@ -93,8 +105,7 @@ public static class ProtectedPaths
                     continue;
                 }
 
-                if (rule.IdentityReference is not SecurityIdentifier sid
-                    || !Array.Exists(AdminSids, s => s.Equals(sid)))
+                if (rule.IdentityReference is not SecurityIdentifier sid || !IsAdminSid(sid))
                 {
                     return true; // ei-hallinnollinen kirjoitus → turvaton
                 }
@@ -105,6 +116,99 @@ public static class ProtectedPaths
         catch (Exception)
         {
             return true; // tuntematon tila = ei korotusta
+        }
+    }
+
+    /// <summary>
+    /// True vain jos koko asennuspuu on turvallinen korotettuun
+    /// automaattikäynnistykseen: exe on jonkin suojatun juuren alla, eikä
+    /// exen, sen ladattavien tiedostojen (*.dll/*.exe), asennushakemiston
+    /// eikä yhdenkään esivanhemman (juureen asti) omistaja/ACL salli
+    /// ei-hallinnollista kirjoitusta. Reparse-pisteet (junction/symlink)
+    /// tulkitaan turvattomiksi. Suojattu juuri itse on OS:n suojaama, joten
+    /// tarkistus pysähtyy siihen.
+    /// </summary>
+    public static bool IsInstallTreeSecure(string exePath, IEnumerable<string> protectedRoots)
+    {
+        try
+        {
+            string? matchedRoot = null;
+            foreach (string root in protectedRoots)
+            {
+                if (string.IsNullOrEmpty(root))
+                {
+                    continue;
+                }
+
+                string prefix = root.TrimEnd(Path.DirectorySeparatorChar)
+                    + Path.DirectorySeparatorChar;
+                if (exePath.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
+                {
+                    matchedRoot = root.TrimEnd(Path.DirectorySeparatorChar);
+                    break;
+                }
+            }
+
+            if (matchedRoot is null || !File.Exists(exePath))
+            {
+                return false;
+            }
+
+            string? installDir = Path.GetDirectoryName(exePath);
+            if (installDir is null)
+            {
+                return false;
+            }
+
+            // Exe + kaikki ladattavat tiedostot asennushakemistossa.
+            if (HasNonAdminWriteAccess(exePath) || IsReparsePoint(exePath))
+            {
+                return false;
+            }
+
+            foreach (string file in Directory.EnumerateFiles(
+                         installDir, "*", SearchOption.AllDirectories))
+            {
+                if (file.EndsWith(".dll", StringComparison.OrdinalIgnoreCase)
+                    || file.EndsWith(".exe", StringComparison.OrdinalIgnoreCase))
+                {
+                    if (HasNonAdminWriteAccess(file) || IsReparsePoint(file))
+                    {
+                        return false;
+                    }
+                }
+            }
+
+            // Asennushakemisto ja esivanhemmat juureen (poislukien juuri, joka
+            // on OS:n suojaama).
+            for (string? dir = installDir;
+                 dir is not null
+                 && !dir.Equals(matchedRoot, StringComparison.OrdinalIgnoreCase);
+                 dir = Path.GetDirectoryName(dir))
+            {
+                if (HasNonAdminWriteAccess(dir) || IsReparsePoint(dir))
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+        catch (Exception)
+        {
+            return false;
+        }
+    }
+
+    private static bool IsReparsePoint(string path)
+    {
+        try
+        {
+            return (File.GetAttributes(path) & FileAttributes.ReparsePoint) != 0;
+        }
+        catch (Exception)
+        {
+            return true; // ei luettavissa → turvaton
         }
     }
 }

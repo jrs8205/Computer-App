@@ -130,6 +130,21 @@ public sealed class LastStateServiceTests : IDisposable
     }
 
     [Fact]
+    public void Write_VanhempiAikaleimaMyohemminSaapuen_EiKorvaaUudempaa()
+    {
+        // Rinnakkaiset 5 s kirjoitukset (Task.Run) voivat valmistua eri
+        // järjestyksessä kuin käynnistyivät — vanhempi tila ei saa jäädä
+        // viimeiseksi. Palvelu hylkää nykyistä vanhemman aikaleiman.
+        var service = new LastStateService(_dir);
+        service.Write(Metrics() with { }, Now.AddSeconds(10));
+        service.Write(Metrics(), Now); // vanhempi saapuu myöhemmin
+
+        LastState? state = new LastStateService(_dir).ReadPrevious();
+        Assert.NotNull(state);
+        Assert.Equal(Now.AddSeconds(10).ToUnixTimeSeconds(), state.Timestamp.ToUnixTimeSeconds());
+    }
+
+    [Fact]
     public void ReadPrevious_RikkinainenTiedosto_PalauttaaNull()
     {
         Directory.CreateDirectory(_dir);
