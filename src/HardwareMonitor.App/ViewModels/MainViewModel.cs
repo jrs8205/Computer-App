@@ -107,6 +107,10 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
         }
     }
 
+    /// <summary>Jälki debug-lokiin, kun overlay sulkeutui ilman sovelluksen omaa kutsua.</summary>
+    public void LogOverlayUnexpectedClose() =>
+        _logger.Log("[WARNING] Overlay-ikkuna sulkeutui odottamatta — luodaan uudelleen.");
+
     /// <summary>Tallentaa käyttäjän raahaaman overlay-sijainnin.</summary>
     public void SetOverlayCustomPosition(double left, double top)
     {
@@ -758,39 +762,44 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
 
     private void LogSnapshot(IReadOnlyList<HardwareGroup> groups)
     {
-        // Kirjataan koko sensorilista debug-lokiin harvakseltaan (n. 10 s välein),
-        // jottei tiedosto kasva liian nopeasti. Tämä on vain PoC-tason lokitus;
-        // varsinainen SQLite-sensoriloki tulee myöhemmässä vaiheessa.
-        if (_tickCount % 10 != 1)
+        // Koko sensorilista lokiin minuutin välein yhtenä eräkirjoituksena —
+        // rivi kerrallaan kirjoitettuna satojen rivien snapshot venytti
+        // 1 s mittausväliä ja kasvatti lokin 149 MB:iin neljässä päivässä.
+        if (_tickCount % 60 != 1)
         {
             return;
         }
 
-        _logger.Log($"--- Sensoritilanne (päivitys #{_tickCount}) ---");
+        var lines = new List<string> { $"--- Sensoritilanne (päivitys #{_tickCount}) ---" };
         foreach (HardwareGroup group in groups)
         {
-            LogGroup(group, indent: 0);
+            CollectLogLines(group, indent: 0, lines);
         }
+
+        _logger.LogBatch(lines);
     }
 
-    private void LogGroup(HardwareGroup group, int indent)
+    private static void CollectLogLines(HardwareGroup group, int indent, List<string> lines)
     {
         string pad = new(' ', indent * 2);
-        _logger.Log($"{pad}[{group.HardwareType}] {group.Name}");
+        lines.Add($"{pad}[{group.HardwareType}] {group.Name}");
 
         foreach (SensorReading reading in group.Sensors)
         {
             string value = reading.Value.HasValue
                 ? $"{reading.Value.Value:0.###} {reading.Unit}".Trim()
                 : "—";
-            _logger.Log($"{pad}  {reading.SensorType,-12} {reading.SensorName}: {value}");
+            lines.Add($"{pad}  {reading.SensorType,-12} {reading.SensorName}: {value}");
         }
 
         foreach (HardwareGroup sub in group.SubHardware)
         {
-            LogGroup(sub, indent + 1);
+            CollectLogLines(sub, indent + 1, lines);
         }
     }
+
+    /// <summary>Graafien enimmäispistemäärä; SQL-harvennus tähtää samaan rajaan.</summary>
+    private const int ChartMaxPoints = 500;
 
     /// <summary>Hakee historiagraafien datan taustalla; päällekkäisyys estetty.</summary>
     private void RefreshHistoryInBackground()
@@ -806,10 +815,16 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
         {
             try
             {
-                IReadOnlyList<SampleRow> rows =
-                    db.ReadSampleRows(DateTimeOffset.Now.AddHours(-hours));
+                // Harvennus SQL:ssä bucket-koosteiksi: 30 pv alue toisi muuten
+                // ~518 000 riviä lapsineen muistiin ja pitäisi kantalukkoa
+                // koko materialisoinnin ajan (UI:n tapahtumakirjaukset jonossa).
+                int bucketSeconds = Math.Max(
+                    _settings.Logging.SensorIntervalSeconds,
+                    (int)Math.Ceiling(hours * 3600 / (double)ChartMaxPoints));
+                IReadOnlyList<SampleRow> rows = db.ReadSampleRowsDownsampled(
+                    DateTimeOffset.Now.AddHours(-hours), bucketSeconds);
                 ChartHistory history =
-                    ChartHistoryBuilder.Build(rows, 500, BuildFanLabelMap());
+                    ChartHistoryBuilder.Build(rows, ChartMaxPoints, BuildFanLabelMap());
                 System.Windows.Application.Current?.Dispatcher.InvokeAsync(
                     () => History.Apply(history, hours));
             }
@@ -865,11 +880,21 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
         try
         {
             _events?.Info("App", UiStrings.Event_AppClosed);
-            _lastState.MarkCleanShutdown();
         }
         catch
         {
             // Sammutus ei saa kaatua lokitukseen.
+        }
+
+        try
+        {
+            // Erillään tapahtumakirjoituksesta: siisti sulkeminen merkitään
+            // vaikka SQLite-kirjoitus epäonnistuisi — muuten seuraava
+            // käynnistys raportoisi normaalin sulkemisen kaatumisena.
+            _lastState.MarkCleanShutdown();
+        }
+        catch
+        {
         }
 
         _historyDb?.Dispose();

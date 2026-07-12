@@ -64,6 +64,28 @@ public class CsvExporterTests
     }
 
     [Fact]
+    public void SamannimisetLevytSaavatOmatSarakkeet()
+    {
+        // Invariantti 10: koneessa on kaksi identtistä 860 EVO:ta — kumpikaan
+        // ei saa kadota vienneistä. Nimet erotellaan kuten graafeissa (#1/#2).
+        var rows = new[]
+        {
+            Row(Now, disks: new[]
+            {
+                new DiskSampleValue("Samsung SSD 860 EVO 1TB ", 30, 32),
+                new DiskSampleValue("Samsung SSD 860 EVO 1TB ", 40, 42),
+            }),
+        };
+
+        string csv = CsvExporter.Build(rows, Finnish);
+        string[] lines = csv.TrimEnd().Split('\n');
+
+        Assert.Contains("Levy Samsung SSD 860 EVO 1TB #1 lämpö °C (ka)", lines[0]);
+        Assert.Contains("Levy Samsung SSD 860 EVO 1TB #2 lämpö °C (max)", lines[0]);
+        Assert.Contains(";30;32;40;42", lines[1]);
+    }
+
+    [Fact]
     public void LevysarakkeetPivotoidaanKaikistaRiveista()
     {
         var rows = new[]

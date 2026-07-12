@@ -55,7 +55,13 @@ public partial class MainWindow : Window
         Closed += (_, _) =>
         {
             _trayIcon?.Dispose();
-            _overlay?.Close();
+
+            // Viite nollataan ennen sulkemista, ettei overlayn Closed-
+            // käsittelijä tulkitse tätä odottamattomaksi ja luo uutta ikkunaa.
+            OverlayWindow? overlay = _overlay;
+            _overlay = null;
+            overlay?.Close();
+
             _viewModel.Dispose();
         };
     }
@@ -118,7 +124,8 @@ public partial class MainWindow : Window
         _trayIcon.ContextMenuStrip = menu;
     }
 
-    private void RestoreFromTray()
+    /// <summary>Näyttää pääikkunan; myös toinen instanssi pyytää tätä (App).</summary>
+    public void RestoreFromTray()
     {
         Show();
         WindowState = WindowState.Normal;
@@ -184,6 +191,8 @@ public partial class MainWindow : Window
                 // mukana trayhin. Overlay suljetaan erikseen Closed-käsittelijässä.
                 _overlay = new OverlayWindow(_viewModel.Overlay);
                 _overlay.PositionChangedByUser += _viewModel.SetOverlayCustomPosition;
+                OverlayWindow created = _overlay;
+                _overlay.Closed += (_, _) => OnOverlayClosed(created);
                 _overlay.Show();
 
                 if (MoveOverlayCheck.IsChecked == true)
@@ -197,8 +206,31 @@ public partial class MainWindow : Window
         else if (_overlay is not null)
         {
             MoveOverlayCheck.IsChecked = false;
-            _overlay.Close();
+
+            // Viite nollataan ennen sulkemista = ohjattu sulkeminen.
+            OverlayWindow closing = _overlay;
             _overlay = null;
+            closing.Close();
+        }
+    }
+
+    /// <summary>
+    /// Itsekorjaus: jos overlay-ikkuna sulkeutuu ilman että sovellus sulki sen
+    /// (esim. ulkopuolinen WM_CLOSE — havaittu 11.7.2026), luodaan se uudelleen
+    /// kun asetus on yhä päällä.
+    /// </summary>
+    private void OnOverlayClosed(OverlayWindow window)
+    {
+        if (!ReferenceEquals(_overlay, window))
+        {
+            return; // ohjattu sulkeminen tai jo korvattu ikkuna
+        }
+
+        _overlay = null;
+        if (_viewModel.OverlayEnabled)
+        {
+            _viewModel.LogOverlayUnexpectedClose();
+            ApplyOverlaySettings();
         }
     }
 

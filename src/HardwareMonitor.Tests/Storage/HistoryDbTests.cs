@@ -1,4 +1,5 @@
 using HardwareMonitor.Core.Storage;
+using Microsoft.Data.Sqlite;
 using Xunit;
 
 namespace HardwareMonitor.Tests.Storage;
@@ -143,6 +144,132 @@ public sealed class HistoryDbTests : IDisposable
         FanSampleValue fan = Assert.Single(rows[0].Fans);
         Assert.Equal("Fan #2", fan.Name);
         Assert.Equal(1955, fan.RpmAvg);
+    }
+
+    [Fact]
+    public void ReadSampleRows_PalauttaaMyosMinimit()
+    {
+        // Invariantti 6: jokainen 5 s rivi tallentaa min/avg/max — myös minimit.
+        _db.InsertSample(Sample(Now));
+
+        SampleRow row = Assert.Single(_db.ReadSampleRows(Now.AddHours(-24)));
+
+        Assert.Equal(10, row.CpuLoadMin);
+        Assert.Equal(50, row.CpuTempMin);
+        DiskSampleValue disk = Assert.Single(row.Disks);
+        Assert.Equal(60, disk.TempMin);
+        FanSampleValue fan = Assert.Single(row.Fans);
+        Assert.Equal(1950, fan.RpmMin);
+    }
+
+    [Fact]
+    public void VanhaKantaIlmanMinSarakkeita_MigratoituuAvattaessa()
+    {
+        // Simuloidaan ennen min-sarakkeita luotua kantaa: luodaan taulut
+        // vanhalla skeemalla ja avataan sitten HistoryDb samaan polkuun.
+        string dir = Path.Combine(_dir, "vanha");
+        Directory.CreateDirectory(dir);
+        string dbPath = Path.Combine(dir, "history.db");
+        using (var conn = new SqliteConnection($"Data Source={dbPath}"))
+        {
+            conn.Open();
+            using var cmd = conn.CreateCommand();
+            cmd.CommandText = """
+                CREATE TABLE samples (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    ts INTEGER NOT NULL,
+                    cpu_load_avg REAL, cpu_load_max REAL,
+                    cpu_temp_avg REAL, cpu_temp_max REAL,
+                    cpu_clock_max REAL,
+                    cpu_power_avg REAL, cpu_power_max REAL,
+                    gpu_load_avg REAL, gpu_load_max REAL,
+                    gpu_temp_avg REAL, gpu_temp_max REAL,
+                    gpu_hotspot_avg REAL, gpu_hotspot_max REAL,
+                    gpu_power_avg REAL, gpu_power_max REAL,
+                    vram_used_mb_avg REAL, vram_used_mb_max REAL,
+                    ram_load_avg REAL, ram_load_max REAL,
+                    ram_used_gb_avg REAL, ram_used_gb_max REAL
+                );
+                CREATE TABLE disk_samples (
+                    sample_id INTEGER NOT NULL REFERENCES samples(id) ON DELETE CASCADE,
+                    disk_index INTEGER NOT NULL,
+                    name TEXT NOT NULL,
+                    temp_avg REAL, temp_max REAL,
+                    activity_max REAL
+                );
+                CREATE TABLE fan_samples (
+                    sample_id INTEGER NOT NULL REFERENCES samples(id) ON DELETE CASCADE,
+                    identifier TEXT NOT NULL,
+                    name TEXT NOT NULL,
+                    rpm_avg REAL, rpm_max REAL
+                );
+                INSERT INTO samples (ts, cpu_temp_avg, cpu_temp_max) VALUES (1, 60, 70);
+                """;
+            cmd.ExecuteNonQuery();
+            SqliteConnection.ClearPool(conn);
+        }
+
+        using var db = new HistoryDb(dir);
+        db.InsertSample(Sample(Now));
+
+        // Vanha rivi ilman minimejä palautuu nullina, uusi rivi minimeineen.
+        IReadOnlyList<SampleRow> rows = db.ReadSampleRows(DateTimeOffset.FromUnixTimeSeconds(0));
+        Assert.Equal(2, rows.Count);
+        Assert.Null(rows[0].CpuTempMin);
+        Assert.Equal(50, rows[1].CpuTempMin);
+    }
+
+    [Fact]
+    public void ReadSampleRowsDownsampled_YhdistaaRivitBucketeiksi()
+    {
+        // 30 pv alue toi ennen ~518 000 riviä muistiin — harvennus tehdään
+        // SQL:ssä niin, että kutsuja saa suoraan bucket-koosteet.
+        _db.InsertSample(Sample(Now, cpuTempMax: 70f));
+        _db.InsertSample(Sample(Now.AddSeconds(5), cpuTempMax: 90f));
+        _db.InsertSample(Sample(Now.AddSeconds(10), cpuTempMax: 80f));
+        _db.InsertSample(Sample(Now.AddSeconds(15), cpuTempMax: 60f));
+
+        IReadOnlyList<SampleRow> rows =
+            _db.ReadSampleRowsDownsampled(Now.AddHours(-1), bucketSeconds: 10);
+
+        Assert.Equal(2, rows.Count);
+        Assert.Equal(90, rows[0].CpuTempMax);  // max(max) bucketin sisällä
+        Assert.Equal(60, rows[0].CpuTempAvg);  // avg(avg)
+        Assert.Equal(50, rows[0].CpuTempMin);  // min(min)
+        Assert.Equal(80, rows[1].CpuTempMax);
+        Assert.True(rows[0].Timestamp < rows[1].Timestamp);
+
+        DiskSampleValue disk = Assert.Single(rows[0].Disks);
+        Assert.Equal("NVMe", disk.Name);
+        Assert.Equal(61, disk.TempAvg);
+        Assert.Equal(62, disk.TempMax);
+
+        FanSampleValue fan = Assert.Single(rows[0].Fans);
+        Assert.Equal("Fan #2", fan.Name);
+        Assert.Equal(1955, fan.RpmAvg);
+    }
+
+    [Fact]
+    public void ReadSampleRowsDownsampled_SamannimisetLevytSailyvatErillaan()
+    {
+        AggregatedSample sample = Sample(Now) with
+        {
+            Disks = new[]
+            {
+                new DiskAggregate(0, "860 EVO", new MetricAggregate(30, 31, 32), 5),
+                new DiskAggregate(1, "860 EVO", new MetricAggregate(50, 51, 52), 5),
+            },
+        };
+        _db.InsertSample(sample);
+        _db.InsertSample(sample with { Timestamp = Now.AddSeconds(5) });
+
+        IReadOnlyList<SampleRow> rows =
+            _db.ReadSampleRowsDownsampled(Now.AddHours(-1), bucketSeconds: 60);
+
+        SampleRow row = Assert.Single(rows);
+        Assert.Equal(2, row.Disks.Count);
+        Assert.Equal(31, row.Disks[0].TempAvg); // disk_index-järjestys säilyy
+        Assert.Equal(51, row.Disks[1].TempAvg);
     }
 
     [Fact]

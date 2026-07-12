@@ -37,6 +37,7 @@ public sealed class HistoryDb : IDisposable
         Execute("PRAGMA journal_mode=WAL;");
         Execute("PRAGMA foreign_keys=ON;");
         CreateSchema();
+        MigrateSchema();
     }
 
     public string DbPath { get; }
@@ -45,17 +46,17 @@ public sealed class HistoryDb : IDisposable
         CREATE TABLE IF NOT EXISTS samples (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             ts INTEGER NOT NULL,
-            cpu_load_avg REAL, cpu_load_max REAL,
-            cpu_temp_avg REAL, cpu_temp_max REAL,
+            cpu_load_avg REAL, cpu_load_max REAL, cpu_load_min REAL,
+            cpu_temp_avg REAL, cpu_temp_max REAL, cpu_temp_min REAL,
             cpu_clock_max REAL,
-            cpu_power_avg REAL, cpu_power_max REAL,
-            gpu_load_avg REAL, gpu_load_max REAL,
-            gpu_temp_avg REAL, gpu_temp_max REAL,
-            gpu_hotspot_avg REAL, gpu_hotspot_max REAL,
-            gpu_power_avg REAL, gpu_power_max REAL,
-            vram_used_mb_avg REAL, vram_used_mb_max REAL,
-            ram_load_avg REAL, ram_load_max REAL,
-            ram_used_gb_avg REAL, ram_used_gb_max REAL
+            cpu_power_avg REAL, cpu_power_max REAL, cpu_power_min REAL,
+            gpu_load_avg REAL, gpu_load_max REAL, gpu_load_min REAL,
+            gpu_temp_avg REAL, gpu_temp_max REAL, gpu_temp_min REAL,
+            gpu_hotspot_avg REAL, gpu_hotspot_max REAL, gpu_hotspot_min REAL,
+            gpu_power_avg REAL, gpu_power_max REAL, gpu_power_min REAL,
+            vram_used_mb_avg REAL, vram_used_mb_max REAL, vram_used_mb_min REAL,
+            ram_load_avg REAL, ram_load_max REAL, ram_load_min REAL,
+            ram_used_gb_avg REAL, ram_used_gb_max REAL, ram_used_gb_min REAL
         );
         CREATE INDEX IF NOT EXISTS idx_samples_ts ON samples(ts);
 
@@ -63,7 +64,7 @@ public sealed class HistoryDb : IDisposable
             sample_id INTEGER NOT NULL REFERENCES samples(id) ON DELETE CASCADE,
             disk_index INTEGER NOT NULL,
             name TEXT NOT NULL,
-            temp_avg REAL, temp_max REAL,
+            temp_avg REAL, temp_max REAL, temp_min REAL,
             activity_max REAL
         );
         CREATE INDEX IF NOT EXISTS idx_disk_samples ON disk_samples(sample_id);
@@ -72,7 +73,7 @@ public sealed class HistoryDb : IDisposable
             sample_id INTEGER NOT NULL REFERENCES samples(id) ON DELETE CASCADE,
             identifier TEXT NOT NULL,
             name TEXT NOT NULL,
-            rpm_avg REAL, rpm_max REAL
+            rpm_avg REAL, rpm_max REAL, rpm_min REAL
         );
         CREATE INDEX IF NOT EXISTS idx_fan_samples ON fan_samples(sample_id);
 
@@ -94,6 +95,48 @@ public sealed class HistoryDb : IDisposable
         );
         """);
 
+    /// <summary>
+    /// Lisää min-sarakkeet ennen niiden käyttöönottoa luotuihin kantoihin.
+    /// CREATE TABLE IF NOT EXISTS ei muuta olemassa olevaa taulua, joten
+    /// puuttuvat sarakkeet lisätään ALTER TABLElla (vanhat rivit jäävät null).
+    /// </summary>
+    private void MigrateSchema()
+    {
+        (string Table, string Column)[] minColumns =
+        {
+            ("samples", "cpu_load_min"), ("samples", "cpu_temp_min"),
+            ("samples", "cpu_power_min"), ("samples", "gpu_load_min"),
+            ("samples", "gpu_temp_min"), ("samples", "gpu_hotspot_min"),
+            ("samples", "gpu_power_min"), ("samples", "vram_used_mb_min"),
+            ("samples", "ram_load_min"), ("samples", "ram_used_gb_min"),
+            ("disk_samples", "temp_min"),
+            ("fan_samples", "rpm_min"),
+        };
+
+        foreach (IGrouping<string, (string Table, string Column)> group in
+                 minColumns.GroupBy(c => c.Table))
+        {
+            var existing = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            using (var cmd = _connection.CreateCommand())
+            {
+                cmd.CommandText = $"PRAGMA table_info({group.Key});";
+                using SqliteDataReader reader = cmd.ExecuteReader();
+                while (reader.Read())
+                {
+                    existing.Add(reader.GetString(1));
+                }
+            }
+
+            foreach ((string table, string column) in group)
+            {
+                if (!existing.Contains(column))
+                {
+                    Execute($"ALTER TABLE {table} ADD COLUMN {column} REAL;");
+                }
+            }
+        }
+    }
+
     /// <summary>Kirjoittaa koosteen lapsiriveineen yhtenä transaktiona.</summary>
     public long InsertSample(AggregatedSample s)
     {
@@ -105,17 +148,27 @@ public sealed class HistoryDb : IDisposable
             cmd.Transaction = tx;
             cmd.CommandText = """
                 INSERT INTO samples (ts,
-                    cpu_load_avg, cpu_load_max, cpu_temp_avg, cpu_temp_max, cpu_clock_max,
-                    cpu_power_avg, cpu_power_max, gpu_load_avg, gpu_load_max,
-                    gpu_temp_avg, gpu_temp_max, gpu_hotspot_avg, gpu_hotspot_max,
-                    gpu_power_avg, gpu_power_max, vram_used_mb_avg, vram_used_mb_max,
-                    ram_load_avg, ram_load_max, ram_used_gb_avg, ram_used_gb_max)
+                    cpu_load_avg, cpu_load_max, cpu_load_min,
+                    cpu_temp_avg, cpu_temp_max, cpu_temp_min, cpu_clock_max,
+                    cpu_power_avg, cpu_power_max, cpu_power_min,
+                    gpu_load_avg, gpu_load_max, gpu_load_min,
+                    gpu_temp_avg, gpu_temp_max, gpu_temp_min,
+                    gpu_hotspot_avg, gpu_hotspot_max, gpu_hotspot_min,
+                    gpu_power_avg, gpu_power_max, gpu_power_min,
+                    vram_used_mb_avg, vram_used_mb_max, vram_used_mb_min,
+                    ram_load_avg, ram_load_max, ram_load_min,
+                    ram_used_gb_avg, ram_used_gb_max, ram_used_gb_min)
                 VALUES ($ts,
-                    $cpu_load_avg, $cpu_load_max, $cpu_temp_avg, $cpu_temp_max, $cpu_clock_max,
-                    $cpu_power_avg, $cpu_power_max, $gpu_load_avg, $gpu_load_max,
-                    $gpu_temp_avg, $gpu_temp_max, $gpu_hotspot_avg, $gpu_hotspot_max,
-                    $gpu_power_avg, $gpu_power_max, $vram_used_mb_avg, $vram_used_mb_max,
-                    $ram_load_avg, $ram_load_max, $ram_used_gb_avg, $ram_used_gb_max);
+                    $cpu_load_avg, $cpu_load_max, $cpu_load_min,
+                    $cpu_temp_avg, $cpu_temp_max, $cpu_temp_min, $cpu_clock_max,
+                    $cpu_power_avg, $cpu_power_max, $cpu_power_min,
+                    $gpu_load_avg, $gpu_load_max, $gpu_load_min,
+                    $gpu_temp_avg, $gpu_temp_max, $gpu_temp_min,
+                    $gpu_hotspot_avg, $gpu_hotspot_max, $gpu_hotspot_min,
+                    $gpu_power_avg, $gpu_power_max, $gpu_power_min,
+                    $vram_used_mb_avg, $vram_used_mb_max, $vram_used_mb_min,
+                    $ram_load_avg, $ram_load_max, $ram_load_min,
+                    $ram_used_gb_avg, $ram_used_gb_max, $ram_used_gb_min);
                 SELECT last_insert_rowid();
                 """;
             cmd.Parameters.AddWithValue("$ts", s.Timestamp.ToUnixTimeSeconds());
@@ -138,14 +191,15 @@ public sealed class HistoryDb : IDisposable
                 using var diskCmd = _connection.CreateCommand();
                 diskCmd.Transaction = tx;
                 diskCmd.CommandText = """
-                    INSERT INTO disk_samples (sample_id, disk_index, name, temp_avg, temp_max, activity_max)
-                    VALUES ($id, $ix, $name, $tavg, $tmax, $act);
+                    INSERT INTO disk_samples (sample_id, disk_index, name, temp_avg, temp_max, temp_min, activity_max)
+                    VALUES ($id, $ix, $name, $tavg, $tmax, $tmin, $act);
                     """;
                 diskCmd.Parameters.AddWithValue("$id", sampleId);
                 diskCmd.Parameters.AddWithValue("$ix", disk.Index);
                 diskCmd.Parameters.AddWithValue("$name", disk.Name);
                 diskCmd.Parameters.AddWithValue("$tavg", (object?)disk.TempC.Avg ?? DBNull.Value);
                 diskCmd.Parameters.AddWithValue("$tmax", (object?)disk.TempC.Max ?? DBNull.Value);
+                diskCmd.Parameters.AddWithValue("$tmin", (object?)disk.TempC.Min ?? DBNull.Value);
                 diskCmd.Parameters.AddWithValue("$act", (object?)disk.ActivityMaxPercent ?? DBNull.Value);
                 diskCmd.ExecuteNonQuery();
             }
@@ -155,14 +209,15 @@ public sealed class HistoryDb : IDisposable
                 using var fanCmd = _connection.CreateCommand();
                 fanCmd.Transaction = tx;
                 fanCmd.CommandText = """
-                    INSERT INTO fan_samples (sample_id, identifier, name, rpm_avg, rpm_max)
-                    VALUES ($id, $ident, $name, $ravg, $rmax);
+                    INSERT INTO fan_samples (sample_id, identifier, name, rpm_avg, rpm_max, rpm_min)
+                    VALUES ($id, $ident, $name, $ravg, $rmax, $rmin);
                     """;
                 fanCmd.Parameters.AddWithValue("$id", sampleId);
                 fanCmd.Parameters.AddWithValue("$ident", fan.Identifier);
                 fanCmd.Parameters.AddWithValue("$name", fan.Name);
                 fanCmd.Parameters.AddWithValue("$ravg", (object?)fan.Rpm.Avg ?? DBNull.Value);
                 fanCmd.Parameters.AddWithValue("$rmax", (object?)fan.Rpm.Max ?? DBNull.Value);
+                fanCmd.Parameters.AddWithValue("$rmin", (object?)fan.Rpm.Min ?? DBNull.Value);
                 fanCmd.ExecuteNonQuery();
             }
 
@@ -175,6 +230,7 @@ public sealed class HistoryDb : IDisposable
     {
         cmd.Parameters.AddWithValue($"${prefix}_avg", (object?)a.Avg ?? DBNull.Value);
         cmd.Parameters.AddWithValue($"${prefix}_max", (object?)a.Max ?? DBNull.Value);
+        cmd.Parameters.AddWithValue($"${prefix}_min", (object?)a.Min ?? DBNull.Value);
     }
 
     public long CountSamples()
@@ -360,7 +416,7 @@ public sealed class HistoryDb : IDisposable
             using (var diskCmd = _connection.CreateCommand())
             {
                 diskCmd.CommandText = """
-                    SELECT d.sample_id, d.name, d.temp_avg, d.temp_max
+                    SELECT d.sample_id, d.name, d.temp_avg, d.temp_max, d.temp_min
                     FROM disk_samples d JOIN samples s ON s.id = d.sample_id
                     WHERE s.ts >= $since ORDER BY d.disk_index;
                     """;
@@ -377,7 +433,8 @@ public sealed class HistoryDb : IDisposable
                     list.Add(new DiskSampleValue(
                         r.GetString(1),
                         r.IsDBNull(2) ? null : r.GetDouble(2),
-                        r.IsDBNull(3) ? null : r.GetDouble(3)));
+                        r.IsDBNull(3) ? null : r.GetDouble(3),
+                        r.IsDBNull(4) ? null : r.GetDouble(4)));
                 }
             }
 
@@ -385,7 +442,7 @@ public sealed class HistoryDb : IDisposable
             using (var fanCmd = _connection.CreateCommand())
             {
                 fanCmd.CommandText = """
-                    SELECT f.sample_id, f.name, f.rpm_avg
+                    SELECT f.sample_id, f.name, f.rpm_avg, f.rpm_min
                     FROM fan_samples f JOIN samples s ON s.id = f.sample_id
                     WHERE s.ts >= $since;
                     """;
@@ -401,7 +458,8 @@ public sealed class HistoryDb : IDisposable
 
                     list.Add(new FanSampleValue(
                         r.GetString(1),
-                        r.IsDBNull(2) ? null : r.GetDouble(2)));
+                        r.IsDBNull(2) ? null : r.GetDouble(2),
+                        r.IsDBNull(3) ? null : r.GetDouble(3)));
                 }
             }
 
@@ -413,7 +471,10 @@ public sealed class HistoryDb : IDisposable
                     cpu_power_avg, cpu_power_max, gpu_load_avg, gpu_load_max,
                     gpu_temp_avg, gpu_temp_max, gpu_hotspot_avg, gpu_hotspot_max,
                     gpu_power_avg, gpu_power_max, vram_used_mb_avg, vram_used_mb_max,
-                    ram_load_avg, ram_load_max, ram_used_gb_avg, ram_used_gb_max
+                    ram_load_avg, ram_load_max, ram_used_gb_avg, ram_used_gb_max,
+                    cpu_load_min, cpu_temp_min, cpu_power_min,
+                    gpu_load_min, gpu_temp_min, gpu_hotspot_min, gpu_power_min,
+                    vram_used_mb_min, ram_load_min, ram_used_gb_min
                 FROM samples WHERE ts >= $since ORDER BY ts, id;
                 """;
             cmd.Parameters.AddWithValue("$since", cutoff);
@@ -437,7 +498,136 @@ public sealed class HistoryDb : IDisposable
                     Disks: disksBySample.TryGetValue(id, out List<DiskSampleValue>? d)
                         ? d : Array.Empty<DiskSampleValue>(),
                     Fans: fansBySample.TryGetValue(id, out List<FanSampleValue>? f)
-                        ? f : Array.Empty<FanSampleValue>()));
+                        ? f : Array.Empty<FanSampleValue>(),
+                    CpuLoadMin: Opt(reader, 23), CpuTempMin: Opt(reader, 24),
+                    CpuPowerMin: Opt(reader, 25),
+                    GpuLoadMin: Opt(reader, 26), GpuTempMin: Opt(reader, 27),
+                    GpuHotspotMin: Opt(reader, 28), GpuPowerMin: Opt(reader, 29),
+                    VramUsedMbMin: Opt(reader, 30),
+                    RamLoadMin: Opt(reader, 31), RamUsedGbMin: Opt(reader, 32)));
+            }
+
+            return rows;
+        }
+    }
+
+    /// <summary>
+    /// Koosterivit harvennettuna SQL:ssä aikabucketteihin (graafeja varten).
+    /// Ilman tätä 30 pv alue materialisoisi ~518 000 riviä lapsineen muistiin
+    /// ja pitäisi kantalukkoa koko ajan. Avg on avg(avg), max max(max) ja
+    /// min min(min) bucketin sisällä; samannimiset levyt pysyvät erillään
+    /// disk_index-avaimella ja rivin levyjärjestys säilyy.
+    /// </summary>
+    public IReadOnlyList<SampleRow> ReadSampleRowsDownsampled(
+        DateTimeOffset since, int bucketSeconds)
+    {
+        bucketSeconds = Math.Max(1, bucketSeconds);
+
+        lock (_lock)
+        {
+            long cutoff = since.ToUnixTimeSeconds();
+
+            var disksByBucket = new Dictionary<long, List<DiskSampleValue>>();
+            using (var diskCmd = _connection.CreateCommand())
+            {
+                diskCmd.CommandText = """
+                    SELECT s.ts / $bucket, d.name,
+                        AVG(d.temp_avg), MAX(d.temp_max), MIN(d.temp_min)
+                    FROM disk_samples d JOIN samples s ON s.id = d.sample_id
+                    WHERE s.ts >= $since
+                    GROUP BY s.ts / $bucket, d.disk_index, d.name
+                    ORDER BY s.ts / $bucket, d.disk_index;
+                    """;
+                diskCmd.Parameters.AddWithValue("$since", cutoff);
+                diskCmd.Parameters.AddWithValue("$bucket", bucketSeconds);
+                using SqliteDataReader r = diskCmd.ExecuteReader();
+                while (r.Read())
+                {
+                    long bucket = r.GetInt64(0);
+                    if (!disksByBucket.TryGetValue(bucket, out List<DiskSampleValue>? list))
+                    {
+                        disksByBucket[bucket] = list = new List<DiskSampleValue>();
+                    }
+
+                    list.Add(new DiskSampleValue(
+                        r.GetString(1), Opt(r, 2), Opt(r, 3), Opt(r, 4)));
+                }
+            }
+
+            var fansByBucket = new Dictionary<long, List<FanSampleValue>>();
+            using (var fanCmd = _connection.CreateCommand())
+            {
+                fanCmd.CommandText = """
+                    SELECT s.ts / $bucket, f.name, AVG(f.rpm_avg), MIN(f.rpm_min)
+                    FROM fan_samples f JOIN samples s ON s.id = f.sample_id
+                    WHERE s.ts >= $since
+                    GROUP BY s.ts / $bucket, f.name;
+                    """;
+                fanCmd.Parameters.AddWithValue("$since", cutoff);
+                fanCmd.Parameters.AddWithValue("$bucket", bucketSeconds);
+                using SqliteDataReader r = fanCmd.ExecuteReader();
+                while (r.Read())
+                {
+                    long bucket = r.GetInt64(0);
+                    if (!fansByBucket.TryGetValue(bucket, out List<FanSampleValue>? list))
+                    {
+                        fansByBucket[bucket] = list = new List<FanSampleValue>();
+                    }
+
+                    list.Add(new FanSampleValue(r.GetString(1), Opt(r, 2), Opt(r, 3)));
+                }
+            }
+
+            var rows = new List<SampleRow>();
+            using var cmd = _connection.CreateCommand();
+            cmd.CommandText = """
+                SELECT ts / $bucket, CAST(AVG(ts) AS INTEGER),
+                    AVG(cpu_load_avg), MAX(cpu_load_max),
+                    AVG(cpu_temp_avg), MAX(cpu_temp_max), MAX(cpu_clock_max),
+                    AVG(cpu_power_avg), MAX(cpu_power_max),
+                    AVG(gpu_load_avg), MAX(gpu_load_max),
+                    AVG(gpu_temp_avg), MAX(gpu_temp_max),
+                    AVG(gpu_hotspot_avg), MAX(gpu_hotspot_max),
+                    AVG(gpu_power_avg), MAX(gpu_power_max),
+                    AVG(vram_used_mb_avg), MAX(vram_used_mb_max),
+                    AVG(ram_load_avg), MAX(ram_load_max),
+                    AVG(ram_used_gb_avg), MAX(ram_used_gb_max),
+                    MIN(cpu_load_min), MIN(cpu_temp_min), MIN(cpu_power_min),
+                    MIN(gpu_load_min), MIN(gpu_temp_min),
+                    MIN(gpu_hotspot_min), MIN(gpu_power_min),
+                    MIN(vram_used_mb_min), MIN(ram_load_min), MIN(ram_used_gb_min)
+                FROM samples WHERE ts >= $since
+                GROUP BY ts / $bucket ORDER BY ts / $bucket;
+                """;
+            cmd.Parameters.AddWithValue("$since", cutoff);
+            cmd.Parameters.AddWithValue("$bucket", bucketSeconds);
+            using SqliteDataReader reader = cmd.ExecuteReader();
+            while (reader.Read())
+            {
+                long bucket = reader.GetInt64(0);
+                rows.Add(new SampleRow(
+                    Timestamp: DateTimeOffset.FromUnixTimeSeconds(reader.GetInt64(1)),
+                    CpuLoadAvg: Opt(reader, 2), CpuLoadMax: Opt(reader, 3),
+                    CpuTempAvg: Opt(reader, 4), CpuTempMax: Opt(reader, 5),
+                    CpuClockMax: Opt(reader, 6),
+                    CpuPowerAvg: Opt(reader, 7), CpuPowerMax: Opt(reader, 8),
+                    GpuLoadAvg: Opt(reader, 9), GpuLoadMax: Opt(reader, 10),
+                    GpuTempAvg: Opt(reader, 11), GpuTempMax: Opt(reader, 12),
+                    GpuHotspotAvg: Opt(reader, 13), GpuHotspotMax: Opt(reader, 14),
+                    GpuPowerAvg: Opt(reader, 15), GpuPowerMax: Opt(reader, 16),
+                    VramUsedMbAvg: Opt(reader, 17), VramUsedMbMax: Opt(reader, 18),
+                    RamLoadAvg: Opt(reader, 19), RamLoadMax: Opt(reader, 20),
+                    RamUsedGbAvg: Opt(reader, 21), RamUsedGbMax: Opt(reader, 22),
+                    Disks: disksByBucket.TryGetValue(bucket, out List<DiskSampleValue>? d)
+                        ? d : Array.Empty<DiskSampleValue>(),
+                    Fans: fansByBucket.TryGetValue(bucket, out List<FanSampleValue>? f)
+                        ? f : Array.Empty<FanSampleValue>(),
+                    CpuLoadMin: Opt(reader, 23), CpuTempMin: Opt(reader, 24),
+                    CpuPowerMin: Opt(reader, 25),
+                    GpuLoadMin: Opt(reader, 26), GpuTempMin: Opt(reader, 27),
+                    GpuHotspotMin: Opt(reader, 28), GpuPowerMin: Opt(reader, 29),
+                    VramUsedMbMin: Opt(reader, 30),
+                    RamLoadMin: Opt(reader, 31), RamUsedGbMin: Opt(reader, 32)));
             }
 
             return rows;

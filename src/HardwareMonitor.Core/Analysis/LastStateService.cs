@@ -62,15 +62,6 @@ public sealed class LastStateService
 
     public void Write(KeyMetrics m, DateTimeOffset now)
     {
-        lock (_lock)
-        {
-            // Viivästynyt taustakirjoitus ei saa liata jo merkittyä siistiä sulkemista.
-            if (_shutdownMarked)
-            {
-                return;
-            }
-        }
-
         var state = new LastState(
             Timestamp: now,
             CleanShutdown: false,
@@ -80,31 +71,38 @@ public sealed class LastStateService
             RamLoadPercent: m.RamLoadPercent,
             Disks: m.Disks.Select(d => new LastStateDisk(d.Name, d.TemperatureC)).ToList());
 
-        Save(state);
+        lock (_lock)
+        {
+            // Tarkistus ja tallennus saman lukon alla: viivästynyt tausta-
+            // kirjoitus ei saa liata jo merkittyä siistiä sulkemista, vaikka
+            // MarkCleanShutdown ajaisi läpi kesken tämän kutsun.
+            if (_shutdownMarked)
+            {
+                return;
+            }
+
+            Save(state);
+        }
     }
 
     /// <summary>Kutsutaan siistin sulkemisen yhteydessä (Dispose).</summary>
     public void MarkCleanShutdown()
     {
-        LastState? state;
         lock (_lock)
         {
             _shutdownMarked = true;
-            state = _current ?? ReadPrevious();
-        }
-
-        if (state is not null)
-        {
-            Save(state with { CleanShutdown = true });
+            LastState? state = _current ?? ReadPrevious();
+            if (state is not null)
+            {
+                Save(state with { CleanShutdown = true });
+            }
         }
     }
 
+    /// <summary>Kutsutaan vain _lock-lukon sisältä.</summary>
     private void Save(LastState state)
     {
-        lock (_lock)
-        {
-            _current = state;
-            File.WriteAllText(FilePath, JsonSerializer.Serialize(state, JsonOptions));
-        }
+        _current = state;
+        File.WriteAllText(FilePath, JsonSerializer.Serialize(state, JsonOptions));
     }
 }

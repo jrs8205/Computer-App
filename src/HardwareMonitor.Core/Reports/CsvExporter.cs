@@ -15,28 +15,78 @@ public static class CsvExporter
 {
     private const char Separator = ';';
 
+    /// <summary>Levysarake: monesko samanniminen levy rivillä + näyttönimi.</summary>
+    private sealed record DiskColumn(string Name, int Occurrence, string Display);
+
     public static string Build(IReadOnlyList<SampleRow> rows, CultureInfo culture)
     {
         // Sarakkeiden unioni kaikista riveistä esiintymisjärjestyksessä —
         // esim. kesken jakson kytketty USB-levy saa omat sarakkeensa.
-        List<string> diskNames = rows.SelectMany(r => r.Disks.Select(d => d.Name))
-            .Distinct().ToList();
+        // Samannimiset levyt (kaksi identtistä 860 EVO:ta) saavat omat
+        // sarakkeensa esiintymänumerolla kuten graafeissa (invariantti 10).
+        List<DiskColumn> diskColumns = DiskColumns(rows);
         List<string> fanNames = rows.SelectMany(r => r.Fans.Select(f => f.Name))
             .Distinct().ToList();
 
         var sb = new StringBuilder();
-        AppendHeader(sb, diskNames, fanNames);
+        AppendHeader(sb, diskColumns, fanNames);
 
         foreach (SampleRow row in rows)
         {
-            AppendRow(sb, row, diskNames, fanNames, culture);
+            AppendRow(sb, row, diskColumns, fanNames, culture);
         }
 
         return sb.ToString();
     }
 
+    private static List<DiskColumn> DiskColumns(IReadOnlyList<SampleRow> rows)
+    {
+        // Nimen sarakemäärä = suurin esiintymämäärä yhdellä rivillä.
+        var counts = new Dictionary<string, int>();
+        foreach (SampleRow row in rows)
+        {
+            var inRow = new Dictionary<string, int>();
+            foreach (DiskSampleValue disk in row.Disks)
+            {
+                inRow[disk.Name] = inRow.TryGetValue(disk.Name, out int n) ? n + 1 : 1;
+            }
+
+            foreach ((string name, int count) in inRow)
+            {
+                counts[name] = Math.Max(counts.TryGetValue(name, out int c) ? c : 0, count);
+            }
+        }
+
+        var columns = new List<DiskColumn>();
+        foreach ((string name, int count) in counts)
+        {
+            for (int i = 0; i < count; i++)
+            {
+                columns.Add(new DiskColumn(name, i,
+                    count > 1 ? $"{name.Trim()} #{i + 1}" : name.Trim()));
+            }
+        }
+
+        return columns;
+    }
+
+    private static DiskSampleValue? Nth(
+        IReadOnlyList<DiskSampleValue> disks, string name, int occurrence)
+    {
+        int seen = 0;
+        foreach (DiskSampleValue disk in disks)
+        {
+            if (disk.Name == name && seen++ == occurrence)
+            {
+                return disk;
+            }
+        }
+
+        return null;
+    }
+
     private static void AppendHeader(
-        StringBuilder sb, List<string> diskNames, List<string> fanNames)
+        StringBuilder sb, List<DiskColumn> diskColumns, List<string> fanNames)
     {
         static string Avg(string name) => $"{name} {Strings.Csv_SuffixAvg}";
         static string Max(string name) => $"{name} {Strings.Csv_SuffixMax}";
@@ -57,11 +107,11 @@ public static class CsvExporter
             Avg(Strings.Csv_RamUsed), Max(Strings.Csv_RamUsed),
         };
 
-        columns.AddRange(diskNames.SelectMany(n =>
+        columns.AddRange(diskColumns.SelectMany(c =>
             new[]
             {
-                Avg(string.Format(Strings.Csv_DiskTemp, n)),
-                Max(string.Format(Strings.Csv_DiskTemp, n)),
+                Avg(string.Format(Strings.Csv_DiskTemp, c.Display)),
+                Max(string.Format(Strings.Csv_DiskTemp, c.Display)),
             }));
         columns.AddRange(fanNames.Select(n => string.Format(Strings.Csv_FanRpm, n)));
 
@@ -70,7 +120,7 @@ public static class CsvExporter
 
     private static void AppendRow(
         StringBuilder sb, SampleRow row,
-        List<string> diskNames, List<string> fanNames, CultureInfo culture)
+        List<DiskColumn> diskColumns, List<string> fanNames, CultureInfo culture)
     {
         var fields = new List<string>
         {
@@ -88,11 +138,9 @@ public static class CsvExporter
             Num(row.RamUsedGbAvg, culture), Num(row.RamUsedGbMax, culture),
         };
 
-        Dictionary<string, DiskSampleValue> disks = row.Disks
-            .GroupBy(d => d.Name).ToDictionary(g => g.Key, g => g.First());
-        foreach (string name in diskNames)
+        foreach (DiskColumn column in diskColumns)
         {
-            if (disks.TryGetValue(name, out DiskSampleValue? disk))
+            if (Nth(row.Disks, column.Name, column.Occurrence) is { } disk)
             {
                 fields.Add(Num(disk.TempAvg, culture));
                 fields.Add(Num(disk.TempMax, culture));

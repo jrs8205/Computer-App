@@ -84,6 +84,52 @@ public sealed class LastStateServiceTests : IDisposable
     }
 
     [Fact]
+    public void Write_MarkCleanShutdownKeskenKirjoituksen_EiLikaaLippua()
+    {
+        // Sama lomitus kuin taustakirjoituksen ja sulkemisen kilpailussa:
+        // Write on ehtinyt tilanrakennukseen, kun MarkCleanShutdown ajaa läpi.
+        // Levylistan enumerointi laukaisee Markin deterministisesti keskelle Writeä.
+        var service = new LastStateService(_dir);
+        service.Write(Metrics(), Now);
+
+        var trap = new MarkTriggeringDiskList(service);
+        service.Write(Metrics() with { Disks = trap }, Now.AddSeconds(5));
+
+        LastState? state = new LastStateService(_dir).ReadPrevious();
+        Assert.NotNull(state);
+        Assert.True(state.CleanShutdown);
+    }
+
+    /// <summary>Kutsuu MarkCleanShutdownia kun listaa aletaan lukea.</summary>
+    private sealed class MarkTriggeringDiskList : IReadOnlyList<DiskMetrics>
+    {
+        private readonly LastStateService _service;
+        private bool _triggered;
+
+        public MarkTriggeringDiskList(LastStateService service) => _service = service;
+
+        public DiskMetrics this[int index] => Trigger()[index];
+
+        public int Count => Trigger().Count;
+
+        public IEnumerator<DiskMetrics> GetEnumerator() => Trigger().GetEnumerator();
+
+        System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator() =>
+            GetEnumerator();
+
+        private IReadOnlyList<DiskMetrics> Trigger()
+        {
+            if (!_triggered)
+            {
+                _triggered = true;
+                _service.MarkCleanShutdown();
+            }
+
+            return new[] { new DiskMetrics("970 EVO Plus", 78, 90) };
+        }
+    }
+
+    [Fact]
     public void ReadPrevious_RikkinainenTiedosto_PalauttaaNull()
     {
         Directory.CreateDirectory(_dir);
