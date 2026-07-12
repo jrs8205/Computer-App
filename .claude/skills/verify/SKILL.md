@@ -8,14 +8,22 @@ description: Hardware Monitorin ajonaikainen todennus — build, käynnistys, ik
 ## Build ja käynnistys
 
 ```powershell
-dotnet build HardwareMonitor.sln     # 0 varoitusta odotettu; vaatii ettei exe ole ajossa
+dotnet build HardwareMonitor.sln     # 0 varoitusta odotettu; vaatii ettei repo-exe ole ajossa
 Start-Process "src\HardwareMonitor.App\bin\Debug\net8.0-windows\HardwareMonitor.exe"
 ```
 
-- Käynnissä oleva HardwareMonitor.exe lukitsee output-DLL:t — mutta `dotnet test`
+- TUOTANTOASENNUS 12.7.2026 alkaen: `C:\Program Files\Hardware Monitor\`
+  (`.\tools\install.ps1` julkaisee + asentaa + päivittää autostart-tehtävän;
+  vaatii korotuksen ja sovelluksen sulkemisen). Asennettu exe EI lukitse
+  repo-buildia — build onnistuu vaikka asennettu sovellus ajaa.
+- Käynnissä oleva repo-exe lukitsee output-DLL:t — mutta `dotnet test`
   buildaa vain Core+Testit, joten testit voi ajaa sovelluksen ajaessa.
 - Korotetusta shellistä käynnistetty exe perii korotuksen → CPU-lämmöt näkyvät.
 - Single instance: toinen käynnistys poistuu itse ja näyttää ensimmäisen ikkunan.
+- Autostart-sääntö: Downloads-ajo kirjoittaa tehtävän ILMAN korotusta (+
+  lokiselitys); Program Files -ajo palauttaa /RL HIGHEST -tason.
+- schtasks /TR PowerShellistä: sisemmät lainausmerkit pelkällä backtickillä
+  (`` `" ``) — `\`"`-muoto vie literaalin \":n schtasksille ja rikkoo tehtävän.
 
 ## Siisti sulkeminen ilman tray-klikkausta
 
