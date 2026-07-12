@@ -50,17 +50,19 @@ public sealed class SettingsViewModel
                 () => t.RamCriticalPercent, v => t.RamCriticalPercent = v),
         };
 
+        // Kokonaislukukentät saavat normalize-pyöristyksen: kenttä näyttää
+        // saman arvon jonka sovellus tallentaa (5,6 → 6, ei 5,6 vs. 6).
         DurationRows = new[]
         {
             Row(UiStrings.Set_RowWarnSustain, "s", 1, 600,
                 () => t.WarningSustainSeconds,
-                v => t.WarningSustainSeconds = (int)MathF.Round(v)),
+                v => t.WarningSustainSeconds = (int)v, integer: true),
             Row(UiStrings.Set_RowCritSustain, "s", 1, 600,
                 () => t.CriticalSustainSeconds,
-                v => t.CriticalSustainSeconds = (int)MathF.Round(v)),
+                v => t.CriticalSustainSeconds = (int)v, integer: true),
             Row(UiStrings.Set_RowCooldown, "min", 1, 60,
                 () => t.EventCooldownMinutes,
-                v => t.EventCooldownMinutes = (int)MathF.Round(v)),
+                v => t.EventCooldownMinutes = (int)v, integer: true),
             Row(UiStrings.Set_RowFanStop, "°C", 20, 120,
                 () => t.FanStopCpuTemp, v => t.FanStopCpuTemp = v),
         };
@@ -69,11 +71,11 @@ public sealed class SettingsViewModel
         {
             Row(UiStrings.Set_RowInterval, "s", 1, 60,
                 () => _settings.Logging.SensorIntervalSeconds,
-                v => _settings.Logging.SensorIntervalSeconds = (int)MathF.Round(v),
-                UiStrings.Set_RowIntervalNote),
+                v => _settings.Logging.SensorIntervalSeconds = (int)v,
+                UiStrings.Set_RowIntervalNote, integer: true),
             Row(UiStrings.Set_RowRetention, UiStrings.Unit_Days, 1, 365,
                 () => _settings.Logging.KeepHistoryDays,
-                v => _settings.Logging.KeepHistoryDays = (int)MathF.Round(v)),
+                v => _settings.Logging.KeepHistoryDays = (int)v, integer: true),
         };
 
         OverlayFontSize = Register(
@@ -170,9 +172,10 @@ public sealed class SettingsViewModel
 
     private FieldRow Row(
         string label, string unit, float min, float max,
-        Func<float> get, Action<float> set, string? note = null) =>
+        Func<float> get, Action<float> set, string? note = null, bool integer = false) =>
         new(label, unit,
-            Register(new NumericFieldViewModel(get(), min, max, Apply(set)), get), note);
+            Register(new NumericFieldViewModel(get(), min, max, Apply(set),
+                normalize: integer ? MathF.Round : null), get), note);
 
     private Action<float> Apply(Action<float> set) => v =>
     {

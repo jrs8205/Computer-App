@@ -169,10 +169,19 @@ vaatimus 9.7.2026: vientien pitää olla selkokielisiä, ei konedataa.
       (`MachineSpecReader`; Virtual Memory -ryhmä ohitetaan RAM-laskennassa),
       trendit 7 pv vs 30 pv, 10 viimeisintä WARNING/CRITICAL-tapahtumaa,
       käyttäjän lisätiedot (`InsightsNotes`-asetus). Todennettu ajossa.
-- [ ] **Julkaisukuntoon**: LICENSE-tiedosto (oma koodi esim. MIT; LibreHardwareMonitorLib
-      on MPL-2.0 — mainittava READMEssä), englanninkielinen README-osio, repo julkiseksi
-- [ ] Paketointi/asennin (self-contained julkaisu, autostart-polun päivitys
-      asennettuun sijaintiin)
+- [x] **Ulkopuolinen bugitarkastus** (12.7.2026): 26 löydöstä triagettu,
+      24 vahvistui, kaikki kolme korjauskoria (A: data ja vakaus, B:
+      julkaisublokkerit, C: graafien laatu) korjattu TDD:llä ja todennettu
+      ajossa — ks. `docs/review-triage.md`. 184 testiä.
+- [x] **Julkaisukuntoon** (12.7.2026): LICENSE (GPL-3.0; LibreHardwareMonitorLib
+      MPL-2.0 ja LiveCharts2 MIT mainittu READMEssä), README uudistettu,
+      versio 1.0.0, app.manifest requireAdministrator (sensorit vaativat
+      adminin joka tapauksessa; autostart käynnistää ilman UAC-kyselyä)
+- [x] **Paketointi/asennin** (12.7.2026): `tools/install.ps1` (kehittäjän
+      paikallisasennus) + `installer/setup.iss` (Inno Setup → setup.exe
+      GitHub-releaseen); asennus Program Filesiin ratkaisee autostart-
+      korotuksen turvasäännön (korotus vain ACL-suojatusta polusta)
+- [ ] Repo julkiseksi (käyttäjän päätös, kun on valmis)
 
 ---
 

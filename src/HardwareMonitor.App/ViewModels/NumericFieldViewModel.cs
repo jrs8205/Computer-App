@@ -17,18 +17,21 @@ public sealed class NumericFieldViewModel : INotifyPropertyChanged
     private readonly float _max;
     private readonly Action<float> _apply;
     private readonly Func<float, string?>? _crossCheck;
+    private readonly Func<float, float>? _normalize;
 
     private string _text;
     private string? _error;
 
     public NumericFieldViewModel(
         float initialValue, float min, float max,
-        Action<float> apply, Func<float, string?>? crossCheck = null)
+        Action<float> apply, Func<float, string?>? crossCheck = null,
+        Func<float, float>? normalize = null)
     {
         _min = min;
         _max = max;
         _apply = apply;
         _crossCheck = crossCheck;
+        _normalize = normalize;
         _text = Format(initialValue);
     }
 
@@ -43,8 +46,12 @@ public sealed class NumericFieldViewModel : INotifyPropertyChanged
                 ?? (result.Value is { } v ? _crossCheck?.Invoke(v) : null);
             if (error is null && result.Value is { } ok)
             {
-                _apply(ok);
-                _text = Format(ok);
+                // Normalisointi (esim. pyöristys kokonaisluvuksi) ENNEN
+                // tallennusta ja näyttöä — kenttä ei saa näyttää eri arvoa
+                // kuin sovellus oikeasti käyttää (esim. "5,6" vs. 6).
+                float applied = _normalize?.Invoke(ok) ?? ok;
+                _apply(applied);
+                _text = Format(applied);
             }
 
             Error = error;

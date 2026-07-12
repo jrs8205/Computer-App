@@ -45,8 +45,15 @@ public sealed class OverlayViewModel : INotifyPropertyChanged
 
             _fontSize = value;
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(FontSize)));
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(LineHeight)));
         }
     }
+
+    /// <summary>
+    /// Riviväli skaalautuu fonttikoon mukana — kiinteä arvo limittäisi rivit
+    /// suurilla fonteilla (asetus sallii 8–32 pt).
+    /// </summary>
+    public double LineHeight => Math.Round(_fontSize * 1.4);
 
     public double BackgroundOpacity
     {

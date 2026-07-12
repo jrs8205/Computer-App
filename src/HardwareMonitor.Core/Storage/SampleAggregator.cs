@@ -61,24 +61,40 @@ public sealed class SampleAggregator
 
     private IReadOnlyList<DiskAggregate> AggregateDisks()
     {
-        // Sama levy on samalla indeksillä jokaisessa jakson lukemassa; nimi voi
-        // toistua (kaksi samanlaista levyä), joten indeksi erottaa ne.
-        int diskCount = _buffer.Count == 0 ? 0 : _buffer.Max(m => m.Disks.Count);
-        var result = new List<DiskAggregate>();
+        // Täsmäys nimi + monesko samanniminen rivillä -avaimella: jos levy
+        // irtoaa tai ilmestyy kesken jakson, pelkkä listaindeksi siirtyisi
+        // ja eri fyysisten levyjen lukemat sekoittuisivat samaan koosteeseen.
+        var readingsByKey = new Dictionary<(string Name, int Occurrence), List<DiskMetrics>>();
+        var keyOrder = new List<(string Name, int Occurrence)>();
 
-        for (int i = 0; i < diskCount; i++)
+        foreach (KeyMetrics m in _buffer)
         {
-            var readings = _buffer.Where(m => i < m.Disks.Count).Select(m => m.Disks[i]).ToList();
-            if (readings.Count == 0)
+            var seen = new Dictionary<string, int>();
+            foreach (DiskMetrics disk in m.Disks)
             {
-                continue;
-            }
+                int occurrence = seen.TryGetValue(disk.Name, out int n) ? n : 0;
+                seen[disk.Name] = occurrence + 1;
 
+                (string Name, int Occurrence) key = (disk.Name, occurrence);
+                if (!readingsByKey.TryGetValue(key, out List<DiskMetrics>? list))
+                {
+                    readingsByKey[key] = list = new List<DiskMetrics>();
+                    keyOrder.Add(key);
+                }
+
+                list.Add(disk);
+            }
+        }
+
+        var result = new List<DiskAggregate>();
+        for (int i = 0; i < keyOrder.Count; i++)
+        {
+            List<DiskMetrics> readings = readingsByKey[keyOrder[i]];
             var activities = readings.Where(d => d.ActivityPercent.HasValue)
                 .Select(d => d.ActivityPercent!.Value).ToList();
             result.Add(new DiskAggregate(
                 Index: i,
-                Name: readings[0].Name,
+                Name: keyOrder[i].Name,
                 TempC: ToAggregate(readings.Select(d => d.TemperatureC)),
                 ActivityMaxPercent: activities.Count == 0 ? null : activities.Max()));
         }

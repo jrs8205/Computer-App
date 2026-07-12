@@ -28,24 +28,25 @@ public static class ChartHistoryBuilder
     {
         IReadOnlyList<IReadOnlyList<SampleRow>> buckets = Bucketize(rows, maxPoints);
         DateTimeOffset[] stamps = Timestamps(buckets, rows);
+        bool[] gapAfter = GapsAfter(stamps);
 
         var temps = new List<ChartSeries>
         {
-            Series("CPU", buckets, stamps, r => r.CpuTempAvg),
-            Series("GPU", buckets, stamps, r => r.GpuTempAvg),
-            Series(Strings.Common_GpuHotspot, buckets, stamps, r => r.GpuHotspotAvg),
+            Series("CPU", buckets, stamps, gapAfter, rows, r => r.CpuTempAvg),
+            Series("GPU", buckets, stamps, gapAfter, rows, r => r.GpuTempAvg),
+            Series(Strings.Common_GpuHotspot, buckets, stamps, gapAfter, rows, r => r.GpuHotspotAvg),
         };
         foreach ((string name, int occurrence, string display) in DiskKeys(rows))
         {
-            temps.Add(Series(display, buckets, stamps,
+            temps.Add(Series(display, buckets, stamps, gapAfter, rows,
                 r => Nth(r.Disks, name, occurrence)?.TempAvg));
         }
 
         var loads = new List<ChartSeries>
         {
-            Series("CPU", buckets, stamps, r => r.CpuLoadAvg),
-            Series("GPU", buckets, stamps, r => r.GpuLoadAvg),
-            Series("RAM", buckets, stamps, r => r.RamLoadAvg),
+            Series("CPU", buckets, stamps, gapAfter, rows, r => r.CpuLoadAvg),
+            Series("GPU", buckets, stamps, gapAfter, rows, r => r.GpuLoadAvg),
+            Series("RAM", buckets, stamps, gapAfter, rows, r => r.RamLoadAvg),
         };
 
         var fans = new List<ChartSeries>();
@@ -54,21 +55,69 @@ public static class ChartHistoryBuilder
             string display =
                 fanLabelsByRawName.TryGetValue(name, out string? label) && label.Length > 0
                     ? label : name;
-            ChartSeries series = Series(display, buckets, stamps,
+            ChartSeries series = Series(display, buckets, stamps, gapAfter, rows,
                 r => r.Fans.FirstOrDefault(f => f.Name == name)?.RpmAvg);
 
             // Sarja vain tuulettimelle joka pyörii vähintään 5 % tunnetusta
-            // ajasta — GPU-tuulettimien satunnaiset pyörähdykset eivät
-            // ansaitse omaa viivaa (käyttäjän palaute 9.7.2026).
-            int known = series.Points.Count(p => p.Value.HasValue);
-            int spinning = series.Points.Count(p => p.Value is > 0);
-            if (spinning > 0 && spinning * 20 >= known)
+            // ajasta (käyttäjän palaute 9.7.2026). Osuus lasketaan rivien
+            // SpinSharesta — harvennetun bucketin keskiarvo laimenee, joten
+            // pisteistä laskettu osuus liioittelisi satunnaisia pyörähdyksiä.
+            double shareSum = 0;
+            int shareCount = 0;
+            foreach (SampleRow row in rows)
+            {
+                FanSampleValue? fan = row.Fans.FirstOrDefault(f => f.Name == name);
+                double? share = fan is null
+                    ? null
+                    : fan.SpinShare
+                      ?? (fan.RpmAvg is { } rpm ? (rpm > 0 ? 1.0 : 0.0) : null);
+                if (share is { } s)
+                {
+                    shareSum += s;
+                    shareCount++;
+                }
+            }
+
+            if (shareSum > 0 && shareSum * 20 >= shareCount)
             {
                 fans.Add(series);
             }
         }
 
         return new ChartHistory(temps, loads, fans);
+    }
+
+    /// <summary>
+    /// Merkitsee aikaleimavälit, joissa dataa puuttuu (kone sammuksissa tai
+    /// unessa): väli yli 3 × mediaanivälin → viivaan piirretään katko.
+    /// </summary>
+    private static bool[] GapsAfter(DateTimeOffset[] stamps)
+    {
+        var gaps = new bool[stamps.Length];
+        if (stamps.Length < 3)
+        {
+            return gaps;
+        }
+
+        var deltas = new double[stamps.Length - 1];
+        for (int i = 1; i < stamps.Length; i++)
+        {
+            deltas[i - 1] = (stamps[i] - stamps[i - 1]).TotalSeconds;
+        }
+
+        double[] sorted = deltas.OrderBy(d => d).ToArray();
+        double median = sorted[sorted.Length / 2];
+        if (median <= 0)
+        {
+            return gaps;
+        }
+
+        for (int i = 1; i < stamps.Length; i++)
+        {
+            gaps[i - 1] = (stamps[i] - stamps[i - 1]).TotalSeconds > median * 3;
+        }
+
+        return gaps;
     }
 
     private static IReadOnlyList<IReadOnlyList<SampleRow>> Bucketize(
@@ -110,15 +159,36 @@ public static class ChartHistoryBuilder
 
     private static ChartSeries Series(
         string name, IReadOnlyList<IReadOnlyList<SampleRow>> buckets,
-        DateTimeOffset[] stamps, Func<SampleRow, double?> select)
+        DateTimeOffset[] stamps, bool[] gapAfter, IReadOnlyList<SampleRow> rows,
+        Func<SampleRow, double?> select)
     {
-        var points = new ChartPoint[buckets.Count];
+        var points = new List<ChartPoint>(buckets.Count + 8);
         for (int i = 0; i < buckets.Count; i++)
         {
             double[] values = buckets[i].Select(select)
                 .Where(v => v.HasValue).Select(v => v!.Value).ToArray();
-            points[i] = new ChartPoint(stamps[i],
-                values.Length > 0 ? values.Average() : null);
+            double? value = values.Length > 0 ? values.Average() : null;
+
+            // Päätepisteet saavat datan päätepisteiden ARVOT aikaleimojen
+            // lisäksi — muuten alun tooltip näyttäisi koko bucketin keskiarvon.
+            if (i == 0)
+            {
+                value = select(rows[0]) ?? value;
+            }
+            else if (i == buckets.Count - 1)
+            {
+                value = select(rows[^1]) ?? value;
+            }
+
+            points.Add(new ChartPoint(stamps[i], value));
+
+            if (i < buckets.Count - 1 && gapAfter[i])
+            {
+                // Null-piste aukon keskelle → LiveCharts katkaisee viivan.
+                long mid = (stamps[i].ToUnixTimeSeconds()
+                    + stamps[i + 1].ToUnixTimeSeconds()) / 2;
+                points.Add(new ChartPoint(DateTimeOffset.FromUnixTimeSeconds(mid), null));
+            }
         }
 
         return new ChartSeries(name, points);

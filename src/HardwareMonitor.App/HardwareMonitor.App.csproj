@@ -11,6 +11,10 @@
     <LangVersion>latest</LangVersion>
     <AssemblyName>HardwareMonitor</AssemblyName>
     <RootNamespace>HardwareMonitor.App</RootNamespace>
+    <Version>1.0.0</Version>
+    <Product>Hardware Monitor</Product>
+    <Authors>jrs8205</Authors>
+    <Copyright>© 2026 jrs8205 — GPL-3.0</Copyright>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <ApplicationIcon>Assets\app.ico</ApplicationIcon>
     <!-- NU1701: LiveCharts2:n SkiaSharp.Views.WPF on net462-kohdennettu mutta

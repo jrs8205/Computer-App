@@ -250,6 +250,30 @@ public sealed class HistoryDbTests : IDisposable
     }
 
     [Fact]
+    public void ReadSampleRowsDownsampled_LaskeeTuulettimenPyorimisosuuden()
+    {
+        // Bucket-keskiarvo laimenee (yksi pyörähdys → pieni positiivinen avg),
+        // joten pyörimisosuus lasketaan 5 s riveistä erikseen.
+        AggregatedSample Fan(DateTimeOffset ts, float rpm) => Sample(ts) with
+        {
+            Fans = new[] { new FanAggregate("/gpu/fan/1", "GPU Fan 1",
+                new MetricAggregate(rpm, rpm, rpm)) },
+        };
+
+        _db.InsertSample(Fan(Now, 1000));
+        _db.InsertSample(Fan(Now.AddSeconds(5), 0));
+        _db.InsertSample(Fan(Now.AddSeconds(10), 0));
+        _db.InsertSample(Fan(Now.AddSeconds(15), 0));
+
+        IReadOnlyList<SampleRow> rows =
+            _db.ReadSampleRowsDownsampled(Now.AddHours(-1), bucketSeconds: 60);
+
+        FanSampleValue fan = Assert.Single(Assert.Single(rows).Fans);
+        Assert.Equal(250, fan.RpmAvg);
+        Assert.Equal(0.25, fan.SpinShare);
+    }
+
+    [Fact]
     public void ReadSampleRowsDownsampled_SamannimisetLevytSailyvatErillaan()
     {
         AggregatedSample sample = Sample(Now) with

@@ -2,8 +2,7 @@
 
 Tarkastaja ajettiin REVIEW-BRIEF.md:n kanssa 12.7.2026. Kaikki löydökset
 todennettiin koodista; 24/26 vahvistui. Korjaukset jaettiin koreihin.
-**Korit A ja B on korjattu ja todennettu ajossa 12.7.2026** — jäljellä
-on vain Kori C (graafien laatu ja pikkuviat).
+**Kaikki kolme koria (A, B, C) on korjattu ja todennettu 12.7.2026.**
 
 ## Kori A — korjattu 12.7.2026 ✅
 
@@ -45,31 +44,36 @@ on vain Kori C (graafien laatu ja pikkuviat).
 9. **SensorType_Timing** lisätty molempiin UiStrings-resursseihin
    (fi "Ajoitus", en "Timing").
 
-## Kori C — graafien laatu ja pikkuviat (avoinna)
+## Kori C — korjattu 12.7.2026 ✅
 
-- Aukot graafeihin sammutusjaksojen kohdalle (ChartHistoryBuilder: aikaleimaväli
-  > esim. 3 × odotettu → null-katkospiste).
-- Tuulettimen 5 % -näkyvyysraja lasketaan bucket-keskiarvoista — laske
-  raakariveistä ennen harvennusta.
-- Aikavälin vaihto haun aikana hukkuu (MainViewModel.RefreshHistoryInBackground:
-  merkitse odottavaksi tai vertaa RangeHours soveltaessa).
-- DST-siirtymä rikkoo X-akselin monotonisuuden (HistoryViewModel: UTC-pisteet,
-  paikallisaika vain akselin labelerissa).
-- Harvennuksen päätepisteet: ensimmäisen/viimeisen pisteen arvo on bucketin
-  keskiarvo vaikka aikaleima on päätepisteen.
-- Levykoosteet täsmätään vain indeksillä (SampleAggregator) — hotplug kesken
-  5 s jakson sekoittaa; täsmää nimi+esiintymä.
-- Kadonneet sensorit jäävät sensoripuuhun ikuisesti (MainViewModel.UpdateValues:
-  havaitse myös puuttuvat tunnisteet → BuildTree).
-- Raportin yhteenveto voi olla ~1 min vanhempi kuin sen tapahtumalista
-  (BuildReport: laske RiskAnalyzer.Assess uudelleen tuoreista tiedoista).
-- Integer-kentät näyttävät 5,6 mutta tallentavat 6 (NumericFieldViewModel:
-  näytä toteutunut arvo tai vaadi kokonaisluku).
-- Overlayn LineHeight 22 fonttikoolla > 22 — todennäköisesti väärä positiivinen
-  (LineStackingStrategy-oletus MaxHeight kasvattaa rivin sisällön mukaan);
-  todenna fontilla 32, halutessa sido LineHeight fonttikokoon.
+1. Aukot graafeihin sammutusjaksojen kohdalle: aikaleimaväli > 3 × mediaani
+   → null-katkospiste kaikkiin sarjoihin (ChartHistoryBuilder.GapsAfter).
+2. Tuulettimen 5 % -näkyvyysraja lasketaan 5 s riveistä: SQL laskee
+   bucketin SpinShare-osuuden (FanSampleValue.SpinShare), builder summaa.
+3. Harvennuksen päätepisteet säilyttävät datan päätepisteiden ARVOT
+   (aikaleimojen lisäksi); välipisteet ovat yhä bucket-keskiarvoja.
+4. Levykoosteet täsmätään nimi + esiintymä -avaimella (SampleAggregator) —
+   hotplug kesken jakson ei sekoita eri levyjen lukemia.
+5. Aikavälin vaihto haun aikana: hylätty pyyntö haetaan uudelleen heti
+   edellisen valmistuttua (RefreshHistoryInBackground finally).
+6. DST: graafipisteet UTC:nä, paikallisaika vain akselin labelerissa —
+   X-akseli pysyy monotonisena syksyn siirtymässä.
+7. Kadonneet sensorit: puu rakennetaan uudelleen myös kun indeksoitu
+   sensori puuttuu luennasta (irrotus, sleep/resume).
+8. Raportin riski lasketaan samasta tuoreesta datasta kuin raportin
+   tapahtumalista (BuildReport kutsuu RiskAnalyzer.Assess itse).
+9. Integer-kentät: normalize-pyöristys ennen tallennusta ja näyttöä —
+   kenttä näyttää saman arvon jonka sovellus käyttää.
+10. Overlayn riviväli sidottu fonttikokoon (LineHeight = FontSize × 1,4) —
+    alkuperäinen löydös oli todennäköisesti väärä positiivinen
+    (LineStackingStrategy-oletus MaxHeight), mutta sidonta on robustimpi.
 
-## Väärät positiiviset / nuanssit
+## Nuanssit
 
-- Overlay-LineHeight (yllä) — todennettava, luultavasti harmiton.
-- GPU-sekoitus ei vaikuta referenssikoneeseen (vain yksi GPU) — julkaisua varten.
+- GPU-sekoitus (B2) ei vaikuttanut referenssikoneeseen (vain yksi GPU) —
+  korjattiin julkaisua varten.
+
+## Julkaisu
+
+v1.0.0 julkaistu 12.7.2026: GPL-3.0, README uudistettu, requireAdministrator,
+Inno Setup -installeri (installer/setup.iss) GitHub-releasessa.

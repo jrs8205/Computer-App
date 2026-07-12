@@ -19,6 +19,6 @@
                    FontFamily="Consolas"
                    FontSize="{Binding FontSize}"
                    Foreground="#E8F5E9"
-                   LineHeight="22" />
+                   LineHeight="{Binding LineHeight}" />
     </Border>
 </Window>

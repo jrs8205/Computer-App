@@ -59,20 +59,69 @@ public class ChartHistoryBuilderTests
     }
 
     [Fact]
-    public void Harvennus_LaskeeBucketKeskiarvon()
+    public void Harvennus_LaskeeBucketKeskiarvon_PaatepisteetArvoineen()
     {
+        // Väliin jäävät pisteet ovat bucket-keskiarvoja; ensimmäinen ja
+        // viimeinen piste saavat datan päätepisteiden ARVOT aikaleimojen
+        // lisäksi — muuten alun tooltip näyttäisi tuntien keskiarvon.
         var rows = new[]
         {
             Row(0, cpuTemp: 40), Row(5, cpuTemp: 60),
             Row(10, cpuTemp: 10), Row(15, cpuTemp: 30),
+            Row(20, cpuTemp: 80), Row(25, cpuTemp: 90),
         };
 
-        ChartHistory h = ChartHistoryBuilder.Build(rows, 2, NoLabels);
+        ChartHistory h = ChartHistoryBuilder.Build(rows, 3, NoLabels);
 
         ChartSeries cpu = Cpu(h);
-        Assert.Equal(2, cpu.Points.Count);
-        Assert.Equal(50, cpu.Points[0].Value);
-        Assert.Equal(20, cpu.Points[1].Value);
+        Assert.Equal(3, cpu.Points.Count);
+        Assert.Equal(40, cpu.Points[0].Value);  // rows[0]:n arvo
+        Assert.Equal(20, cpu.Points[1].Value);  // bucket-keskiarvo (10+30)/2
+        Assert.Equal(90, cpu.Points[^1].Value); // rows[^1]:n arvo
+    }
+
+    [Fact]
+    public void Sammutusjakso_TuottaaKatkonViivaan()
+    {
+        // Kone oli sammuksissa rivien välissä — kannassa ei ole null-riviä
+        // vaan pelkkä aikaleimaväli, eikä viivaa saa vetää aukon yli.
+        var rows = new List<SampleRow>();
+        for (int i = 0; i < 10; i++)
+        {
+            rows.Add(Row(i * 60, cpuTemp: 40));
+        }
+
+        for (int i = 0; i < 10; i++)
+        {
+            rows.Add(Row(7200 + i * 60, cpuTemp: 50));
+        }
+
+        ChartHistory h = ChartHistoryBuilder.Build(rows, 500, NoLabels);
+
+        ChartSeries cpu = Cpu(h);
+        Assert.Equal(21, cpu.Points.Count); // 20 riviä + 1 katkospiste
+        ChartPoint gap = cpu.Points[10];
+        Assert.Null(gap.Value);
+        Assert.True(gap.Timestamp > T0.AddSeconds(9 * 60));
+        Assert.True(gap.Timestamp < T0.AddSeconds(7200));
+    }
+
+    [Fact]
+    public void HarvoinPyoriva_SuodattuuMyosSpinSharella()
+    {
+        // SQL-harvennetun rivin RpmAvg voi olla positiivinen vaikka tuuletin
+        // pyöri vain 1 % ajasta — osuus tulee SpinShare-kentästä, ei pisteistä.
+        SampleRow[] rows = Enumerable.Range(0, 100).Select(i =>
+            Row(i * 300, fans: new[]
+            {
+                new FanSampleValue("GPU Fan 1", 8, null, SpinShare: 0.01),
+                new FanSampleValue("Fan #1", 600, null, SpinShare: 1.0),
+            })).ToArray();
+
+        ChartHistory h = ChartHistoryBuilder.Build(rows, 500, NoLabels);
+
+        ChartSeries fan = Assert.Single(h.Fans);
+        Assert.Equal("Fan #1", fan.Name);
     }
 
     [Fact]

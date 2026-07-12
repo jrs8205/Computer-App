@@ -3,7 +3,12 @@ namespace HardwareMonitor.Core.Storage;
 public sealed record DiskSampleValue(
     string Name, double? TempAvg, double? TempMax, double? TempMin = null);
 
-public sealed record FanSampleValue(string Name, double? RpmAvg, double? RpmMin = null);
+/// <summary>
+/// SpinShare = pyörimässä olleiden 5 s rivien osuus (0–1) harvennetussa
+/// bucketissa; null raakariveillä (silloin RpmAvg > 0 kertoo saman asian).
+/// </summary>
+public sealed record FanSampleValue(
+    string Name, double? RpmAvg, double? RpmMin = null, double? SpinShare = null);
 
 /// <summary>
 /// Yksi 5 s kooste lapsiriveineen CSV-vientiä varten (määrittelyn luku 21).

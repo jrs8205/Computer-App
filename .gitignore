@@ -21,8 +21,9 @@ x86/
 *.nupkg
 packages/
 
-# install.ps1:n julkaisukansio
+# install.ps1:n julkaisukansio ja installerin tuloste
 publish/
+installer/Output/
 
 # Ohjelman tuottama data (lokit, tietokannat) ei kuulu versionhallintaan
 data/logs/

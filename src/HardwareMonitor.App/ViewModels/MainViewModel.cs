@@ -54,7 +54,6 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
     private SampleStats? _dayStats;
     private KeyMetrics? _latestMetrics;
     private MetricStates? _latestStates;
-    private RiskAssessment? _latestAssessment;
     private int _windowsScanRunning;
     private int _analysisRefreshRunning;
     private int _insightsWriteRunning;
@@ -400,7 +399,6 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
             // Raporttia varten (Vaihe 7).
             _latestMetrics = metrics;
             _latestStates = thresholds.States;
-            _latestAssessment = assessment;
 
             // Vaihe 8: balloon-ilmoitus ilmaisinalueelle hälytyksistä.
             TrayNotification? notification =
@@ -552,18 +550,29 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
     public string? BuildReport()
     {
         if (_latestMetrics is not { } metrics ||
-            _latestStates is not { } states ||
-            _latestAssessment is not { } assessment)
+            _latestStates is not { } states)
         {
             return null;
         }
 
         DateTimeOffset now = DateTimeOffset.Now;
+        SampleStats dayStats = _historyDb?.GetSampleStats(now.AddHours(-24)) ?? EmptyStats;
+        IReadOnlyList<EventRow> dayEvents =
+            _historyDb?.ReadEventsSince(now.AddHours(-24)) ?? Array.Empty<EventRow>();
+
+        // Riski lasketaan samasta tuoreesta datasta kuin raportin listat —
+        // tickin välimuistittu arvio voi olla minuutin vanha, jolloin
+        // yhteenveto voisi sanoa "Hyvä" vaikka alla listataan juuri
+        // kirjattu CRITICAL-tapahtuma.
+        RiskAssessment assessment = RiskAnalyzer.Assess(
+            states, metrics, _settings.Thresholds,
+            dayEvents, dayStats, _previousSessionCrashed);
+
         return ReportBuilder.Build(
             now, assessment, metrics, states,
-            _historyDb?.GetSampleStats(now.AddHours(-24)) ?? EmptyStats,
+            dayStats,
             _historyDb?.GetSampleStats(now.AddDays(-30)) ?? EmptyStats,
-            _historyDb?.ReadEventsSince(now.AddHours(-24)) ?? Array.Empty<EventRow>(),
+            dayEvents,
             _settings.Thresholds);
     }
 
@@ -723,20 +732,23 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
     private void UpdateValues(IReadOnlyList<HardwareGroup> groups)
     {
         bool newSensorAppeared = false;
+        int sensorsSeen = 0;
 
         foreach (HardwareGroup group in groups)
         {
-            newSensorAppeared |= UpdateGroup(group);
+            newSensorAppeared |= UpdateGroup(group, ref sensorsSeen);
         }
 
-        // Jos laitteita tuli lisää ajon aikana (esim. USB-levy), rakennetaan puu uudelleen.
-        if (newSensorAppeared)
+        // Puu rakennetaan uudelleen kun laitteita tulee lisää (esim. USB-levy)
+        // TAI kun indeksoitu sensori katoaa (irrotus, sleep/resume) — muuten
+        // kadonneen laitteen rivit jäisivät näkyviin viimeisine arvoineen.
+        if (newSensorAppeared || sensorsSeen != _sensorIndex.Count)
         {
             BuildTree(groups);
         }
     }
 
-    private bool UpdateGroup(HardwareGroup group)
+    private bool UpdateGroup(HardwareGroup group, ref int sensorsSeen)
     {
         bool newSensorAppeared = false;
 
@@ -745,6 +757,7 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
             if (_sensorIndex.TryGetValue(reading.Identifier, out SensorViewModel? sensorVm))
             {
                 sensorVm.Update(reading);
+                sensorsSeen++;
             }
             else
             {
@@ -754,7 +767,7 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
 
         foreach (HardwareGroup sub in group.SubHardware)
         {
-            newSensorAppeared |= UpdateGroup(sub);
+            newSensorAppeared |= UpdateGroup(sub, ref sensorsSeen);
         }
 
         return newSensorAppeared;
@@ -835,6 +848,13 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
             finally
             {
                 Interlocked.Exchange(ref _historyRefreshRunning, 0);
+
+                // Jos käyttäjä vaihtoi aikaväliä haun aikana, vaihto olisi
+                // muuten hukkunut vartiointiin — haetaan uusi alue heti.
+                if (History.RangeHours != hours)
+                {
+                    RefreshHistoryInBackground();
+                }
             }
         });
     }

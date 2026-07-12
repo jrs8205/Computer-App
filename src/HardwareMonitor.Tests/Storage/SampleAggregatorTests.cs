@@ -79,6 +79,30 @@ public class SampleAggregatorTests
     }
 
     [Fact]
+    public void Add_LevynIrtoaminenKeskenJakson_EiSekoitaKoosteita()
+    {
+        // Jos levy irtoaa kesken jakson, jäljelle jäävät siirtyvät listassa
+        // pienempään indeksiin — eri fyysisten levyjen lukemia ei saa
+        // yhdistää samaan koosteeseen.
+        var agg = new SampleAggregator(samplesPerRow: 2);
+        agg.Add(Metrics(disks: new[]
+        {
+            new DiskMetrics("A-levy", 30f, null),
+            new DiskMetrics("B-levy", 50f, null),
+        }), T0);
+        AggregatedSample s = agg.Add(Metrics(disks: new[]
+        {
+            new DiskMetrics("B-levy", 52f, null),
+        }), T0)!;
+
+        Assert.Equal(2, s.Disks.Count);
+        DiskAggregate a = s.Disks.Single(d => d.Name == "A-levy");
+        Assert.Equal(30, a.TempC.Avg);
+        DiskAggregate b = s.Disks.Single(d => d.Name == "B-levy");
+        Assert.Equal(51, b.TempC.Avg); // (50 + 52) / 2 — ei A:n lukemia
+    }
+
+    [Fact]
     public void Add_LevytTasmataanIndeksilla_TuulettimetTunnisteella()
     {
         var agg = new SampleAggregator(samplesPerRow: 2);

@@ -1,109 +1,99 @@
-# HANDOFF — 12.7.2026 istunto (päivitys 2: Kori B + asennus)
+# HANDOFF — 12.7.2026 istunto (päivitys 3: Kori C + julkaisu v1.0.0)
 
 Tämä tiedosto kertoo mihin jäätiin ja miten jatketaan. Lue tämä ensin,
-sitten `docs/review-triage.md` (tarkastuslöydösten tilanne) ja
-`docs/ROADMAP.md`.
+sitten `docs/review-triage.md` ja `docs/ROADMAP.md`.
 
 ## Tilanne yhdellä lauseella
 
-**Tarkastuksen Korit A ja B on korjattu TDD:llä ja todennettu ajossa
-(180 testiä), JA sovellus on nyt asennettu oikeana sovelluksena
-`C:\Program Files\Hardware Monitor` -polkuun** (tools/install.ps1;
-autostart-tehtävä osoittaa asennettuun exeen korotettuna) — jäljellä
-Kori C (graafien laatu) ja sitten LICENSE + README + release + repo
-julkiseksi.
+**v1.0.0 on julkaistu**: kaikki tarkastuksen kolme korjauskoria (A/B/C)
+tehty TDD:llä (184 testiä), sovellus on GPL-3.0, README uudistettu,
+Inno Setup -installeri rakennettu ja GitHub-release luotu — sovellus
+ajaa asennettuna polusta `C:\Program Files\Hardware Monitor` (v1.0.0).
 
-## SOVELLUS AJAA NYT ASENNETUSTA POLUSTA
+## Julkaisu ja asennus
 
-- Asennus: `C:\Program Files\Hardware Monitor\HardwareMonitor.exe`
-  (self-contained win-x64 Release; ei riipu Downloads-kansion buildeista).
-- Ajastettu tehtävä `HardwareMonitor` käynnistää sen kirjautuessa
-  korotettuna (`--tray`); Käynnistä-valikossa pikakuvake admin-lipulla.
-- Uudelleenasennus koodimuutosten jälkeen: sulje sovellus (tray →
-  Lopeta) ja aja korotettuna `.\tools\install.ps1`. Poisto: `-Uninstall`.
-- Kehitysbuildia (Downloads) voi yhä ajaa run.ps1:llä — mutta jos
-  autostart on päällä, Downloads-ajo kirjoittaa tehtävän ILMAN korotusta
-  (turvasääntö) ja asennetun exen seuraava ajo palauttaa korotuksen.
-  Repojuuren "Hardware Monitor.lnk" osoittaa yhä debug-buildiin.
+- **Release**: GitHub-release `v1.0.0`, liitteenä
+  `HardwareMonitor-Setup-1.0.0.exe` (Inno Setup, ~56 MB self-contained).
+- **Installerin rakennus**: `dotnet publish ... -o publish` +
+  `ISCC.exe installer\setup.iss` (ISCC: `%LOCALAPPDATA%\Programs\
+  Inno Setup 6\`). Tuloste: `installer/Output/` (gitignoressa).
+- Installeri sulkee ajossa olevan sovelluksen SIISTISTI Restart
+  Managerilla (todennettu: CleanShutdown säilyi true) ja poisto
+  (`unins000.exe`) poistaa myös autostart-tehtävän. Käyttäjädata
+  (%LOCALAPPDATA%\HardwareMonitor) säilyy.
+- **app.manifest on nyt requireAdministrator** (päätös 12.7.): manuaalinen
+  käynnistys kysyy UAC:n, autostart-tehtävä käynnistää ilman kyselyä.
+  HUOM: myös kehitysajo (run.ps1 ilman -AsAdmin) nostaa nyt UAC-kyselyn.
+- Versio asetetaan `HardwareMonitor.App.csproj`:n `<Version>`-propertyllä
+  JA `installer/setup.iss`:n `MyAppVersion`-definellä — päivitä molemmat.
 
-## Tehty tässä istunnossa (12.7.2026)
+## Tehty 12.7.2026 (kolme rupeamaa)
 
-1. **Tarkastuslöydösten triage** (kaikki 26 todennettu): `docs/review-triage.md`.
-2. **Kori A** (8 korjausta): loki-kierto 20 MB + eräkirjoitus (loki oli
-   149 MB ja per-rivi-kirjoitus venytti 1 s tickin ~15 s:iin!),
-   min-sarakkeet + migraatio, SQL-harvennettu graafiluku
-   (ReadSampleRowsDownsampled), LastState-race, Dispose-järjestys,
-   CSV-levyduplikaatit #1/#2, single instance -mutex, overlayn
-   itsekorjaus (11.7. katoaminen = ulkopuolinen WM_CLOSE).
-3. **Kori B** (9 korjausta): autostart-korotus vain suojatusta polusta
-   (Core/Security/ProtectedPaths + AutostartService-lokitus), GPU-kentät
-   yhdestä ensisijaisesta laitteesta, Windows-lokin kirjanmerkin nollaus
-   tyhjennyksen jälkeen (ReadNewestRecordId), tapahtumat+kirjanmerkki
-   samassa transaktiossa (InsertEventsWithMeta), GPU-fanit pois
-   CPU-fanisäännöstä, NaN-hylkäys, kriittisen tekstin väri #FF9E9E
-   (7,8:1 AAA; reunukset yhä #EF5350), insights-tapahtumat ilman
-   sensoridataa, SensorType_Timing molempiin resursseihin.
-4. **Asennus** (käyttäjän pyyntö): `tools/install.ps1` — publish +
-   kopiointi Program Filesiin + tehtäväpäivitys + pikakuvake.
-   GOTCHA: schtasks /TR PowerShellistä EI saa käyttää \`"-escapointia
-   kenoviivalla (literaali \" menee schtasksille) — pelkkä backtick-quote.
-5. **Ajonaikaiset todennukset**: Downloads-ajo pudotti tehtävän
-   rajoitetuksi + lokiselitys; asennettu ajo palautti HighestAvailable;
-   siistit sulkemiset (CleanShutdown: true); ei VIRHE-rivejä.
+1. **Triage**: 26 löydöstä todennettu (24 aitoa) → `docs/review-triage.md`.
+2. **Kori A** (data ja vakaus): loki-kierto + eräkirjoitus, min-sarakkeet
+   + migraatio, SQL-harvennettu graafiluku, LastState-race, CSV-duplikaatit,
+   single instance, overlay-itsekorjaus.
+3. **Kori B** (julkaisublokkerit): autostart-korotus vain suojatusta
+   polusta (ProtectedPaths), GPU-kentät yhdestä laitteesta, Windows-lokin
+   kirjanmerkin nollaus + atominen kirjoitus, GPU-fanit pois CPU-säännöstä,
+   NaN-hylkäys, kriittinen tekstiväri #FF9E9E, insights-tapahtumat ilman
+   sensoridataa, SensorType_Timing.
+4. **Kori C** (graafien laatu): aukot sammutusjaksoihin (3× mediaaniväli),
+   fan 5 % SpinSharesta, päätepisteiden arvot, levykoosteet nimi+esiintymä,
+   aikavälijonon uusintahaku, DST-monotonisuus (UTC-pisteet + paikallinen
+   labeler), kadonneet sensorit puusta, raportin tuore riski,
+   integer-kenttien normalize, overlayn LineHeight-sidonta.
+5. **Julkaisu**: LICENSE (GPL-3.0), README, versio 1.0.0,
+   requireAdministrator, installer/setup.iss, GitHub-release.
 
-## Seuraavaksi
+## Seuraavaksi (avoinna)
 
-1. **Kori C** (`docs/review-triage.md`): graafien aukot, fan 5 % raaka-
-   datasta, aikavälijono, DST, päätepisteet, integer-näyttö, levykoosteet
-   nimellä, kadonneet sensorit puusta, raportin tuore riski, overlayn
-   LineHeight-todennus (todennäköinen väärä positiivinen).
-2. **ROADMAP Vaihe 8:n loput**: LICENSE (MIT? LHM on MPL-2.0, mainittava),
-   README-päivitys (kertoo yhä Vaihe 1:stä!), release + repo julkiseksi.
-   Julkaisupaketiksi harkitse zip publish-kansiosta tai oikea installeri
-   (Inno Setup) — install.ps1 on kehittäjän työkalu, ei loppukäyttäjän.
+- **Repo julkiseksi** — käyttäjän päätös, kun on valmis. Release on jo
+  olemassa; julkistuksessa se näkyy kaikille. REVIEW-BRIEF.md ja
+  aloitusmäärittely-md ovat committoimatta tahallaan (eivät tule mukaan).
+- Mahdollinen jatkokehitys: ROADMAPin jatkokehitysideat (PresentMon/FPS,
+  MSI Afterburner -tyylinen käyrästö ym.), code signing -sertifikaatti
+  (SmartScreen-varoitus poistuisi setup.exe:stä).
 
 ## Build- ja ajokomennot + sudenkuopat
 
 ```powershell
 dotnet build HardwareMonitor.sln    # AINA UI-muutosten jälkeen!
-dotnet test src/HardwareMonitor.Tests/HardwareMonitor.Tests.csproj  # 180 ✓
-.\tools\install.ps1                 # julkaisu + asennus (korotettu shell)
-.\run.ps1 -AsAdmin                  # kehitysajo Downloads-buildista
+dotnet test src/HardwareMonitor.Tests/HardwareMonitor.Tests.csproj  # 184 ✓
+.\tools\install.ps1                 # kehittäjän pika-asennus Program Filesiin
+dotnet publish src\HardwareMonitor.App\HardwareMonitor.App.csproj -c Release -r win-x64 --self-contained true -o publish
+& "$env:LOCALAPPDATA\Programs\Inno Setup 6\ISCC.exe" installer\setup.iss
 ```
 
-- `dotnet test` EI buildaa App-projektia; käynnissä oleva exe lukitsee
-  omat DLL:nsä — asennettu exe EI lukitse repo-buildia, joten build
-  onnistuu vaikka asennettu sovellus ajaa. Asennus vaatii sulkemisen.
-- Sovellus suljetaan trayn kautta (Lopeta) — EI Stop-Processia.
-  Todennuksessa: MinimizeToTray=false + WM_CLOSE (ks. .claude/skills/verify).
-- Vain yksi instanssi (mutex); toinen käynnistys aktivoi ikkunan.
-- debug.log kiertää 20 MB:ssä → debug.old.log; snapshot 60 s välein.
-- LHM-gotchat: "Virtual Memory" ohitetaan RAM-laskennassa, nimissä
-  häntävälilyöntejä (Trim), NVMe "Temperature #1/#2" -fallback,
+- `dotnet test` EI buildaa App-projektia. Asennettu exe EI lukitse
+  repo-buildia. Sovellus suljetaan trayn kautta — EI Stop-Processia
+  (todennuksessa: MinimizeToTray=false + WM_CLOSE, ks. .claude/skills/verify).
+- schtasks /TR PowerShellistä: backtick-quote ILMAN kenoviivaa.
+- Vain yksi instanssi (mutex `Local\HardwareMonitor.SingleInstance`).
+- debug.log kiertää 20 MB → debug.old.log; snapshot 60 s välein.
+- LHM: "Virtual Memory" ohitetaan RAM-laskennassa; nimissä
+  häntävälilyöntejä (Trim); NVMe "Temperature #1/#2" -fallback;
   GPU-kentät vain ensisijaisesta GPU:sta.
 - Lokalisointi: avain molempiin resx:iin + accessor käsin; events-taulun
   Component-arvot ovat luokitteluavaimia — EI lokalisoida.
-- WCAG AAA (≥ 7:1) kaikkiin UI-TEKSTEIHIN; reunuksille riittää 3:1.
+- WCAG AAA (≥ 7:1) UI-teksteihin; reunuksille riittää 3:1.
 - WPF: paikallinen arvo sidottuun DP:hen tuhoaa sidonnan; Loaded ei
-  laukea näyttämättömälle ikkunalle; UIPI estää syötteet korotettuun
-  ikkunaan. ThresholdSettings-olion VIITE ei saa vaihtua.
+  laukea näyttämättömälle ikkunalle. ThresholdSettings-viite ei vaihdu.
+- Graafit: pisteet UTC:nä, akselin labeler muuntaa paikalliseksi —
+  älä palauta LocalDateTime-pisteitä (DST rikkoisi X-akselin).
 
 ## Tiedostosijainnit ajossa
 
-- Asennus: `C:\Program Files\Hardware Monitor\`
-- Asetukset: `%LOCALAPPDATA%\HardwareMonitor\settings.json`
-- Debug-loki: `%LOCALAPPDATA%\HardwareMonitor\logs\debug.log` (+ debug.old.log)
-- Historia: `%LOCALAPPDATA%\HardwareMonitor\data\history.db` (+ -wal/-shm)
-- Viimeisin tila: `%LOCALAPPDATA%\HardwareMonitor\data\last_state.json`
-- Konetuntemus-loki: `%LOCALAPPDATA%\HardwareMonitor\machine-insights.md`
+- Asennus: `C:\Program Files\Hardware Monitor\` (+ unins000.exe)
+- Asetukset/loki/data: `%LOCALAPPDATA%\HardwareMonitor\`
+  (settings.json, logs\debug.log(+old), data\history.db, data\last_state.json,
+  machine-insights.md)
 - Ajastettu tehtävä: `schtasks /Query /TN HardwareMonitor /XML`
 
 ## Muut muistiinpanot
 
 - Kone: i9-9900K, RTX 2060, ASUS Z390-F, 64 GB, Win 11, 3440x1440.
-  Fan #2 = AIO-pumppu (~1950 RPM). KAKSI samannimistä 860 EVO:ta.
-- Committoimatta TAHALLAAN: REVIEW-BRIEF.md ja windows-11-hardware-
-  monitor-ohjelman-aloitusmaarittely.md; "Hardware Monitor.lnk" ja
-  publish/-kansio gitignoreen (publish/ lisättävä jos ei vielä ole!).
+  Fan #2 = AIO-pumppu. KAKSI samannimistä 860 EVO:ta.
+- Committoimatta TAHALLAAN: REVIEW-BRIEF.md,
+  windows-11-hardware-monitor-ohjelman-aloitusmaarittely.md.
 - Events-taulussa vanhoja testihälytyksiä (raja 30 °C) — dataa, ei bugi.
-- README on VANHENTUNUT — päivitys julkaisuvaiheessa.

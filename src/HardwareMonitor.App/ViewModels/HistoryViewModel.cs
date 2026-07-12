@@ -99,8 +99,11 @@ public sealed class HistoryViewModel : INotifyPropertyChanged
         series.Select((s, i) => (ISeries)new LineSeries<DateTimePoint>
         {
             Name = s.Name,
+            // X-arvot UTC:nä: paikallisaika hyppäisi DST-siirtymässä tunnin
+            // taaksepäin ja X-akseli menettäisi monotonisuutensa. Akselin
+            // labeler muuntaa näytettävän tekstin paikallisajaksi.
             Values = s.Points
-                .Select(p => new DateTimePoint(p.Timestamp.LocalDateTime, p.Value))
+                .Select(p => new DateTimePoint(p.Timestamp.UtcDateTime, p.Value))
                 .ToArray(),
             GeometrySize = 0,
             LineSmoothness = 0,
@@ -120,7 +123,8 @@ public sealed class HistoryViewModel : INotifyPropertyChanged
             _ => (TimeSpan.FromDays(5), "d.M."),
         };
 
-        return new DateTimeAxis(unit, d => d.ToString(format))
+        return new DateTimeAxis(unit,
+            d => DateTime.SpecifyKind(d, DateTimeKind.Utc).ToLocalTime().ToString(format))
         {
             LabelsPaint = new SolidColorPaint(SKColors.White),
             TextSize = 14,

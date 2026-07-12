@@ -600,8 +600,13 @@ public sealed class HistoryDb : IDisposable
             var fansByBucket = new Dictionary<long, List<FanSampleValue>>();
             using (var fanCmd = _connection.CreateCommand())
             {
+                // SpinShare: pyörivien 5 s rivien osuus — bucket-keskiarvo
+                // laimenee (yksi pyörähdys → pieni positiivinen avg), joten
+                // graafin 5 % -näkyvyysraja lasketaan tästä, ei keskiarvosta.
                 fanCmd.CommandText = """
-                    SELECT s.ts / $bucket, f.name, AVG(f.rpm_avg), MIN(f.rpm_min)
+                    SELECT s.ts / $bucket, f.name, AVG(f.rpm_avg), MIN(f.rpm_min),
+                        AVG(CASE WHEN f.rpm_avg IS NULL THEN NULL
+                                 WHEN f.rpm_avg > 0 THEN 1.0 ELSE 0.0 END)
                     FROM fan_samples f JOIN samples s ON s.id = f.sample_id
                     WHERE s.ts >= $since
                     GROUP BY s.ts / $bucket, f.name;
@@ -617,7 +622,8 @@ public sealed class HistoryDb : IDisposable
                         fansByBucket[bucket] = list = new List<FanSampleValue>();
                     }
 
-                    list.Add(new FanSampleValue(r.GetString(1), Opt(r, 2), Opt(r, 3)));
+                    list.Add(new FanSampleValue(
+                        r.GetString(1), Opt(r, 2), Opt(r, 3), Opt(r, 4)));
                 }
             }
 

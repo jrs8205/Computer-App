@@ -6,18 +6,13 @@
     <security>
       <requestedPrivileges xmlns="urn:schemas-microsoft-com:asm.v2">
         <!--
-          Oletus: asInvoker (EI admin-oikeuksia). Tämä noudattaa suunnitelman
-          turvallisuusperiaatteita (luvut 12 ja 28): perusdata näytetään ilman
-          adminia, ja admin pyydetään vain laajempia sensoreita varten.
-
-          HUOM: Ilman admin-oikeuksia moni matalan tason sensori (CPU-lämpö,
-          tuulettimet, jännitteet) EI näy. Jos haluat nähdä kaikki sensorit
-          jo tässä proof of concept -vaiheessa, aja ohjelma "Suorita
-          järjestelmänvalvojana" tai vaihda rivi tilapäisesti muotoon:
-
-            <requestedExecutionLevel level="requireAdministrator" uiAccess="false" />
+          requireAdministrator (päätös 12.7.2026): matalan tason sensorit
+          (CPU-lämpö, tuulettimet, jännitteet) vaativat adminin joka
+          tapauksessa, ja ilman korotusta sovellus näyttäisi hämmentävän
+          vajaita lukemia. Manuaalinen käynnistys kysyy UAC:n; autostartin
+          ajastettu tehtävä (/RL HIGHEST) käynnistää ilman kyselyä.
         -->
-        <requestedExecutionLevel level="asInvoker" uiAccess="false" />
+        <requestedExecutionLevel level="requireAdministrator" uiAccess="false" />
       </requestedPrivileges>
     </security>
   </trustInfo>
