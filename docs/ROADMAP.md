@@ -181,7 +181,9 @@ vaatimus 9.7.2026: vientien pitää olla selkokielisiä, ei konedataa.
       paikallisasennus) + `installer/setup.iss` (Inno Setup → setup.exe
       GitHub-releaseen); asennus Program Filesiin ratkaisee autostart-
       korotuksen turvasäännön (korotus vain ACL-suojatusta polusta)
-- [ ] Repo julkiseksi (käyttäjän päätös, kun on valmis)
+- [x] Repo julkiseksi (12.7.2026) + exet allekirjoitettu itse allekirjoitetulla
+      varmenteella (aito code signing — Trusted Signing / Certum —
+      jatkokehitysideana SmartScreeniä varten)
 
 ---
 

@@ -46,14 +46,30 @@ ajaa asennettuna polusta `C:\Program Files\Hardware Monitor` (v1.0.0).
 5. **Julkaisu**: LICENSE (GPL-3.0), README, versio 1.0.0,
    requireAdministrator, installer/setup.iss, GitHub-release.
 
+## Allekirjoitus (12.7.2026)
+
+- Exet allekirjoitetaan itse allekirjoitetulla varmenteella:
+  **CN=jrs8205 Hardware Monitor**, thumbprint
+  `346D869550F3A7BD54FA947E024341C64F729AF8`, voimassa 12.7.2031,
+  yksityisavain käyttäjän CurrentUser\My-varastossa (vain tällä koneella).
+  Julkinen osa on viety LocalMachine Root + TrustedPublisher -varastoihin,
+  joten omalla koneella allekirjoitus näkyy kelvollisena.
+- Uuden version allekirjoitus: `Set-AuthenticodeSignature -FilePath <exe>
+  -Certificate (Get-ChildItem Cert:\CurrentUser\My | Where Thumbprint -eq
+  '346D…AF8') -HashAlgorithm SHA256 -TimestampServer
+  "http://timestamp.digicert.com"` — ENSIN publish\HardwareMonitor.exe,
+  SITTEN ISCC-käännös, LOPUKSI setup.exe.
+- Itse allekirjoitettu varmenne EI poista SmartScreen-varoitusta muilta —
+  aito ratkaisu olisi Azure Trusted Signing (~10 $/kk) tai Certum OSS
+  -varmenne; kirjattu jatkokehitysideaksi.
+- setup.iss: EI AppMutexia — sen tarkistus keskeyttäisi hiljaisen
+  asennuksen; CloseApplications=yes sulkee ajossa olevan sovelluksen
+  Restart Managerilla SIISTISTI (todennettu: CleanShutdown säilyy true).
+
 ## Seuraavaksi (avoinna)
 
-- **Repo julkiseksi** — käyttäjän päätös, kun on valmis. Release on jo
-  olemassa; julkistuksessa se näkyy kaikille. REVIEW-BRIEF.md ja
-  aloitusmäärittely-md ovat committoimatta tahallaan (eivät tule mukaan).
-- Mahdollinen jatkokehitys: ROADMAPin jatkokehitysideat (PresentMon/FPS,
-  MSI Afterburner -tyylinen käyrästö ym.), code signing -sertifikaatti
-  (SmartScreen-varoitus poistuisi setup.exe:stä).
+- Mahdollinen jatkokehitys: ROADMAPin ideat (PresentMon/FPS ym.),
+  aito code signing (Trusted Signing / Certum) SmartScreeniä varten.
 
 ## Build- ja ajokomennot + sudenkuopat
 

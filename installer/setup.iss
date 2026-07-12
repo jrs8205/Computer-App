@@ -30,8 +30,12 @@ DisableProgramGroupPage=yes
 LicenseFile=..\LICENSE
 ; Sovellus vaatii adminin (sensorit) ja asentuu Program Filesiin.
 PrivilegesRequired=admin
-; Estä asennus sovelluksen ajaessa (single instance -mutexin nimet).
-AppMutex=HardwareMonitor.SingleInstance,Local\HardwareMonitor.SingleInstance
+; Ajossa oleva sovellus suljetaan Restart Managerilla — todennettu, että
+; sulkeminen on SIISTI (CleanShutdown säilyy, ei kaatumismerkintää).
+; EI AppMutexia: sen tarkistus keskeyttäisi hiljaisen asennuksen ennen
+; kuin Restart Manager ehtii sulkea sovelluksen.
+CloseApplications=yes
+RestartApplications=no
 OutputDir=Output
 OutputBaseFilename=HardwareMonitor-Setup-{#MyAppVersion}
 SetupIconFile=..\src\HardwareMonitor.App\Assets\app.ico
