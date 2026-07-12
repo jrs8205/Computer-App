@@ -277,6 +277,49 @@ public sealed class HistoryDb : IDisposable
         }
     }
 
+    /// <summary>
+    /// Kirjoittaa tapahtumat ja meta-arvon (esim. Windows-lokin kirjanmerkin)
+    /// yhtenä transaktiona — joko kaikki tai ei mitään.
+    /// </summary>
+    public void InsertEventsWithMeta(
+        IReadOnlyList<EventRow> events, string metaKey, string metaValue)
+    {
+        lock (_lock)
+        {
+            using SqliteTransaction tx = _connection.BeginTransaction();
+
+            foreach (EventRow e in events)
+            {
+                using var cmd = _connection.CreateCommand();
+                cmd.Transaction = tx;
+                cmd.CommandText = """
+                    INSERT INTO events (ts, level, component, sensor, value, threshold, message)
+                    VALUES ($ts, $level, $component, $sensor, $value, $threshold, $message);
+                    """;
+                cmd.Parameters.AddWithValue("$ts", e.Timestamp.ToUnixTimeSeconds());
+                cmd.Parameters.AddWithValue("$level", e.Level);
+                cmd.Parameters.AddWithValue("$component", e.Component);
+                cmd.Parameters.AddWithValue("$sensor", (object?)e.Sensor ?? DBNull.Value);
+                cmd.Parameters.AddWithValue("$value", (object?)e.Value ?? DBNull.Value);
+                cmd.Parameters.AddWithValue("$threshold", (object?)e.Threshold ?? DBNull.Value);
+                cmd.Parameters.AddWithValue("$message", e.Message);
+                cmd.ExecuteNonQuery();
+            }
+
+            using var metaCmd = _connection.CreateCommand();
+            metaCmd.Transaction = tx;
+            metaCmd.CommandText = """
+                INSERT INTO meta (key, value) VALUES ($key, $value)
+                ON CONFLICT(key) DO UPDATE SET value = excluded.value;
+                """;
+            metaCmd.Parameters.AddWithValue("$key", metaKey);
+            metaCmd.Parameters.AddWithValue("$value", metaValue);
+            metaCmd.ExecuteNonQuery();
+
+            tx.Commit();
+        }
+    }
+
     public IReadOnlyList<EventRow> ReadRecentEvents(int limit)
     {
         lock (_lock)

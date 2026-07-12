@@ -2,8 +2,8 @@
 
 Tarkastaja ajettiin REVIEW-BRIEF.md:n kanssa 12.7.2026. Kaikki löydökset
 todennettiin koodista; 24/26 vahvistui. Korjaukset jaettiin koreihin.
-**Kori A on korjattu ja todennettu ajossa 12.7.2026** — tämä tiedosto
-seuraa jäljellä olevia koreja B ja C.
+**Korit A ja B on korjattu ja todennettu ajossa 12.7.2026** — jäljellä
+on vain Kori C (graafien laatu ja pikkuviat).
 
 ## Kori A — korjattu 12.7.2026 ✅
 
@@ -19,32 +19,31 @@ seuraa jäljellä olevia koreja B ja C.
 8. Overlay: itsekorjaus — ulkopuolinen WM_CLOSE havaitaan Closed-käsittelijässä,
    ikkuna luodaan uudelleen ja lokiin kirjataan WARNING (havainto 11.7.2026).
 
-## Kori B — ennen julkaisua (avoinna)
+## Kori B — korjattu 12.7.2026 ✅
 
-- **[P1] Autostart-korotus kirjoitettavasta polusta** (AutostartService.cs):
-  /RL HIGHEST + exe Downloads-kansiossa = UAC-ohitus exen vaihtamalla.
-  Korjaus kytkeytyy paketointiin (asennus ACL-suojattuun polkuun); välivaihe:
-  SetEnabled kieltäytyy korotuksesta jos polku on käyttäjän kirjoitettavissa.
-- **[P1] GPU-kenttien sekoittuminen hybridikoneissa** (KeyMetricsService.cs):
-  ??= poimii kentät eri GPU-ryhmistä — valitse ensin yksi ensisijainen GPU.
-- **[P1] Windows-lokin kirjanmerkki jumiutuu lokin tyhjennyksessä**
-  (SystemEventReader/Collector): jos lokin uusin RecordID < kirjanmerkki,
-  nollaa kirjanmerkki.
-- **[P2] Collector: tapahtumat + SetMeta samaan transaktioon** (duplikaatit
-  jos skannaus keskeytyy).
-- **[P2] CPU-fanisääntö laukeaa GPU:n puolipassiivifaneista** (ThresholdMonitor):
-  rajaa GPU-tunnisteet (identifier alkaa /gpu) CPU-jäähdytyssäännön ulkopuolelle.
-- **[P2] float.TryParse hyväksyy NaN:n** (SettingsValidator): vaadi
-  float.IsFinite(value).
-- **[P2] Kriittisen tilan tekstiväri #EF5350 on 4,4:1 korttitaustalla #252526**
-  (ThresholdStateToBrushConverter): tekstikäyttöön vaaleampi punainen
-  (huom. #FF8A80:kin on vain 6,7:1 tällä taustalla — tarvitaan esim. #FFABA3-
-  tasoinen; reunuksiin nykyinen käy, ei-teksti). WCAG AAA ≥ 7:1.
-- **[P2] Insights ohittaa tapahtumaosiot kun SampleCount == 0**
-  (MachineInsightsBuilder): Windows-tapahtumia voi olla ilman sensoridataa —
-  ehdollista vain taso- ja trendiosiot.
-- **[P2] SensorType_Timing-avain puuttuu** molemmista UiStrings-resursseista
-  (LHM 0.9.6: DIMM-sensorit).
+1. **Autostart-korotus**: /RL HIGHEST vain ACL-suojatusta polusta
+   (ProtectedPaths.IsUnderAny: Program Files / x86 / Windows); muuten
+   tehtävä luodaan rajoitettuna ja debug-lokiin kirjataan selitys.
+   Lisäksi tools/install.ps1 asentaa sovelluksen Program Filesiin
+   (self-contained publish, autostart-tehtävän päivitys, Käynnistä-valikon
+   pikakuvake admin-lipulla) — asennettuna korotus toimii turvallisesti.
+2. **GPU-laitevalinta**: KeyMetricsService valitsee yhden ensisijaisen
+   GPU-ryhmän (Nvidia/AMD ennen Inteliä, sitten sensorimäärä) ja poimii
+   kaikki kentät siitä — ei enää sekoitusta hybridikoneissa.
+3. **Kirjanmerkin nollaus**: IWindowsEventSource.ReadNewestRecordId;
+   jos lokin uusin RecordID < kirjanmerkki (loki tyhjennetty), luku
+   alkaa alusta.
+4. **Atominen kirjoitus**: HistoryDb.InsertEventsWithMeta — tapahtumat ja
+   kirjanmerkki samassa transaktiossa, ei duplikaatteja keskeytyksissä.
+5. **GPU-fanit pois CPU-säännöstä**: identifier joka sisältää "gpu" ei
+   laukaise pysähtyi-kuumana-sääntöä (semi-passive on normaalia).
+6. **NaN hylätään**: SettingsValidator vaatii float.IsFinite.
+7. **Kriittisen tilan tekstiväri**: tekstinä #FF9E9E (7,8:1 taustalla
+   #252526, WCAG AAA), reunuksissa edelleen #EF5350 (ei-teksti).
+8. **Insights ilman sensoridataa**: vain taso- ja trendiosiot ehdollistetaan
+   SampleCountilla — tapahtumaosiot kirjoitetaan aina.
+9. **SensorType_Timing** lisätty molempiin UiStrings-resursseihin
+   (fi "Ajoitus", en "Timing").
 
 ## Kori C — graafien laatu ja pikkuviat (avoinna)
 

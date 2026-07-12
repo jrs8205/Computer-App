@@ -12,4 +12,11 @@ public interface IWindowsEventSource
     /// <paramref name="maxAge"/> vanhoja.
     /// </summary>
     IReadOnlyList<WindowsLogEvent> ReadSince(long lastRecordId, TimeSpan maxAge);
+
+    /// <summary>
+    /// Lokin uusimman tapahtuman EventRecordID, tai null jos loki on tyhjä.
+    /// Jos tämä on pienempi kuin talletettu kirjanmerkki, loki on tyhjennetty
+    /// ja numerointi alkanut alusta.
+    /// </summary>
+    long? ReadNewestRecordId();
 }

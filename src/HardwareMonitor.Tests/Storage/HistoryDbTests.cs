@@ -289,6 +289,23 @@ public sealed class HistoryDbTests : IDisposable
     }
 
     [Fact]
+    public void InsertEventsWithMeta_KirjoittaaTapahtumatJaKirjanmerkinYhdessa()
+    {
+        // Windows-lokin skannaus kirjoittaa tapahtumat ja kirjanmerkin samassa
+        // transaktiossa — keskeytynyt skannaus ei saa tuottaa duplikaatteja.
+        var rows = new[]
+        {
+            new EventRow(Now, "WARNING", "Laitteisto", "whea", 19, null, "WHEA-virhe"),
+            new EventRow(Now.AddMinutes(1), "CRITICAL", "Järjestelmä", "kernel", 41, null, "Kernel-Power 41"),
+        };
+
+        _db.InsertEventsWithMeta(rows, "windows_last_record_id", "123");
+
+        Assert.Equal(2, _db.ReadRecentEvents(10).Count);
+        Assert.Equal("123", _db.GetMeta("windows_last_record_id"));
+    }
+
+    [Fact]
     public void EventLogService_KirjoittaaOikeallaTasolla()
     {
         var service = new EventLogService(_db);

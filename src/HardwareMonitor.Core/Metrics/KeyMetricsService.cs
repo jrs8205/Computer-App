@@ -19,6 +19,7 @@ public static class KeyMetricsService
         float? ramLoad = null, ramUsed = null, ramAvailable = null;
         var disks = new List<DiskMetrics>();
         var fans = new List<FanMetrics>();
+        var gpuGroups = new List<HardwareGroup>();
 
         foreach (HardwareGroup group in groups)
         {
@@ -70,30 +71,10 @@ public static class KeyMetricsService
                     break;
 
                 case "GpuNvidia" or "GpuAmd" or "GpuIntel":
-                    foreach (SensorReading s in group.Sensors)
-                    {
-                        switch (s.SensorType)
-                        {
-                            case "Load" when s.SensorName == "GPU Core":
-                                gpuLoad ??= s.Value;
-                                break;
-                            case "Temperature" when s.SensorName == "GPU Core":
-                                gpuTemp ??= s.Value;
-                                break;
-                            case "Temperature" when s.SensorName == "GPU Hot Spot":
-                                gpuHotspot ??= s.Value;
-                                break;
-                            case "SmallData" when s.SensorName == "GPU Memory Used":
-                                vramUsed ??= s.Value;
-                                break;
-                            case "SmallData" when s.SensorName == "GPU Memory Total":
-                                vramTotal ??= s.Value;
-                                break;
-                            case "Power" when s.SensorName == "GPU Package":
-                                gpuPower ??= s.Value;
-                                break;
-                        }
-                    }
+                    // Hybridikoneessa (iGPU + dGPU) kentät poimitaan vain
+                    // yhdestä laitteesta — sekoitus näyttäisi esim. iGPU:n
+                    // lämmön dGPU:n kuorman vieressä. Valinta silmukan jälkeen.
+                    gpuGroups.Add(group);
                     break;
 
                 case "Storage":
@@ -139,6 +120,34 @@ public static class KeyMetricsService
             CollectFans(group, fans);
         }
 
+        if (SelectPrimaryGpu(gpuGroups) is { } gpu)
+        {
+            foreach (SensorReading s in gpu.Sensors)
+            {
+                switch (s.SensorType)
+                {
+                    case "Load" when s.SensorName == "GPU Core":
+                        gpuLoad = s.Value;
+                        break;
+                    case "Temperature" when s.SensorName == "GPU Core":
+                        gpuTemp = s.Value;
+                        break;
+                    case "Temperature" when s.SensorName == "GPU Hot Spot":
+                        gpuHotspot = s.Value;
+                        break;
+                    case "SmallData" when s.SensorName == "GPU Memory Used":
+                        vramUsed = s.Value;
+                        break;
+                    case "SmallData" when s.SensorName == "GPU Memory Total":
+                        vramTotal = s.Value;
+                        break;
+                    case "Power" when s.SensorName == "GPU Package":
+                        gpuPower = s.Value;
+                        break;
+                }
+            }
+        }
+
         return new KeyMetrics(
             CpuLoadPercent: cpuLoad,
             CpuPackageTempC: cpuPackageTemp ?? cpuCoreMaxTemp,
@@ -156,6 +165,16 @@ public static class KeyMetricsService
             Disks: disks,
             Fans: fans);
     }
+
+    /// <summary>
+    /// Ensisijainen GPU: erillisnäytönohjain (Nvidia/AMD) ennen Inteliä,
+    /// tasapelissä eniten sensoreita tarjoava (erilliskortti on rikkaampi).
+    /// </summary>
+    private static HardwareGroup? SelectPrimaryGpu(List<HardwareGroup> gpuGroups) =>
+        gpuGroups
+            .OrderBy(g => g.HardwareType == "GpuIntel" ? 1 : 0)
+            .ThenByDescending(g => g.Sensors.Count)
+            .FirstOrDefault();
 
     /// <summary>Kerää Fan-tyyppiset sensorit laitteesta ja sen alalaitteista rekursiivisesti.</summary>
     private static void CollectFans(HardwareGroup group, List<FanMetrics> fans)

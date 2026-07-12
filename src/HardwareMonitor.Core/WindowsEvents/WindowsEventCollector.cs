@@ -26,13 +26,21 @@ public sealed class WindowsEventCollector
     public int Scan()
     {
         long lastRecordId = long.TryParse(_db.GetMeta(BookmarkKey), out long parsed) ? parsed : 0;
+
+        // Jos loki on tyhjennetty, RecordID:t alkavat taas pienestä — vanha
+        // suuri kirjanmerkki mykistäisi valvonnan pysyvästi.
+        if (lastRecordId > 0 && _source.ReadNewestRecordId() is { } newest && newest < lastRecordId)
+        {
+            lastRecordId = 0;
+        }
+
         IReadOnlyList<WindowsLogEvent> events = _source.ReadSince(lastRecordId, MaxAge);
         if (events.Count == 0)
         {
             return 0;
         }
 
-        int written = 0;
+        var rows = new List<EventRow>();
         long maxRecordId = lastRecordId;
         foreach (WindowsLogEvent e in events)
         {
@@ -44,12 +52,13 @@ public sealed class WindowsEventCollector
                 continue;
             }
 
-            _db.InsertEvent(e.Time, c.Level, c.Component,
-                sensor: e.Provider, value: e.EventId, threshold: null, message: c.Message);
-            written++;
+            rows.Add(new EventRow(e.Time, c.Level, c.Component,
+                Sensor: e.Provider, Value: e.EventId, Threshold: null, Message: c.Message));
         }
 
-        _db.SetMeta(BookmarkKey, maxRecordId.ToString());
-        return written;
+        // Tapahtumat ja kirjanmerkki samassa transaktiossa — keskeytynyt
+        // skannaus ei saa tuottaa duplikaatteja seuraavalla kierroksella.
+        _db.InsertEventsWithMeta(rows, BookmarkKey, maxRecordId.ToString());
+        return rows.Count;
     }
 }

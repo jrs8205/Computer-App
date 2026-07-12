@@ -140,6 +140,27 @@ public class ThresholdMonitorTests
     }
 
     [Fact]
+    public void GpuTuuletin_PysahtyyPuolipassiiviseksi_EiHalyta()
+    {
+        // GPU-tuulettimet pysähtyvät normaalisti idlessä (semi-passive) —
+        // CPU-jäähdytyssääntö ei koske niitä, vaikka CPU olisi kuuma.
+        var monitor = Monitor();
+        var spinning = new[] { new FanMetrics("GPU Fan 1", 1200f, "/gpu-nvidia/0/fan/1") };
+        var stopped = new[] { new FanMetrics("GPU Fan 1", 0f, "/gpu-nvidia/0/fan/1") };
+
+        monitor.Update(Metrics(cpuTemp: 60, fans: spinning), T0, NoLabels);
+
+        for (int s = 1; s <= 20; s++)
+        {
+            // CPU 82 °C: yli FanStopCpuTemp-rajan (80) mutta alle varoitusrajan (85).
+            ThresholdResult r = monitor.Update(
+                Metrics(cpuTemp: 82, fans: stopped), T0.AddSeconds(s), NoLabels);
+            Assert.DoesNotContain(r.Events, e => e.Component == "Tuuletin");
+            Assert.Equal(ThresholdState.Normal, r.States.Worst);
+        }
+    }
+
+    [Fact]
     public void Tuuletin_JokaEiKoskaanPyorinyt_EiHalyta()
     {
         var monitor = Monitor();

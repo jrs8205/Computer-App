@@ -123,4 +123,5 @@
   <data name="SensorType_Energy" xml:space="preserve"><value>Energia</value></data>
   <data name="SensorType_Noise" xml:space="preserve"><value>Melu</value></data>
   <data name="SensorType_Humidity" xml:space="preserve"><value>Kosteus</value></data>
+  <data name="SensorType_Timing" xml:space="preserve"><value>Ajoitus</value></data>
 </root>

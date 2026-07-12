@@ -42,6 +42,16 @@ public class SettingsValidatorTests
     }
 
     [Fact]
+    public void NaN_AntaaVirheen()
+    {
+        // float.TryParse hyväksyy "NaN"-merkkijonon .NET 8:ssa, ja NaN läpäisisi
+        // molemmat raja-arvovertailut — hälytysraja mykistyisi huomaamatta.
+        ParseResult r = SettingsValidator.ParseNumber("NaN", 20, 120);
+        Assert.False(r.Ok);
+        Assert.Equal("Anna numero", r.Error);
+    }
+
+    [Fact]
     public void AlleMinimin_KertooSallitunValin()
     {
         Assert.Equal("Sallittu väli on 20–120",

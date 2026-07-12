@@ -23,8 +23,11 @@ public static class SettingsValidator
         string trimmed = raw?.Trim() ?? "";
         if (trimmed.Length == 0
             || (!float.TryParse(trimmed, NumberStyles.Float, Fi, out float value)
-                && !float.TryParse(trimmed, NumberStyles.Float, CultureInfo.InvariantCulture, out value)))
+                && !float.TryParse(trimmed, NumberStyles.Float, CultureInfo.InvariantCulture, out value))
+            || !float.IsFinite(value))
         {
+            // TryParse hyväksyy myös "NaN"- ja ääretön-syötteet — NaN läpäisisi
+            // raja-arvovertailut ja mykistäisi hälytyksen huomaamatta.
             return new ParseResult(null, Strings.Validate_EnterNumber);
         }
 

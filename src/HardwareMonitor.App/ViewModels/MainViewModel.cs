@@ -94,7 +94,7 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
                 return;
             }
 
-            if (AutostartService.SetEnabled(value))
+            if (AutostartService.SetEnabled(value, _logger.Log))
             {
                 _autoStart = value;
             }
@@ -367,7 +367,7 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
 
             // Pidä ajastettu tehtävä ajan tasalla (exe-polku ja --tray-argumentti)
             // taustalla, ettei schtasks-kutsu viivytä käynnistystä.
-            Task.Run(AutostartService.RefreshIfEnabled);
+            Task.Run(() => AutostartService.RefreshIfEnabled(_logger.Log));
         }
         catch (Exception ex)
         {

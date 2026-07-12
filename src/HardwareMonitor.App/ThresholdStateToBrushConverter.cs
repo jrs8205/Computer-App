@@ -7,13 +7,17 @@ namespace HardwareMonitor.App;
 
 /// <summary>
 /// ThresholdState -> väri: Normal vihreä, Warning oranssi, Critical punainen.
-/// Parametrilla "border" Normal on läpinäkyvä (overlayn reunus näkyy vain hälyttäessä).
+/// Parametrilla "border" Normal on läpinäkyvä (overlayn reunus näkyy vain
+/// hälyttäessä) ja Critical saa kylläisemmän punaisen — tekstinä punaisen
+/// pitää olla vaaleampi, jotta WCAG AAA -kontrasti (≥ 7:1) täyttyy
+/// korttitaustalla #252526 (#EF5350 olisi vain 4,4:1; #FF9E9E on 7,8:1).
 /// </summary>
 public sealed class ThresholdStateToBrushConverter : IValueConverter
 {
     private static readonly Brush NormalBrush = Freeze(new SolidColorBrush(Color.FromRgb(0xA5, 0xD6, 0xA7)));
     private static readonly Brush WarningBrush = Freeze(new SolidColorBrush(Color.FromRgb(0xFF, 0xB7, 0x4D)));
-    private static readonly Brush CriticalBrush = Freeze(new SolidColorBrush(Color.FromRgb(0xEF, 0x53, 0x50)));
+    private static readonly Brush CriticalTextBrush = Freeze(new SolidColorBrush(Color.FromRgb(0xFF, 0x9E, 0x9E)));
+    private static readonly Brush CriticalBorderBrush = Freeze(new SolidColorBrush(Color.FromRgb(0xEF, 0x53, 0x50)));
 
     public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
     {
@@ -21,7 +25,7 @@ public sealed class ThresholdStateToBrushConverter : IValueConverter
         return value is ThresholdState state
             ? state switch
             {
-                ThresholdState.Critical => CriticalBrush,
+                ThresholdState.Critical => border ? CriticalBorderBrush : CriticalTextBrush,
                 ThresholdState.Warning => WarningBrush,
                 _ => border ? Brushes.Transparent : NormalBrush,
             }

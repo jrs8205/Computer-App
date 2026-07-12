@@ -56,4 +56,15 @@ public sealed class SystemEventReader : IWindowsEventSource
 
         return result;
     }
+
+    public long? ReadNewestRecordId()
+    {
+        var query = new EventLogQuery("System", PathType.LogName)
+        {
+            ReverseDirection = true,
+        };
+        using var reader = new EventLogReader(query);
+        using EventRecord? record = reader.ReadEvent();
+        return record?.RecordId;
+    }
 }

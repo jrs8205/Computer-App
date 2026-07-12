@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using HardwareMonitor.Core.Security;
 
 namespace HardwareMonitor.App.Services;
 
@@ -6,8 +7,10 @@ namespace HardwareMonitor.App.Services;
 /// Automaattikäynnistys Windowsin mukana Task Schedulerilla. Ajastettu tehtävä
 /// /RL HIGHEST käynnistää sovelluksen kirjautuessa admin-oikeuksin ilman
 /// UAC-kyselyä — Run-rekisteriavain ei siihen pysty, ja ilman adminia
-/// CPU-lämpösensorit jäisivät pimeiksi. Luonti/poisto vaatii, että tämä
-/// sovellus on itse käynnissä adminina.
+/// CPU-lämpösensorit jäisivät pimeiksi. Korotus sallitaan vain ACL-suojatusta
+/// polusta (Program Files, Windows): kirjoitettavasta polusta korotettu
+/// tehtävä olisi UAC-ohitus. Luonti/poisto vaatii, että tämä sovellus on
+/// itse käynnissä adminina.
 /// </summary>
 public static class AutostartService
 {
@@ -17,7 +20,7 @@ public static class AutostartService
         RunSchtasks($"/Query /TN \"{TaskName}\"") == 0;
 
     /// <summary>Palauttaa true jos operaatio onnistui.</summary>
-    public static bool SetEnabled(bool on)
+    public static bool SetEnabled(bool on, Action<string>? log = null)
     {
         if (!on)
         {
@@ -30,10 +33,24 @@ public static class AutostartService
             return false;
         }
 
+        string elevation = "";
+        if (IsInProtectedDirectory(exe))
+        {
+            elevation = "/RL HIGHEST ";
+        }
+        else
+        {
+            log?.Invoke(
+                "Autostart luotu ilman korotusta: ohjelma on käyttäjän " +
+                "kirjoitettavassa polussa. CPU-lämmöt puuttuvat " +
+                "automaattikäynnistyksestä, kunnes ohjelma on asennettu " +
+                "suojattuun polkuun (esim. Program Files).");
+        }
+
         // --tray: Windowsin mukana käynnistyttäessä pääikkuna jää trayhin
         // ja vain overlay avautuu.
         return RunSchtasks(
-            $"/Create /F /RL HIGHEST /SC ONLOGON /TN \"{TaskName}\" " +
+            $"/Create /F {elevation}/SC ONLOGON /TN \"{TaskName}\" " +
             $"/TR \"\\\"{exe}\\\" {App.TrayArgument}\"") == 0;
     }
 
@@ -42,13 +59,21 @@ public static class AutostartService
     /// nykyiseen exe-polkuun nykyisillä argumenteilla (esim. --tray lisättiin
     /// vanhan tehtävän luonnin jälkeen). Ei tee mitään jos autostart ei ole päällä.
     /// </summary>
-    public static void RefreshIfEnabled()
+    public static void RefreshIfEnabled(Action<string>? log = null)
     {
         if (IsEnabled())
         {
-            SetEnabled(true);
+            SetEnabled(true, log);
         }
     }
+
+    private static bool IsInProtectedDirectory(string path) =>
+        ProtectedPaths.IsUnderAny(path, new[]
+        {
+            Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles),
+            Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86),
+            Environment.GetFolderPath(Environment.SpecialFolder.Windows),
+        });
 
     private static int RunSchtasks(string arguments)
     {

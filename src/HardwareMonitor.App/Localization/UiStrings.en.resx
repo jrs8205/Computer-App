@@ -123,4 +123,5 @@
   <data name="SensorType_Energy" xml:space="preserve"><value>Energy</value></data>
   <data name="SensorType_Noise" xml:space="preserve"><value>Noise</value></data>
   <data name="SensorType_Humidity" xml:space="preserve"><value>Humidity</value></data>
+  <data name="SensorType_Timing" xml:space="preserve"><value>Timing</value></data>
 </root>

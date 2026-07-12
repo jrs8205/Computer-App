@@ -33,6 +33,9 @@ public sealed class WindowsEventCollectorTests : IDisposable
             LastRequestedRecordId = lastRecordId;
             return Events.Where(e => e.RecordId > lastRecordId).ToList();
         }
+
+        public long? ReadNewestRecordId() =>
+            Events.Count == 0 ? null : Events.Max(e => e.RecordId);
     }
 
     [Fact]
@@ -106,6 +109,36 @@ public sealed class WindowsEventCollectorTests : IDisposable
     {
         _db.SetMeta("windows_last_record_id", "150");
         var source = new FakeSource();
+
+        new WindowsEventCollector(source, _db).Scan();
+
+        Assert.Equal(150, source.LastRequestedRecordId);
+    }
+
+    [Fact]
+    public void Scan_LokiTyhjennetty_NollaaKirjanmerkin()
+    {
+        // System-lokin tyhjennyksen jälkeen RecordID:t alkavat taas pienestä —
+        // vanha suuri kirjanmerkki ei saa mykistää valvontaa pysyvästi.
+        _db.SetMeta("windows_last_record_id", "5000");
+        var source = new FakeSource();
+        source.Events.Add(new WindowsLogEvent(Now,
+            "Microsoft-Windows-Kernel-Power", 41, WindowsLevel: 1, RecordId: 2));
+
+        int written = new WindowsEventCollector(source, _db).Scan();
+
+        Assert.Equal(1, written);
+        Assert.Equal(0, source.LastRequestedRecordId); // luku alkoi alusta
+        Assert.Equal("2", _db.GetMeta("windows_last_record_id"));
+    }
+
+    [Fact]
+    public void Scan_UusinIdSuurempiKuinKirjanmerkki_EiNollausta()
+    {
+        _db.SetMeta("windows_last_record_id", "150");
+        var source = new FakeSource();
+        source.Events.Add(new WindowsLogEvent(Now,
+            "Microsoft-Windows-Kernel-Power", 41, WindowsLevel: 1, RecordId: 200));
 
         new WindowsEventCollector(source, _db).Scan();
 

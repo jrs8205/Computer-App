@@ -161,8 +161,13 @@ public sealed class ThresholdMonitor
                           && label.Length > 0 ? label : fan.Name;
             RuleState state = GetRule($"fan:{fan.Identifier}");
 
+            // GPU-tuulettimet pysähtyvät normaalisti idlessä (semi-passive)
+            // eivätkä jäähdytä CPU:ta — CPU-lämpösääntö ei koske niitä.
+            bool isGpuFan = fan.Identifier.Contains("gpu", StringComparison.OrdinalIgnoreCase);
+
             bool stoppedWhileHot =
-                _fansThatSpun.Contains(fan.Identifier)
+                !isGpuFan
+                && _fansThatSpun.Contains(fan.Identifier)
                 && fan.Rpm is { } r && r <= 0
                 && m.CpuPackageTempC is { } cpuTemp && cpuTemp >= _s.FanStopCpuTemp;
 

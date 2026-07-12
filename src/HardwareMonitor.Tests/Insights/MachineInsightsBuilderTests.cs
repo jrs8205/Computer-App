@@ -262,4 +262,24 @@ public class MachineInsightsBuilderTests
 
         Assert.Contains("Ei vielä riittävästi dataa", md);
     }
+
+    [Fact]
+    public void IlmanSensoridataa_TapahtumatSailyvat()
+    {
+        // Windows-lokin tapahtumia voi olla kannassa vaikka sensorinäytteitä
+        // ei vielä ole (uusi kanta) — kaatumistiedot eivät saa kadota juuri
+        // silloin, kun niitä eniten tarvitaan.
+        var events = new[]
+        {
+            new EventRow(Now.AddHours(-2), "CRITICAL", "Järjestelmä",
+                "Microsoft-Windows-Kernel-Power", 41, null,
+                "Kernel-Power 41: kone sammui yllättäen"),
+        };
+
+        string md = Build(stats: Stats(count: 0), stats7d: Stats(count: 0), events: events);
+
+        Assert.Contains("Ei vielä riittävästi dataa", md);   // tasot puuttuvat yhä
+        Assert.Contains("Kernel-Power 41", md);              // mutta tapahtuma ei katoa
+        Assert.Contains("Viimeisimmät varoitus", md);        // eikä tapahtumalista
+    }
 }

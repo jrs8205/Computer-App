@@ -117,6 +117,45 @@ public class KeyMetricsServiceTests
     }
 
     [Fact]
+    public void Extract_HybridiKone_KaikkiGpuArvotSamastaLaitteesta()
+    {
+        // iGPU listautuu usein ensin ja tarjoaa vain osan kentistä — arvoja
+        // ei saa poimia eri GPU-laitteista sekaisin (kortti näyttäisi iGPU:n
+        // lämmön dGPU:n kuorman vieressä).
+        var igpu = Group("Intel UHD Graphics 630", "GpuIntel", new[]
+        {
+            Reading("igpu", "GpuIntel", "GPU Core", "Temperature", 40f),
+            Reading("igpu", "GpuIntel", "GPU Memory Total", "SmallData", 128f),
+        });
+        var dgpu = Group("NVIDIA GeForce RTX 2060", "GpuNvidia", new[]
+        {
+            Reading("dgpu", "GpuNvidia", "GPU Core", "Load", 33f),
+            Reading("dgpu", "GpuNvidia", "GPU Core", "Temperature", 49f),
+            Reading("dgpu", "GpuNvidia", "GPU Hot Spot", "Temperature", 62f),
+        });
+
+        KeyMetrics m = KeyMetricsService.Extract(new[] { igpu, dgpu });
+
+        Assert.Equal(33f, m.GpuLoadPercent);
+        Assert.Equal(49f, m.GpuTempC);      // dGPU:n lämpö, ei iGPU:n 40
+        Assert.Equal(62f, m.GpuHotspotTempC);
+        Assert.Null(m.GpuMemoryTotalMb);    // iGPU:n VRAM ei sekoitu mukaan
+    }
+
+    [Fact]
+    public void Extract_VainIntegroituGpu_KaytetaanSita()
+    {
+        var igpu = Group("Intel UHD Graphics 630", "GpuIntel", new[]
+        {
+            Reading("igpu", "GpuIntel", "GPU Core", "Temperature", 40f),
+        });
+
+        KeyMetrics m = KeyMetricsService.Extract(new[] { igpu });
+
+        Assert.Equal(40f, m.GpuTempC);
+    }
+
+    [Fact]
     public void Extract_UseaLevy_KaikkiListassaJaAktiivisuusOnReadWriteMaksimi()
     {
         var ssd1 = Group("Samsung SSD 860 EVO 1TB", "Storage", new[]

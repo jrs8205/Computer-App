@@ -29,14 +29,20 @@ public static class MachineInsightsBuilder
         AppendAiIntro(sb);
         AppendSpec(sb, spec);
 
+        // Vain taso- ja trendiosiot vaativat sensoridataa — tapahtumat (esim.
+        // Windows-lokin Kernel-Power/WHEA) voivat olla kannassa jo ennen
+        // ensimmäistäkään näytettä, eivätkä ne saa kadota juuri silloin.
         if (stats.SampleCount == 0)
         {
             sb.AppendLine(Strings.Insights_NotEnoughData);
-            return sb.ToString();
+            sb.AppendLine();
+        }
+        else
+        {
+            AppendLevels(sb, stats, limits);
+            AppendTrends(sb, stats, stats7d);
         }
 
-        AppendLevels(sb, stats, limits);
-        AppendTrends(sb, stats, stats7d);
         (int whea, int crashes, int thresholds, int gpuDriver, int winDisk) = CountEvents(events);
         AppendEvents(sb, whea, crashes, thresholds, gpuDriver, winDisk);
         AppendRecentEvents(sb, events);
