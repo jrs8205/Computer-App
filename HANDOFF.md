@@ -66,6 +66,16 @@ ajaa asennettuna polusta `C:\Program Files\Hardware Monitor` (v1.0.0).
   asennuksen; CloseApplications=yes sulkee ajossa olevan sovelluksen
   Restart Managerilla SIISTISTI (todennettu: CleanShutdown säilyy true).
 
+## Commit-käytäntö (käyttäjän päätös 12.7.2026)
+
+- **Committeihin EI lisätä Co-Authored-By-riviä.** Koko historia
+  kirjoitettiin uudelleen 12.7.2026 (84 traileria pois + aloituscommitin
+  tekijä korjattu) — kaikki commit-hashit vaihtuivat ja v1.0.0-release
+  luotiin uudelleen. Vanhoihin hasheihin viittaavat muistiinpanot ovat
+  vanhentuneita.
+- main = julkaisuhaara; pushaa työhaara + main (`git push origin
+  HEAD:työhaara HEAD:main`).
+
 ## Seuraavaksi (avoinna)
 
 - Mahdollinen jatkokehitys: ROADMAPin ideat (PresentMon/FPS ym.),
