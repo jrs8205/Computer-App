@@ -1,83 +1,96 @@
 # Hardware Monitor
 
-*(Windows 11 hardware monitor with plain-language logging, risk analysis and
-post-crash forensics. UI and docs are in Finnish.)*
+**English** · [Suomeksi](README.fi.md)
 
-Windows 11 -tietokoneen laitteistomonitori, joka lukee reaaliajassa CPU:n,
-GPU:n, muistin, levyjen, emolevyn ja tuulettimien tiedot. Erottuva idea:
-**selkeä lokitus, riskianalyysi ja kaatumisten jälkiselvitys** — ei pelkkiä
-numeroita, vaan tieto siitä, oliko kone oikeasti riskirajoilla, ja
-tekoälyavustajalle luettava konetuntemus-loki.
+A Windows 11 hardware monitor that reads CPU, GPU, memory, disk, motherboard
+and fan sensors in real time. What sets it apart: **plain-language logging,
+risk analysis and post-crash forensics** — not just raw numbers, but an
+answer to "was my machine actually at risk?", plus a machine-context file
+you can hand to any AI assistant.
 
-## Ominaisuudet
+The application UI is available in **Finnish and English**. Project
+documentation (`docs/`) is in Finnish by design.
 
-- **Dashboard**: CPU / GPU / RAM / levyt / tuulettimet värikoodattuina
-  kortteina + selkokielinen riskiyhteenveto suosituksineen.
-- **Työpöytäoverlay**: läpiklikattava, aina päällimmäisenä; reunuksen väri
-  kertoo pahimman tilan yhdellä silmäyksellä; sijainti ja rivit valittavissa.
-- **Historia**: 1 s lukemat koostetaan 5 s min/avg/max-riveiksi SQLiteen
-  (30 pv), graafit aikaväleillä 1 h – 30 pv.
-- **Raja-arvovalvonta**: välitön väritila + tapahtumat vasta yhtäjaksoisen
-  ylityksen jälkeen, tray-ilmoitukset, palautumiskirjaukset kestoineen.
-- **Windowsin tapahtumaloki**: Kernel-Power 41, WHEA, näyttöajuri- ja
-  levyvirheet kerätään samaan tapahtumahistoriaan.
-- **Kaatumisselvitys**: yllättäen päättynyt istunto tunnistetaan ja
-  viimeisimmät arvot ennen katkoa kirjataan.
-- **Raportit**: selkokielinen tekstiraportti ja suomalais-Excel-CSV.
-- **machine-insights.md**: jatkuvasti päivittyvä yhteenveto koneen
-  normaalitasoista, trendeistä ja tapahtumista — annettavaksi kontekstina
-  mille tahansa AI-avustajalle.
-- **Kielet**: suomi ja englanti (fi/en). Kaikki UI-tekstit WCAG AAA
-  -kontrastilla.
+## Features
 
-## Asennus
+- **Dashboard**: CPU / GPU / RAM / disks / fans as color-coded cards with a
+  plain-language risk summary and recommendation.
+- **Desktop overlay**: click-through, always on top; the border color shows
+  the worst current state at a glance; position and rows are configurable.
+- **History**: 1 s readings aggregated into 5 s min/avg/max rows in SQLite
+  (30-day retention), charts from 1 hour to 30 days.
+- **Threshold monitoring**: immediate color state, events only after
+  sustained exceedance, tray notifications, recovery entries with duration
+  and peak.
+- **Windows Event Log integration**: Kernel-Power 41, WHEA, display-driver
+  and disk errors collected into the same event history.
+- **Crash forensics**: an unexpectedly ended session is detected and the
+  last known sensor values before the cut are recorded.
+- **Reports**: plain-language text report and CSV export (Finnish Excel
+  conventions).
+- **machine-insights.md**: a continuously regenerated summary of your
+  machine's normal levels, trends and events — ready to paste into any AI
+  chat as context.
+- All UI text colors meet **WCAG AAA** contrast.
 
-1. Asenna **PawnIO-ajuri**: <https://pawnio.eu/> → `PawnIO_setup.exe`.
-   Ilman sitä CPU-lämmöt jäävät tyhjiksi Windows 11:llä (Windowsin
-   estolista blokkaa vanhan WinRing0-ajurin; LibreHardwareMonitor 0.9.5+
-   käyttää PawnIO:ta).
-2. Lataa uusin **HardwareMonitor-Setup-x.y.z.exe** [Releases-sivulta](../../releases)
-   ja aja se. Asennus menee Program Filesiin eikä vaadi .NETin asentamista
-   (self-contained).
-3. Käynnistä "Hardware Monitor" Käynnistä-valikosta. Sovellus vaatii
-   järjestelmänvalvojan oikeudet (matalan tason sensorit) — manuaalinen
-   käynnistys kysyy UAC-vahvistuksen. Kun kytket asetuksista
-   **Käynnistä Windowsin mukana**, sovellus käynnistyy kirjautuessa
-   korotettuna ilman kyselyä (Task Scheduler).
+## Installation
 
-Tietosi tallentuvat polkuun `%LOCALAPPDATA%\HardwareMonitor\`
-(asetukset, historia, lokit) — ne säilyvät päivityksissä ja poistossa.
+1. Install the **PawnIO driver**: <https://pawnio.eu/> → `PawnIO_setup.exe`.
+   Without it CPU temperatures stay empty on Windows 11 (Windows blocklists
+   the old WinRing0 driver; LibreHardwareMonitor 0.9.5+ uses PawnIO).
+2. Download the latest **HardwareMonitor-Setup-x.y.z.exe** from
+   [Releases](../../releases) and run it. Self-contained — no .NET
+   installation required.
+3. Launch "Hardware Monitor" from the Start Menu. The app requires
+   administrator rights (low-level sensors), so a manual launch shows a UAC
+   prompt. Enable **Start with Windows** in the settings and the app starts
+   elevated at logon without any prompt (Task Scheduler).
 
-## Kehittäjille
+> Note: the installer and app are signed with a self-signed certificate —
+> Windows SmartScreen may warn about an unknown publisher. Choose
+> "More info" → "Run anyway". The installer closes a running instance
+> gracefully, so updating is just running the new setup.
 
-Vaatimukset: **Windows 10/11**, **.NET 8 SDK**, PawnIO (ks. yllä).
+Your data lives under `%LOCALAPPDATA%\HardwareMonitor\` (settings, history
+database, logs) and survives updates and uninstall.
+
+## Building from source
+
+Requirements: **Windows 10/11**, **.NET 8 SDK**, PawnIO (see above).
 
 ```powershell
-dotnet build HardwareMonitor.sln    # käännös (0 varoitusta)
+dotnet build HardwareMonitor.sln    # full build (0 warnings expected)
 dotnet test src/HardwareMonitor.Tests/HardwareMonitor.Tests.csproj
-.\run.ps1 -AsAdmin                  # kehitysajo repo-buildista
-.\tools\install.ps1                 # paikallinen asennus Program Filesiin
-installer\setup.iss                 # Inno Setup -asennusohjelman määrittely
+.\run.ps1 -AsAdmin                  # build + run the development build
+.\tools\install.ps1                 # local install into Program Files
+installer\setup.iss                 # Inno Setup installer definition
 ```
 
-Huomioita:
+Notes for contributors:
 
-- `dotnet test` buildaa vain Core + testit — UI-muutosten jälkeen aja
+- `dotnet test` builds Core + tests only — after UI changes run
   `dotnet build HardwareMonitor.sln`.
-- Turvasääntö: autostart-tehtävä saa korotuksen (`/RL HIGHEST`) vain kun
-  exe on ACL-suojatussa polussa (Program Files) — kirjoitettavasta polusta
-  ajettuna tehtävä luodaan rajoitettuna.
-- Arkkitehtuuri: `src/HardwareMonitor.Core` (kaikki logiikka, ei
-  UI-riippuvuuksia, yksikkötestattu) + `src/HardwareMonitor.App`
-  (WPF, MVVM ilman kirjastoja) + `src/HardwareMonitor.Tests` (xUnit).
+- Security rule: the autostart task gets elevation (`/RL HIGHEST`) only
+  when the exe lives in an ACL-protected path (Program Files) — from a
+  user-writable path the task is created without elevation.
+- Architecture: `src/HardwareMonitor.Core` (all logic, no UI dependencies,
+  unit-tested) + `src/HardwareMonitor.App` (WPF, MVVM without frameworks)
+  + `src/HardwareMonitor.Tests` (xUnit).
+- Full specification: [`docs/requirements.md`](docs/requirements.md) (Finnish) ·
+  progress: [`docs/ROADMAP.md`](docs/ROADMAP.md) · per-feature designs:
+  `docs/superpowers/specs/`.
 
-Täysi määrittely: [`docs/requirements.md`](docs/requirements.md) ·
-eteneminen: [`docs/ROADMAP.md`](docs/ROADMAP.md) ·
-featurekohtaiset specit: `docs/superpowers/specs/`.
+## About
 
-## Lisenssi
+A hobby project by [jrs8205](https://github.com/jrs8205), built for a home
+machine (i9-9900K / RTX 2060 / ASUS Z390-F) and developed in pair with an
+AI assistant (Claude). The codebase went through an external AI bug review
+before the 1.0 release — all 26 findings were triaged and fixed
+(`docs/review-triage.md`, in Finnish).
 
-**GPL-3.0** — katso [LICENSE](LICENSE). Sovellus käyttää
-[LibreHardwareMonitorLib](https://github.com/LibreHardwareMonitor/LibreHardwareMonitor)-
-kirjastoa (**MPL-2.0**) sekä [LiveCharts2](https://github.com/beto-rodriguez/LiveCharts2)-
-kirjastoa (**MIT**).
+## License
+
+**GPL-3.0** — see [LICENSE](LICENSE). Uses
+[LibreHardwareMonitorLib](https://github.com/LibreHardwareMonitor/LibreHardwareMonitor)
+(**MPL-2.0**) and [LiveCharts2](https://github.com/beto-rodriguez/LiveCharts2)
+(**MIT**).
