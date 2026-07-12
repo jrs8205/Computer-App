@@ -11,6 +11,7 @@ namespace HardwareMonitor.Core.WindowsEvents;
 public sealed class WindowsEventCollector
 {
     private const string BookmarkKey = "windows_last_record_id";
+    private const string LogCreatedKey = "windows_log_created_utc";
     private static readonly TimeSpan MaxAge = TimeSpan.FromDays(30);
 
     private readonly IWindowsEventSource _source;
@@ -26,6 +27,24 @@ public sealed class WindowsEventCollector
     public int Scan()
     {
         long lastRecordId = long.TryParse(_db.GetMeta(BookmarkKey), out long parsed) ? parsed : 0;
+
+        // Lokin sukupolvi: tyhjennys luo lokitiedoston uudelleen, jolloin
+        // luontiaika muuttuu. Tämä huomaa tyhjennyksen myös silloin, kun
+        // uusi loki on ehtinyt kasvaa vanhan kirjanmerkin ohi (RecordID-
+        // vertailu ei sitä erottaisi).
+        DateTime? created = _source.ReadLogCreationTimeUtc();
+        string? createdValue = created?.Ticks.ToString();
+        string? storedCreated = _db.GetMeta(LogCreatedKey);
+        if (createdValue is not null && storedCreated is not null
+            && storedCreated != createdValue)
+        {
+            lastRecordId = 0;
+        }
+
+        if (createdValue is not null && storedCreated != createdValue)
+        {
+            _db.SetMeta(LogCreatedKey, createdValue);
+        }
 
         // Jos loki on tyhjennetty, RecordID:t alkavat taas pienestä — vanha
         // suuri kirjanmerkki mykistäisi valvonnan pysyvästi.

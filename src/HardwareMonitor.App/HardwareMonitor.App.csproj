@@ -11,7 +11,7 @@
     <LangVersion>latest</LangVersion>
     <AssemblyName>HardwareMonitor</AssemblyName>
     <RootNamespace>HardwareMonitor.App</RootNamespace>
-    <Version>1.0.0</Version>
+    <Version>1.0.1</Version>
     <Product>Hardware Monitor</Product>
     <Authors>jrs8205</Authors>
     <Copyright>© 2026 jrs8205 — GPL-3.0</Copyright>
@@ -38,6 +38,15 @@
   <ItemGroup>
     <!-- app.ico Resource-itemina, jotta tray-kuvake voi ladata sen pack-URIsta. -->
     <Resource Include="Assets\app.ico" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Lisenssitekstit mukaan julkaisuun: GPL vaatii oman tekstinsä ja
+         MPL/MIT/Apache kolmansien osapuolten tekstit binäärijakelussa. -->
+    <None Include="..\..\LICENSE" Link="LICENSE.txt"
+          CopyToOutputDirectory="Never" CopyToPublishDirectory="PreserveNewest" />
+    <None Include="..\..\THIRD-PARTY-NOTICES.md" Link="THIRD-PARTY-NOTICES.md"
+          CopyToOutputDirectory="Never" CopyToPublishDirectory="PreserveNewest" />
   </ItemGroup>
 
   <ItemGroup>

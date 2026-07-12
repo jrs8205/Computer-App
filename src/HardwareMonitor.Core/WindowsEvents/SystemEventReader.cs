@@ -67,4 +67,18 @@ public sealed class SystemEventReader : IWindowsEventSource
         using EventRecord? record = reader.ReadEvent();
         return record?.RecordId;
     }
+
+    public DateTime? ReadLogCreationTimeUtc()
+    {
+        try
+        {
+            EventLogInformation info = EventLogSession.GlobalSession
+                .GetLogInformation("System", PathType.LogName);
+            return info.CreationTime?.ToUniversalTime();
+        }
+        catch (Exception)
+        {
+            return null; // sukupolvitieto on lisävarmistus — puute ei kaada skannausta
+        }
+    }
 }

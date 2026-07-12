@@ -36,6 +36,10 @@ public sealed class WindowsEventCollectorTests : IDisposable
 
         public long? ReadNewestRecordId() =>
             Events.Count == 0 ? null : Events.Max(e => e.RecordId);
+
+        public DateTime? LogCreationTimeUtc { get; set; }
+
+        public DateTime? ReadLogCreationTimeUtc() => LogCreationTimeUtc;
     }
 
     [Fact]
@@ -137,6 +141,54 @@ public sealed class WindowsEventCollectorTests : IDisposable
     {
         _db.SetMeta("windows_last_record_id", "150");
         var source = new FakeSource();
+        source.Events.Add(new WindowsLogEvent(Now,
+            "Microsoft-Windows-Kernel-Power", 41, WindowsLevel: 1, RecordId: 200));
+
+        new WindowsEventCollector(source, _db).Scan();
+
+        Assert.Equal(150, source.LastRequestedRecordId);
+    }
+
+    [Fact]
+    public void Scan_LokinLuontiaikaMuuttunut_NollaaKirjanmerkinVaikkaIdRiittaisi()
+    {
+        // Jos loki tyhjennetään sovelluksen ollessa sammuksissa ja uusi loki
+        // ehtii kasvaa yli vanhan kirjanmerkin, RecordID-vertailu ei huomaa
+        // tyhjennystä — lokitiedoston luontiaika (sukupolvi) huomaa.
+        _db.SetMeta("windows_last_record_id", "150");
+        _db.SetMeta("windows_log_created_utc",
+            new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc).Ticks.ToString());
+        var source = new FakeSource
+        {
+            LogCreationTimeUtc = new DateTime(2026, 7, 1, 0, 0, 0, DateTimeKind.Utc),
+        };
+        source.Events.Add(new WindowsLogEvent(Now,
+            "Microsoft-Windows-Kernel-Power", 41, WindowsLevel: 1, RecordId: 200));
+
+        int written = new WindowsEventCollector(source, _db).Scan();
+
+        Assert.Equal(0, source.LastRequestedRecordId); // luku alkoi alusta
+        Assert.Equal(1, written);
+    }
+
+    [Fact]
+    public void Scan_TallentaaLokinLuontiajan()
+    {
+        var created = new DateTime(2026, 7, 1, 0, 0, 0, DateTimeKind.Utc);
+        var source = new FakeSource { LogCreationTimeUtc = created };
+
+        new WindowsEventCollector(source, _db).Scan();
+
+        Assert.Equal(created.Ticks.ToString(), _db.GetMeta("windows_log_created_utc"));
+    }
+
+    [Fact]
+    public void Scan_SamaLuontiaika_EiNollausta()
+    {
+        var created = new DateTime(2026, 7, 1, 0, 0, 0, DateTimeKind.Utc);
+        _db.SetMeta("windows_last_record_id", "150");
+        _db.SetMeta("windows_log_created_utc", created.Ticks.ToString());
+        var source = new FakeSource { LogCreationTimeUtc = created };
         source.Events.Add(new WindowsLogEvent(Now,
             "Microsoft-Windows-Kernel-Power", 41, WindowsLevel: 1, RecordId: 200));
 

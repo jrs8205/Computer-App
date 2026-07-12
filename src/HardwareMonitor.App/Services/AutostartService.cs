@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.IO;
 using HardwareMonitor.Core.Security;
 
 namespace HardwareMonitor.App.Services;
@@ -33,24 +34,24 @@ public static class AutostartService
             return false;
         }
 
-        string elevation = "";
-        if (IsInProtectedDirectory(exe))
-        {
-            elevation = "/RL HIGHEST ";
-        }
-        else
+        // Ei suojattu polku → EI tehtävää lainkaan: rajoitettu tehtävä ei
+        // pystyisi käynnistämään requireAdministrator-manifestilla varustettua
+        // exeä kirjautumisessa, ja korotettu tehtävä kirjoitettavasta polusta
+        // olisi UAC-ohitus. Mahdollinen vanha tehtävä (asennettuun versioon)
+        // jätetään ennalleen.
+        if (!IsInProtectedDirectory(exe))
         {
             log?.Invoke(
-                "Autostart luotu ilman korotusta: ohjelma on käyttäjän " +
-                "kirjoitettavassa polussa. CPU-lämmöt puuttuvat " +
-                "automaattikäynnistyksestä, kunnes ohjelma on asennettu " +
-                "suojattuun polkuun (esim. Program Files).");
+                "Autostartia ei kytketty tästä sijainnista: ohjelma ei ole " +
+                "ACL-suojatussa polussa. Asenna sovellus (Program Files) ja " +
+                "kytke automaattikäynnistys asennetusta versiosta.");
+            return false;
         }
 
         // --tray: Windowsin mukana käynnistyttäessä pääikkuna jää trayhin
         // ja vain overlay avautuu.
         return RunSchtasks(
-            $"/Create /F {elevation}/SC ONLOGON /TN \"{TaskName}\" " +
+            $"/Create /F /RL HIGHEST /SC ONLOGON /TN \"{TaskName}\" " +
             $"/TR \"\\\"{exe}\\\" {App.TrayArgument}\"") == 0;
     }
 
@@ -67,13 +68,29 @@ public static class AutostartService
         }
     }
 
-    private static bool IsInProtectedDirectory(string path) =>
-        ProtectedPaths.IsUnderAny(path, new[]
+    /// <summary>
+    /// Suojattu = Program Files -juurten alla JA hakemiston sekä exen ACL ei
+    /// salli tavallisen käyttäjän kirjoitusta. Windows-juurta ei hyväksytä:
+    /// sen alla on käyttäjäkirjoitettavia polkuja (esim. C:\Windows\Temp),
+    /// eikä sovellusta koskaan asenneta sinne.
+    /// </summary>
+    private static bool IsInProtectedDirectory(string path)
+    {
+        bool underProtectedRoot = ProtectedPaths.IsUnderAny(path, new[]
         {
             Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles),
             Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86),
-            Environment.GetFolderPath(Environment.SpecialFolder.Windows),
         });
+        if (!underProtectedRoot)
+        {
+            return false;
+        }
+
+        string? directory = Path.GetDirectoryName(path);
+        return directory is not null
+            && !ProtectedPaths.HasNonAdminWriteAccess(directory)
+            && !ProtectedPaths.HasNonAdminWriteAccess(path);
+    }
 
     private static int RunSchtasks(string arguments)
     {

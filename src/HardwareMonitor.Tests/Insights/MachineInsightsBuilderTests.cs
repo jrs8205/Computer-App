@@ -1,4 +1,5 @@
 using HardwareMonitor.Core.Insights;
+using HardwareMonitor.Core.Localization;
 using HardwareMonitor.Core.Settings;
 using HardwareMonitor.Core.Storage;
 using Xunit;
@@ -261,6 +262,16 @@ public class MachineInsightsBuilderTests
         string md = Build(stats: Stats(count: 0));
 
         Assert.Contains("Ei vielä riittävästi dataa", md);
+    }
+
+    [Fact]
+    public void IlmanDataaJaTapahtumia_EiVaitaNormaalitasoa()
+    {
+        // "Arvot ovat normaalitasolla" olisi perusteeton päätelmä, kun
+        // yhtään sensorinäytettä ei vielä ole.
+        string md = Build(stats: Stats(count: 0), stats7d: Stats(count: 0));
+
+        Assert.DoesNotContain(Strings.Insights_AllGood, md);
     }
 
     [Fact]

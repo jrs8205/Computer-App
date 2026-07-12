@@ -1,7 +1,12 @@
 namespace HardwareMonitor.Core.Metrics;
 
-/// <summary>Yhden levyn tärkeimmät arvot (nimi, lämpö, aktiivisuus).</summary>
-public sealed record DiskMetrics(string Name, float? TemperatureC, float? ActivityPercent);
+/// <summary>
+/// Yhden levyn tärkeimmät arvot. Identifier on LHM:n pysyvä laitetunniste
+/// (esim. "/nvme/0") — samannimiset levyt erottuvat sillä luotettavasti
+/// myös silloin, kun jokin levy irtoaa tai ilmestyy kesken koostejakson.
+/// </summary>
+public sealed record DiskMetrics(
+    string Name, float? TemperatureC, float? ActivityPercent, string Identifier = "");
 
 /// <summary>
 /// Yhden tuulettimen nimi ja kierrosnopeus. Identifier on sensorin pysyvä

@@ -61,25 +61,34 @@ public sealed class SampleAggregator
 
     private IReadOnlyList<DiskAggregate> AggregateDisks()
     {
-        // Täsmäys nimi + monesko samanniminen rivillä -avaimella: jos levy
-        // irtoaa tai ilmestyy kesken jakson, pelkkä listaindeksi siirtyisi
-        // ja eri fyysisten levyjen lukemat sekoittuisivat samaan koosteeseen.
-        var readingsByKey = new Dictionary<(string Name, int Occurrence), List<DiskMetrics>>();
-        var keyOrder = new List<(string Name, int Occurrence)>();
+        // Täsmäys ensisijaisesti LHM:n pysyvällä laitetunnisteella: jos levy
+        // irtoaa tai ilmestyy kesken jakson, indeksi- tai esiintymäpohjainen
+        // avain siirtyisi ja eri fyysisten levyjen lukemat sekoittuisivat.
+        // Nimi + esiintymä on varapolku tunnisteettomille lukemille.
+        var readingsByKey = new Dictionary<string, List<DiskMetrics>>();
+        var keyOrder = new List<(string Key, string Name)>();
 
         foreach (KeyMetrics m in _buffer)
         {
             var seen = new Dictionary<string, int>();
             foreach (DiskMetrics disk in m.Disks)
             {
-                int occurrence = seen.TryGetValue(disk.Name, out int n) ? n : 0;
-                seen[disk.Name] = occurrence + 1;
+                string key;
+                if (disk.Identifier.Length > 0)
+                {
+                    key = "id:" + disk.Identifier;
+                }
+                else
+                {
+                    int occurrence = seen.TryGetValue(disk.Name, out int n) ? n : 0;
+                    seen[disk.Name] = occurrence + 1;
+                    key = $"name:{disk.Name}#{occurrence}";
+                }
 
-                (string Name, int Occurrence) key = (disk.Name, occurrence);
                 if (!readingsByKey.TryGetValue(key, out List<DiskMetrics>? list))
                 {
                     readingsByKey[key] = list = new List<DiskMetrics>();
-                    keyOrder.Add(key);
+                    keyOrder.Add((key, disk.Name));
                 }
 
                 list.Add(disk);
@@ -89,7 +98,7 @@ public sealed class SampleAggregator
         var result = new List<DiskAggregate>();
         for (int i = 0; i < keyOrder.Count; i++)
         {
-            List<DiskMetrics> readings = readingsByKey[keyOrder[i]];
+            List<DiskMetrics> readings = readingsByKey[keyOrder[i].Key];
             var activities = readings.Where(d => d.ActivityPercent.HasValue)
                 .Select(d => d.ActivityPercent!.Value).ToList();
             result.Add(new DiskAggregate(

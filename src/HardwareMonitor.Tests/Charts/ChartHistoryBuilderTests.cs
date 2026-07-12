@@ -81,6 +81,22 @@ public class ChartHistoryBuilderTests
     }
 
     [Fact]
+    public void PaatepisteenPuuttuvaArvo_SailyyAukkona()
+    {
+        // Jos päätepisterivin mittaus puuttuu, pisteen pitää jäädä nulliksi —
+        // bucket-keskiarvo olisi keksitty mittaus aukon kohdalle.
+        var rows = new[]
+        {
+            Row(0), Row(5, cpuTemp: 60),
+            Row(10, cpuTemp: 10), Row(15, cpuTemp: 30),
+        };
+
+        ChartHistory h = ChartHistoryBuilder.Build(rows, 2, NoLabels);
+
+        Assert.Null(Cpu(h).Points[0].Value);
+    }
+
+    [Fact]
     public void Sammutusjakso_TuottaaKatkonViivaan()
     {
         // Kone oli sammuksissa rivien välissä — kannassa ei ole null-riviä

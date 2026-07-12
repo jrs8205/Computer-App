@@ -627,60 +627,187 @@ public sealed class HistoryDb : IDisposable
                 }
             }
 
-            var rows = new List<SampleRow>();
-            using var cmd = _connection.CreateCommand();
-            cmd.CommandText = """
-                SELECT ts / $bucket, CAST(AVG(ts) AS INTEGER),
-                    AVG(cpu_load_avg), MAX(cpu_load_max),
-                    AVG(cpu_temp_avg), MAX(cpu_temp_max), MAX(cpu_clock_max),
-                    AVG(cpu_power_avg), MAX(cpu_power_max),
-                    AVG(gpu_load_avg), MAX(gpu_load_max),
-                    AVG(gpu_temp_avg), MAX(gpu_temp_max),
-                    AVG(gpu_hotspot_avg), MAX(gpu_hotspot_max),
-                    AVG(gpu_power_avg), MAX(gpu_power_max),
-                    AVG(vram_used_mb_avg), MAX(vram_used_mb_max),
-                    AVG(ram_load_avg), MAX(ram_load_max),
-                    AVG(ram_used_gb_avg), MAX(ram_used_gb_max),
-                    MIN(cpu_load_min), MIN(cpu_temp_min), MIN(cpu_power_min),
-                    MIN(gpu_load_min), MIN(gpu_temp_min),
-                    MIN(gpu_hotspot_min), MIN(gpu_power_min),
-                    MIN(vram_used_mb_min), MIN(ram_load_min), MIN(ram_used_gb_min)
-                FROM samples WHERE ts >= $since
-                GROUP BY ts / $bucket ORDER BY ts / $bucket;
-                """;
-            cmd.Parameters.AddWithValue("$since", cutoff);
-            cmd.Parameters.AddWithValue("$bucket", bucketSeconds);
-            using SqliteDataReader reader = cmd.ExecuteReader();
-            while (reader.Read())
+            var pairs = new List<(long Bucket, SampleRow Row)>();
+            using (var cmd = _connection.CreateCommand())
             {
-                long bucket = reader.GetInt64(0);
-                rows.Add(new SampleRow(
-                    Timestamp: DateTimeOffset.FromUnixTimeSeconds(reader.GetInt64(1)),
-                    CpuLoadAvg: Opt(reader, 2), CpuLoadMax: Opt(reader, 3),
-                    CpuTempAvg: Opt(reader, 4), CpuTempMax: Opt(reader, 5),
-                    CpuClockMax: Opt(reader, 6),
-                    CpuPowerAvg: Opt(reader, 7), CpuPowerMax: Opt(reader, 8),
-                    GpuLoadAvg: Opt(reader, 9), GpuLoadMax: Opt(reader, 10),
-                    GpuTempAvg: Opt(reader, 11), GpuTempMax: Opt(reader, 12),
-                    GpuHotspotAvg: Opt(reader, 13), GpuHotspotMax: Opt(reader, 14),
-                    GpuPowerAvg: Opt(reader, 15), GpuPowerMax: Opt(reader, 16),
-                    VramUsedMbAvg: Opt(reader, 17), VramUsedMbMax: Opt(reader, 18),
-                    RamLoadAvg: Opt(reader, 19), RamLoadMax: Opt(reader, 20),
-                    RamUsedGbAvg: Opt(reader, 21), RamUsedGbMax: Opt(reader, 22),
-                    Disks: disksByBucket.TryGetValue(bucket, out List<DiskSampleValue>? d)
-                        ? d : Array.Empty<DiskSampleValue>(),
-                    Fans: fansByBucket.TryGetValue(bucket, out List<FanSampleValue>? f)
-                        ? f : Array.Empty<FanSampleValue>(),
-                    CpuLoadMin: Opt(reader, 23), CpuTempMin: Opt(reader, 24),
-                    CpuPowerMin: Opt(reader, 25),
-                    GpuLoadMin: Opt(reader, 26), GpuTempMin: Opt(reader, 27),
-                    GpuHotspotMin: Opt(reader, 28), GpuPowerMin: Opt(reader, 29),
-                    VramUsedMbMin: Opt(reader, 30),
-                    RamLoadMin: Opt(reader, 31), RamUsedGbMin: Opt(reader, 32)));
+                cmd.CommandText = """
+                    SELECT ts / $bucket, CAST(AVG(ts) AS INTEGER),
+                        AVG(cpu_load_avg), MAX(cpu_load_max),
+                        AVG(cpu_temp_avg), MAX(cpu_temp_max), MAX(cpu_clock_max),
+                        AVG(cpu_power_avg), MAX(cpu_power_max),
+                        AVG(gpu_load_avg), MAX(gpu_load_max),
+                        AVG(gpu_temp_avg), MAX(gpu_temp_max),
+                        AVG(gpu_hotspot_avg), MAX(gpu_hotspot_max),
+                        AVG(gpu_power_avg), MAX(gpu_power_max),
+                        AVG(vram_used_mb_avg), MAX(vram_used_mb_max),
+                        AVG(ram_load_avg), MAX(ram_load_max),
+                        AVG(ram_used_gb_avg), MAX(ram_used_gb_max),
+                        MIN(cpu_load_min), MIN(cpu_temp_min), MIN(cpu_power_min),
+                        MIN(gpu_load_min), MIN(gpu_temp_min),
+                        MIN(gpu_hotspot_min), MIN(gpu_power_min),
+                        MIN(vram_used_mb_min), MIN(ram_load_min), MIN(ram_used_gb_min)
+                    FROM samples WHERE ts >= $since
+                    GROUP BY ts / $bucket ORDER BY ts / $bucket;
+                    """;
+                cmd.Parameters.AddWithValue("$since", cutoff);
+                cmd.Parameters.AddWithValue("$bucket", bucketSeconds);
+                using SqliteDataReader reader = cmd.ExecuteReader();
+                while (reader.Read())
+                {
+                    long bucket = reader.GetInt64(0);
+                    pairs.Add((bucket, new SampleRow(
+                        Timestamp: DateTimeOffset.FromUnixTimeSeconds(reader.GetInt64(1)),
+                        CpuLoadAvg: Opt(reader, 2), CpuLoadMax: Opt(reader, 3),
+                        CpuTempAvg: Opt(reader, 4), CpuTempMax: Opt(reader, 5),
+                        CpuClockMax: Opt(reader, 6),
+                        CpuPowerAvg: Opt(reader, 7), CpuPowerMax: Opt(reader, 8),
+                        GpuLoadAvg: Opt(reader, 9), GpuLoadMax: Opt(reader, 10),
+                        GpuTempAvg: Opt(reader, 11), GpuTempMax: Opt(reader, 12),
+                        GpuHotspotAvg: Opt(reader, 13), GpuHotspotMax: Opt(reader, 14),
+                        GpuPowerAvg: Opt(reader, 15), GpuPowerMax: Opt(reader, 16),
+                        VramUsedMbAvg: Opt(reader, 17), VramUsedMbMax: Opt(reader, 18),
+                        RamLoadAvg: Opt(reader, 19), RamLoadMax: Opt(reader, 20),
+                        RamUsedGbAvg: Opt(reader, 21), RamUsedGbMax: Opt(reader, 22),
+                        Disks: disksByBucket.TryGetValue(bucket, out List<DiskSampleValue>? d)
+                            ? d : Array.Empty<DiskSampleValue>(),
+                        Fans: fansByBucket.TryGetValue(bucket, out List<FanSampleValue>? f)
+                            ? f : Array.Empty<FanSampleValue>(),
+                        CpuLoadMin: Opt(reader, 23), CpuTempMin: Opt(reader, 24),
+                        CpuPowerMin: Opt(reader, 25),
+                        GpuLoadMin: Opt(reader, 26), GpuTempMin: Opt(reader, 27),
+                        GpuHotspotMin: Opt(reader, 28), GpuPowerMin: Opt(reader, 29),
+                        VramUsedMbMin: Opt(reader, 30),
+                        RamLoadMin: Opt(reader, 31), RamUsedGbMin: Opt(reader, 32))));
+                }
+            }
+
+            // Puuttuvien buckettien kohdalle all-null-rivi: graafi katkaisee
+            // viivan siitä luotettavasti — keskiarvoaikaleimojen värinä estää
+            // yhden puuttuvan bucketin tunnistamisen pelkistä aikaleimoista.
+            var rows = new List<SampleRow>(pairs.Count + 4);
+            for (int i = 0; i < pairs.Count; i++)
+            {
+                if (i > 0 && pairs[i].Bucket - pairs[i - 1].Bucket >= 2)
+                {
+                    long gapStart = (pairs[i - 1].Bucket + 1) * bucketSeconds;
+                    rows.Add(EmptyRow(DateTimeOffset.FromUnixTimeSeconds(
+                        gapStart + bucketSeconds / 2)));
+                }
+
+                rows.Add(pairs[i].Row);
+            }
+
+            // Aidot päätepisterivit: bucket-keskiarvo hukkaisi todellisen
+            // ensimmäisen ja viimeisen näytteen (graafin päätepisteiden
+            // tooltipit vastaavat raakarivejä).
+            if (rows.Count > 0)
+            {
+                SampleRow? first = ReadEdgeRow(cutoff, newest: false);
+                if (first is not null && first.Timestamp != rows[0].Timestamp)
+                {
+                    rows.Insert(0, first);
+                }
+
+                SampleRow? last = ReadEdgeRow(cutoff, newest: true);
+                if (last is not null && last.Timestamp != rows[^1].Timestamp)
+                {
+                    rows.Add(last);
+                }
             }
 
             return rows;
         }
+    }
+
+    private static SampleRow EmptyRow(DateTimeOffset ts) => new(
+        ts, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null,
+        Array.Empty<DiskSampleValue>(), Array.Empty<FanSampleValue>());
+
+    /// <summary>Alueen ensimmäinen tai viimeinen raaka 5 s rivi lapsineen. Kutsutaan lukon sisältä.</summary>
+    private SampleRow? ReadEdgeRow(long cutoff, bool newest)
+    {
+        string order = newest ? "DESC" : "ASC";
+
+        long id;
+        SampleRow row;
+        using (var cmd = _connection.CreateCommand())
+        {
+            cmd.CommandText = $"""
+                SELECT id, ts,
+                    cpu_load_avg, cpu_load_max, cpu_temp_avg, cpu_temp_max, cpu_clock_max,
+                    cpu_power_avg, cpu_power_max, gpu_load_avg, gpu_load_max,
+                    gpu_temp_avg, gpu_temp_max, gpu_hotspot_avg, gpu_hotspot_max,
+                    gpu_power_avg, gpu_power_max, vram_used_mb_avg, vram_used_mb_max,
+                    ram_load_avg, ram_load_max, ram_used_gb_avg, ram_used_gb_max,
+                    cpu_load_min, cpu_temp_min, cpu_power_min,
+                    gpu_load_min, gpu_temp_min, gpu_hotspot_min, gpu_power_min,
+                    vram_used_mb_min, ram_load_min, ram_used_gb_min
+                FROM samples WHERE ts >= $since
+                ORDER BY ts {order}, id {order} LIMIT 1;
+                """;
+            cmd.Parameters.AddWithValue("$since", cutoff);
+            using SqliteDataReader reader = cmd.ExecuteReader();
+            if (!reader.Read())
+            {
+                return null;
+            }
+
+            id = reader.GetInt64(0);
+            row = new SampleRow(
+                Timestamp: DateTimeOffset.FromUnixTimeSeconds(reader.GetInt64(1)),
+                CpuLoadAvg: Opt(reader, 2), CpuLoadMax: Opt(reader, 3),
+                CpuTempAvg: Opt(reader, 4), CpuTempMax: Opt(reader, 5),
+                CpuClockMax: Opt(reader, 6),
+                CpuPowerAvg: Opt(reader, 7), CpuPowerMax: Opt(reader, 8),
+                GpuLoadAvg: Opt(reader, 9), GpuLoadMax: Opt(reader, 10),
+                GpuTempAvg: Opt(reader, 11), GpuTempMax: Opt(reader, 12),
+                GpuHotspotAvg: Opt(reader, 13), GpuHotspotMax: Opt(reader, 14),
+                GpuPowerAvg: Opt(reader, 15), GpuPowerMax: Opt(reader, 16),
+                VramUsedMbAvg: Opt(reader, 17), VramUsedMbMax: Opt(reader, 18),
+                RamLoadAvg: Opt(reader, 19), RamLoadMax: Opt(reader, 20),
+                RamUsedGbAvg: Opt(reader, 21), RamUsedGbMax: Opt(reader, 22),
+                Disks: Array.Empty<DiskSampleValue>(),
+                Fans: Array.Empty<FanSampleValue>(),
+                CpuLoadMin: Opt(reader, 23), CpuTempMin: Opt(reader, 24),
+                CpuPowerMin: Opt(reader, 25),
+                GpuLoadMin: Opt(reader, 26), GpuTempMin: Opt(reader, 27),
+                GpuHotspotMin: Opt(reader, 28), GpuPowerMin: Opt(reader, 29),
+                VramUsedMbMin: Opt(reader, 30),
+                RamLoadMin: Opt(reader, 31), RamUsedGbMin: Opt(reader, 32));
+        }
+
+        var disks = new List<DiskSampleValue>();
+        using (var diskCmd = _connection.CreateCommand())
+        {
+            diskCmd.CommandText = """
+                SELECT name, temp_avg, temp_max, temp_min FROM disk_samples
+                WHERE sample_id = $id ORDER BY disk_index;
+                """;
+            diskCmd.Parameters.AddWithValue("$id", id);
+            using SqliteDataReader r = diskCmd.ExecuteReader();
+            while (r.Read())
+            {
+                disks.Add(new DiskSampleValue(
+                    r.GetString(0), Opt(r, 1), Opt(r, 2), Opt(r, 3)));
+            }
+        }
+
+        var fans = new List<FanSampleValue>();
+        using (var fanCmd = _connection.CreateCommand())
+        {
+            fanCmd.CommandText = """
+                SELECT name, rpm_avg, rpm_min FROM fan_samples WHERE sample_id = $id;
+                """;
+            fanCmd.Parameters.AddWithValue("$id", id);
+            using SqliteDataReader r = fanCmd.ExecuteReader();
+            while (r.Read())
+            {
+                fans.Add(new FanSampleValue(r.GetString(0), Opt(r, 1), Opt(r, 2)));
+            }
+        }
+
+        return row with { Disks = disks, Fans = fans };
     }
 
     private static double? Opt(SqliteDataReader reader, int ordinal) =>

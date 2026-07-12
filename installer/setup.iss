@@ -12,7 +12,7 @@
 ; Käyttäjän data (%LOCALAPPDATA%\HardwareMonitor) säilyy poistossa.
 
 #define MyAppName "Hardware Monitor"
-#define MyAppVersion "1.0.0"
+#define MyAppVersion "1.0.1"
 #define MyAppPublisher "jrs8205"
 #define MyAppURL "https://github.com/jrs8205/Computer-App"
 #define MyAppExeName "HardwareMonitor.exe"

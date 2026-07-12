@@ -232,19 +232,21 @@ public sealed class HistoryDbTests : IDisposable
         IReadOnlyList<SampleRow> rows =
             _db.ReadSampleRowsDownsampled(Now.AddHours(-1), bucketSeconds: 10);
 
-        Assert.Equal(2, rows.Count);
-        Assert.Equal(90, rows[0].CpuTempMax);  // max(max) bucketin sisällä
-        Assert.Equal(60, rows[0].CpuTempAvg);  // avg(avg)
-        Assert.Equal(50, rows[0].CpuTempMin);  // min(min)
-        Assert.Equal(80, rows[1].CpuTempMax);
+        // [raaka 1. rivi, bucket 1, bucket 2, raaka viimeinen rivi]
+        Assert.Equal(4, rows.Count);
+        Assert.Equal(90, rows[1].CpuTempMax);  // max(max) bucketin sisällä
+        Assert.Equal(60, rows[1].CpuTempAvg);  // avg(avg)
+        Assert.Equal(50, rows[1].CpuTempMin);  // min(min)
+        Assert.Equal(80, rows[2].CpuTempMax);
         Assert.True(rows[0].Timestamp < rows[1].Timestamp);
+        Assert.True(rows[2].Timestamp < rows[3].Timestamp);
 
-        DiskSampleValue disk = Assert.Single(rows[0].Disks);
+        DiskSampleValue disk = Assert.Single(rows[1].Disks);
         Assert.Equal("NVMe", disk.Name);
         Assert.Equal(61, disk.TempAvg);
         Assert.Equal(62, disk.TempMax);
 
-        FanSampleValue fan = Assert.Single(rows[0].Fans);
+        FanSampleValue fan = Assert.Single(rows[1].Fans);
         Assert.Equal("Fan #2", fan.Name);
         Assert.Equal(1955, fan.RpmAvg);
     }
@@ -268,9 +270,55 @@ public sealed class HistoryDbTests : IDisposable
         IReadOnlyList<SampleRow> rows =
             _db.ReadSampleRowsDownsampled(Now.AddHours(-1), bucketSeconds: 60);
 
-        FanSampleValue fan = Assert.Single(Assert.Single(rows).Fans);
+        // Bucket-koosterivi on raakapäätepisteiden välissä.
+        SampleRow bucketRow = Assert.Single(
+            rows, r => r.Fans.Any(f => f.SpinShare is not null));
+        FanSampleValue fan = Assert.Single(bucketRow.Fans);
         Assert.Equal(250, fan.RpmAvg);
         Assert.Equal(0.25, fan.SpinShare);
+    }
+
+    [Fact]
+    public void ReadSampleRowsDownsampled_SailyttaaAidotPaatepisterivit()
+    {
+        // Bucket-keskiarvoistus hukkaisi todelliset päätepistenäytteet —
+        // graafin ensimmäisen ja viimeisen pisteen pitää vastata raakarivejä.
+        _db.InsertSample(Sample(Now, cpuTempMax: 70f));
+        _db.InsertSample(Sample(Now.AddSeconds(5), cpuTempMax: 90f));
+        _db.InsertSample(Sample(Now.AddSeconds(10), cpuTempMax: 80f));
+        _db.InsertSample(Sample(Now.AddSeconds(15), cpuTempMax: 60f));
+
+        IReadOnlyList<SampleRow> rows =
+            _db.ReadSampleRowsDownsampled(Now.AddHours(-1), bucketSeconds: 60);
+
+        Assert.Equal(Now.ToUnixTimeSeconds(), rows[0].Timestamp.ToUnixTimeSeconds());
+        Assert.Equal(70, rows[0].CpuTempMax);  // raaka ensimmäinen rivi
+        Assert.Equal(
+            Now.AddSeconds(15).ToUnixTimeSeconds(),
+            rows[^1].Timestamp.ToUnixTimeSeconds());
+        Assert.Equal(60, rows[^1].CpuTempMax); // raaka viimeinen rivi
+        DiskSampleValue disk = Assert.Single(rows[0].Disks);
+        Assert.Equal("NVMe", disk.Name);       // lapsirivit mukana
+    }
+
+    [Fact]
+    public void ReadSampleRowsDownsampled_PuuttuvaBucketTuottaaNullRivin()
+    {
+        // Kone sammuksissa bucketin verran → väliin syntyy all-null-rivi,
+        // josta graafi katkaisee viivan luotettavasti (aikaleimaheuristiikka
+        // ei erota yhtä puuttuvaa buckettia keskiarvoaikaleimojen värinästä).
+        _db.InsertSample(Sample(Now));
+        _db.InsertSample(Sample(Now.AddSeconds(130)));
+
+        IReadOnlyList<SampleRow> rows =
+            _db.ReadSampleRowsDownsampled(Now.AddHours(-1), bucketSeconds: 60);
+
+        int gapIndex = rows.ToList().FindIndex(r =>
+            r.CpuTempAvg is null && r.CpuLoadAvg is null && r.Disks.Count == 0);
+        Assert.True(gapIndex > 0, "null-riviä ei löytynyt datan välistä");
+        Assert.True(gapIndex < rows.Count - 1);
+        Assert.True(rows[gapIndex].Timestamp > rows[0].Timestamp);
+        Assert.True(rows[gapIndex].Timestamp < rows[^1].Timestamp);
     }
 
     [Fact]
@@ -290,7 +338,8 @@ public sealed class HistoryDbTests : IDisposable
         IReadOnlyList<SampleRow> rows =
             _db.ReadSampleRowsDownsampled(Now.AddHours(-1), bucketSeconds: 60);
 
-        SampleRow row = Assert.Single(rows);
+        // rows[1] on bucket-koosterivi (raakapäätepisteet ympärillä).
+        SampleRow row = rows[1];
         Assert.Equal(2, row.Disks.Count);
         Assert.Equal(31, row.Disks[0].TempAvg); // disk_index-järjestys säilyy
         Assert.Equal(51, row.Disks[1].TempAvg);

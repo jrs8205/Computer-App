@@ -103,6 +103,28 @@ public class SampleAggregatorTests
     }
 
     [Fact]
+    public void Add_LevytTasmataanPysyvallaTunnisteella()
+    {
+        // Kaksi samannimistä levyä, joista ensimmäinen katoaa kesken jakson:
+        // nimi+esiintymä-avain siirtäisi jäljelle jäävän esiintymäksi 0 ja
+        // sekoittaisi sen ensimmäisen levyn lukemiin — pysyvä tunniste ei.
+        var agg = new SampleAggregator(samplesPerRow: 2);
+        agg.Add(Metrics(disks: new[]
+        {
+            new DiskMetrics("860 EVO", 30f, null, "/nvme/0"),
+            new DiskMetrics("860 EVO", 50f, null, "/nvme/1"),
+        }), T0);
+        AggregatedSample s = agg.Add(Metrics(disks: new[]
+        {
+            new DiskMetrics("860 EVO", 52f, null, "/nvme/1"),
+        }), T0)!;
+
+        Assert.Equal(2, s.Disks.Count);
+        Assert.Equal(30, s.Disks[0].TempC.Avg);  // /nvme/0: vain oma lukema
+        Assert.Equal(51, s.Disks[1].TempC.Avg);  // /nvme/1: (50 + 52) / 2
+    }
+
+    [Fact]
     public void Add_LevytTasmataanIndeksilla_TuulettimetTunnisteella()
     {
         var agg = new SampleAggregator(samplesPerRow: 2);

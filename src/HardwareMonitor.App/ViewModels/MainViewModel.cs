@@ -838,8 +838,15 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
                     DateTimeOffset.Now.AddHours(-hours), bucketSeconds);
                 ChartHistory history =
                     ChartHistoryBuilder.Build(rows, ChartMaxPoints, BuildFanLabelMap());
-                System.Windows.Application.Current?.Dispatcher.InvokeAsync(
-                    () => History.Apply(history, hours));
+                System.Windows.Application.Current?.Dispatcher.InvokeAsync(() =>
+                {
+                    // Vanhentuneen aikavälin tulosta ei sovelleta: valitsin
+                    // näyttäisi uutta aluetta mutta graafi palaisi vanhaan.
+                    if (History.RangeHours == hours)
+                    {
+                        History.Apply(history, hours);
+                    }
+                });
             }
             catch (Exception ex)
             {

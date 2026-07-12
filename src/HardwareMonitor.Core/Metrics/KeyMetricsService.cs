@@ -113,7 +113,7 @@ public static class KeyMetricsService
                         (null, { } w) => w,
                         _ => null,
                     };
-                    disks.Add(new DiskMetrics(group.Name, diskTemp, activity));
+                    disks.Add(new DiskMetrics(group.Name, diskTemp, activity, group.Identifier));
                     break;
             }
 

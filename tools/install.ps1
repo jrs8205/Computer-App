@@ -38,6 +38,12 @@ if ($Uninstall) {
 $repoRoot = Split-Path $PSScriptRoot -Parent
 $publishDir = Join-Path $repoRoot 'publish'
 
+# Tyhjennys ensin: dotnet publish -o ei siivoa hakemistoa, joten aiemman
+# version poistetut/uudelleennimetyt tiedostot jäisivät muuten pakettiin.
+if (Test-Path $publishDir) {
+    Remove-Item $publishDir -Recurse -Force
+}
+
 Write-Host '1/4 Julkaistaan self-contained-versio (win-x64, Release)...'
 dotnet publish (Join-Path $repoRoot 'src\HardwareMonitor.App\HardwareMonitor.App.csproj') `
     -c Release -r win-x64 --self-contained true -o $publishDir --nologo -v quiet

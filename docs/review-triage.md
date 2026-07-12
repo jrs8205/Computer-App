@@ -77,3 +77,41 @@ todennettiin koodista; 24/26 vahvistui. Korjaukset jaettiin koreihin.
 
 v1.0.0 julkaistu 12.7.2026: GPL-3.0, README uudistettu, requireAdministrator,
 Inno Setup -installeri (installer/setup.iss) GitHub-releasessa.
+
+# Toinen katselmointi (12.7.2026, v1.0.0:n jälkeen) — korjattu v1.0.1 ✅
+
+Kaikki 12 löydöstä vahvistuivat ja korjattiin:
+
+1. **[P1] Suojatun polun ACL**: pelkkä polkuetuliite ei riitä (C:\Windows\
+   Temp on käyttäjäkirjoitettava) → Windows-juuri pois sallituista,
+   ProtectedPaths.HasNonAdminWriteAccess tarkistaa hakemiston ja exen
+   todelliset käyttöoikeudet (Everyone/Users/Authenticated Users/
+   INTERACTIVE + kirjoitusoikeudet; InheritOnly-ACE:t ohitetaan).
+2. **[P1] Kolmansien osapuolten lisenssit**: LICENSE.txt +
+   THIRD-PARTY-NOTICES.md (MPL-2.0/MIT/Apache-2.0 -tekstit) kopioituvat
+   publishiin csprojista ja asentuvat sovelluksen mukana.
+3. **[P2] Rajoitettu tehtävä + requireAdministrator**: suojaamattomasta
+   polusta autostartia ei kytketä lainkaan (rajoitettu tehtävä ei voisi
+   käynnistää admin-manifestista exeä) — SetEnabled palauttaa false + loki.
+4. **[P2] Näyttöpyynnön race**: event luodaan heti mutexin jälkeen ja
+   signalointi käyttää luo-tai-avaa-semantiikkaa; kuuntelija käynnistyy
+   vasta MainWindow-asetuksen jälkeen (AutoReset säilyttää signaalin).
+5. **[P2] Levyjen pysyvä tunniste**: HardwareGroup/DiskMetrics kantavat
+   LHM:n laitetunnisteen; SampleAggregator täsmää sillä (nimi+esiintymä
+   vain varapolkuna).
+6. **[P2] Aidot päätepisteet**: ReadSampleRowsDownsampled palauttaa
+   alueen ensimmäisen ja viimeisen RAAKArivin bucket-koosteiden lisäksi.
+7. **[P2] Päätepisteen null säilyy**: builderin endpoint-arvo on aina
+   päätepisterivin arvo — myös null (ei keksittyä bucket-keskiarvoa).
+8. **[P2] Lyhyet aukot**: puuttuvat bucketit tuottavat all-null-rivin
+   SQL-tasolla (bucket-indekseistä) — viiva katkeaa luotettavasti myös
+   1–2 bucketin aukoissa, joita aikaleimaheuristiikka ei erota.
+9. **[P2] Vanhentunut aikaväli**: tulos sovelletaan vain jos RangeHours
+   on yhä sama (generation check) + uusintahaku finallyssä.
+10. **[P2] Lokin sukupolvi**: System-lokin luontiaika (CreationTime)
+    talletetaan metaan; muutos → kirjanmerkki nollataan, vaikka uusi loki
+    olisi kasvanut vanhan kirjanmerkin ohi.
+11. **[P2] Ei "normaalitasolla" ilman näytteitä**: AllGood-päätelmä vain
+    kun SampleCount > 0; muuten havainto-osio jää pois.
+12. **[P2] publish-siivous**: install.ps1 tyhjentää publish-hakemiston
+    ennen dotnet publishia (vanhat DLL:t eivät jää pakettiin).

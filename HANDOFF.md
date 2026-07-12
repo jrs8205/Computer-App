@@ -1,27 +1,32 @@
-# HANDOFF — 12.7.2026 istunnon päätös: v1.0.0 julkaistu, repo julkinen
+# HANDOFF — 12.7.2026 istunnon päätös: v1.0.1 julkaistu, repo julkinen
 
 Tämä tiedosto kertoo mihin jäätiin ja miten jatketaan. Lue tämä ensin,
 sitten `docs/review-triage.md` ja `docs/ROADMAP.md`.
 
 ## Tilanne yhdellä lauseella
 
-**Projekti on julkaisukunnossa eikä aktiivista työtä ole kesken**: v1.0.0
-julkaistu GitHubiin allekirjoitetulla Inno Setup -installerilla, repo on
-JULKINEN, README on kaksikielinen (EN pääsivu + FI), kaikki ulkopuolisen
-tarkastuksen 26 löydöstä on korjattu TDD:llä (184 testiä), ja git-historia
-on uudelleenkirjoitettu niin että Contributors-listassa on vain käyttäjä.
+**Projekti on julkaisukunnossa eikä aktiivista työtä ole kesken**: v1.0.1
+julkaistu GitHubiin (ensimmäisen katselmoinnin 26 + toisen katselmoinnin
+12 löydöstä kaikki korjattu TDD:llä, 196 testiä), repo on JULKINEN,
+README kaksikielinen, exet allekirjoitettu, lisenssitekstit paketissa ja
+git-historia puhdistettu (vain käyttäjä Contributors-listassa).
 
 ## Julkaisun tila
 
 - **Repo**: https://github.com/jrs8205/Computer-App — JULKINEN.
   **main = julkaisuhaara** (sama kärki kuin työhaara
   `claude/windows-11-program-setup-rxuyhn`). About-osio + topicit asetettu.
-- **Release**: v1.0.0, liitteenä allekirjoitettu
-  `HardwareMonitor-Setup-1.0.0.exe` (~56 MB, self-contained).
-- **Asennettuna koneella**: `C:\Program Files\Hardware Monitor` (v1.0.0,
+- **Release**: v1.0.1, liitteenä allekirjoitettu
+  `HardwareMonitor-Setup-1.0.1.exe` (self-contained; sisältää LICENSE.txt
+  + THIRD-PARTY-NOTICES.md). v1.0.0 jää historiaan.
+- **Asennettuna koneella**: `C:\Program Files\Hardware Monitor` (v1.0.1,
   allekirjoitettu, ajossa tray-tilassa; autostart-tehtävä HighestAvailable).
 - **README.md = englanti** (julkinen etusivu), **README.fi.md = suomi**,
   ristiinlinkitetty. About-osiossa EI AI-mainintoja (käyttäjän päätös).
+- **Autostart-turvasääntö v1.0.1**: korotus vain Program Files -juurten
+  alta JA vain jos hakemiston+exen ACL ei salli ei-admin-kirjoitusta;
+  suojaamattomasta polusta autostartia ei kytketä lainkaan
+  (requireAdministrator tekisi rajoitetusta tehtävästä toimimattoman).
 
 ## Commit-käytäntö ja historia (käyttäjän päätös 12.7.2026)
 

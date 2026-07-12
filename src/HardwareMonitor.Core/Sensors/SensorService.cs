@@ -89,7 +89,8 @@ public sealed class SensorService : IDisposable
             hardware.Name,
             hardware.HardwareType.ToString(),
             readings,
-            subGroups);
+            subGroups,
+            hardware.Identifier.ToString());
     }
 
     private static SensorReading ToReading(IHardware hardware, ISensor sensor) =>

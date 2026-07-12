@@ -51,6 +51,12 @@ public partial class App : Application
             return;
         }
 
+        // Event luodaan HETI mutexin jälkeen: jos toinen instanssi ehtii
+        // signaloida ennen kuin ikkuna on valmis, AutoReset-event säilyttää
+        // signaalin kunnes kuuntelija käynnistyy.
+        _showEvent = new EventWaitHandle(
+            initialState: false, EventResetMode.AutoReset, ShowEventName);
+
         // Kieli asetuksista ennen ikkunoiden luontia; DefaultThreadCurrentUICulture
         // kattaa myös taustasäikeet (raportit, analyysit, insights).
         AppSettings settings = new SettingsService().Load();
@@ -59,10 +65,12 @@ public partial class App : Application
         CultureInfo.DefaultThreadCurrentUICulture = ui;
         Thread.CurrentThread.CurrentUICulture = ui;
 
-        StartShowWindowListener();
-
         var window = new MainWindow(startInTray);
         MainWindow = window;
+
+        // Kuuntelija vasta kun MainWindow on olemassa — muuten signaali
+        // kulutettaisiin tilassa, jossa ikkunaa ei vielä voi näyttää.
+        StartShowWindowListener();
 
         if (!startInTray)
         {
@@ -75,25 +83,26 @@ public partial class App : Application
     {
         try
         {
-            using var showEvent = EventWaitHandle.OpenExisting(ShowEventName);
+            // Luo-tai-avaa: jos ensimmäinen instanssi ei ole vielä ehtinyt
+            // luoda eventtiä, signaali jää silti talteen (AutoReset säilyy
+            // asetettuna kunnes joku odottaa sitä).
+            using var showEvent = new EventWaitHandle(
+                initialState: false, EventResetMode.AutoReset, ShowEventName);
             showEvent.Set();
         }
         catch (Exception)
         {
-            // Ei saatu yhteyttä (poistumassa oleva tai eri oikeustason
-            // instanssi) — poistutaan silti hiljaa, instansseja on jo yksi.
+            // Ei saatu yhteyttä (eri oikeustason instanssi tms.) —
+            // poistutaan silti hiljaa, instansseja on jo yksi.
         }
     }
 
     /// <summary>Kuuntelee toisen instanssin näyttöpyyntöjä taustasäikeessä.</summary>
     private void StartShowWindowListener()
     {
-        _showEvent = new EventWaitHandle(
-            initialState: false, EventResetMode.AutoReset, ShowEventName);
-
         var listener = new Thread(() =>
         {
-            while (_showEvent.WaitOne())
+            while (_showEvent!.WaitOne())
             {
                 try
                 {

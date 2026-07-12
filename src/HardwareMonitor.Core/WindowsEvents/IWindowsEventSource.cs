@@ -19,4 +19,11 @@ public interface IWindowsEventSource
     /// ja numerointi alkanut alusta.
     /// </summary>
     long? ReadNewestRecordId();
+
+    /// <summary>
+    /// Lokitiedoston luontiaika (UTC) — lokin "sukupolvi". Tyhjennys luo
+    /// tiedoston uudelleen, jolloin aika muuttuu; tavallinen kiertävä
+    /// retentio ei muuta sitä. Null jos tietoa ei saada.
+    /// </summary>
+    DateTime? ReadLogCreationTimeUtc();
 }

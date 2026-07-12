@@ -276,9 +276,6 @@ public static class MachineInsightsBuilder
         StringBuilder sb, SampleStats stats, ThresholdSettings limits,
         int whea, int crashes, int winDisk)
     {
-        sb.AppendLine(Strings.Insights_InsightsHeading);
-        sb.AppendLine();
-
         var insights = new List<string>();
 
         if (stats.CpuTemp.Max is { } cpuMax && cpuMax >= limits.CpuWarningTemp)
@@ -324,9 +321,18 @@ public static class MachineInsightsBuilder
 
         if (insights.Count == 0)
         {
+            // "Arvot normaalitasolla" vain kun näytteitä on oikeasti kertynyt —
+            // tyhjästä kannasta se olisi perusteeton päätelmä.
+            if (stats.SampleCount == 0)
+            {
+                return;
+            }
+
             insights.Add(Strings.Insights_AllGood);
         }
 
+        sb.AppendLine(Strings.Insights_InsightsHeading);
+        sb.AppendLine();
         foreach (string insight in insights)
         {
             sb.AppendLine($"- {insight}");

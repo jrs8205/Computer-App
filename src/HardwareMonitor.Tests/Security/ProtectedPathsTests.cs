@@ -1,10 +1,69 @@
+using System.Security.AccessControl;
+using System.Security.Principal;
 using HardwareMonitor.Core.Security;
 using Xunit;
 
 namespace HardwareMonitor.Tests.Security;
 
-public class ProtectedPathsTests
+public class ProtectedPathsTests : IDisposable
 {
+    private readonly string _dir = Path.Combine(
+        Path.GetTempPath(), "HardwareMonitorTests", Guid.NewGuid().ToString("N"));
+
+    public void Dispose()
+    {
+        if (Directory.Exists(_dir))
+        {
+            Directory.Delete(_dir, recursive: true);
+        }
+    }
+
+    [Fact]
+    public void KayttajilleKirjoitettavaHakemisto_EiOleSuojattu()
+    {
+        // Esim. C:\Windows\Temp on Windows-juuren alla mutta käyttäjien
+        // kirjoitettavissa — pelkkä polkuetuliite ei riitä suojaukseen.
+        var info = Directory.CreateDirectory(_dir);
+        DirectorySecurity security = info.GetAccessControl();
+        security.AddAccessRule(new FileSystemAccessRule(
+            new SecurityIdentifier(WellKnownSidType.BuiltinUsersSid, null),
+            FileSystemRights.Modify,
+            InheritanceFlags.ContainerInherit | InheritanceFlags.ObjectInherit,
+            PropagationFlags.None,
+            AccessControlType.Allow));
+        info.SetAccessControl(security);
+
+        Assert.True(ProtectedPaths.HasNonAdminWriteAccess(_dir));
+    }
+
+    [Fact]
+    public void VainAdminKirjoitettavaHakemisto_OnSuojattu()
+    {
+        var info = Directory.CreateDirectory(_dir);
+        DirectorySecurity security = info.GetAccessControl();
+        // Kuten Program Files: adminit ja SYSTEM kirjoittavat, Users vain lukee.
+        security.SetAccessRuleProtection(isProtected: true, preserveInheritance: false);
+        security.AddAccessRule(new FileSystemAccessRule(
+            new SecurityIdentifier(WellKnownSidType.BuiltinAdministratorsSid, null),
+            FileSystemRights.FullControl, AccessControlType.Allow));
+        security.AddAccessRule(new FileSystemAccessRule(
+            new SecurityIdentifier(WellKnownSidType.LocalSystemSid, null),
+            FileSystemRights.FullControl, AccessControlType.Allow));
+        security.AddAccessRule(new FileSystemAccessRule(
+            new SecurityIdentifier(WellKnownSidType.BuiltinUsersSid, null),
+            FileSystemRights.ReadAndExecute, AccessControlType.Allow));
+        info.SetAccessControl(security);
+
+        Assert.False(ProtectedPaths.HasNonAdminWriteAccess(_dir));
+    }
+
+    [Fact]
+    public void PuuttuvaPolku_TulkitaanTurvattomaksi()
+    {
+        Assert.True(ProtectedPaths.HasNonAdminWriteAccess(
+            Path.Combine(_dir, "ei-olemassa")));
+    }
+
     private static readonly string[] Roots =
     {
         @"C:\Program Files",

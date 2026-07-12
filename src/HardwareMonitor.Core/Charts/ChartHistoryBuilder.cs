@@ -170,14 +170,15 @@ public static class ChartHistoryBuilder
             double? value = values.Length > 0 ? values.Average() : null;
 
             // Päätepisteet saavat datan päätepisteiden ARVOT aikaleimojen
-            // lisäksi — muuten alun tooltip näyttäisi koko bucketin keskiarvon.
+            // lisäksi — myös null säilyy: bucket-keskiarvo aukon kohdalla
+            // olisi keksitty mittaus.
             if (i == 0)
             {
-                value = select(rows[0]) ?? value;
+                value = select(rows[0]);
             }
             else if (i == buckets.Count - 1)
             {
-                value = select(rows[^1]) ?? value;
+                value = select(rows[^1]);
             }
 
             points.Add(new ChartPoint(stamps[i], value));

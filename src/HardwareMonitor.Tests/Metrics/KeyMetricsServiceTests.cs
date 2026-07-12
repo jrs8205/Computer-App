@@ -12,8 +12,22 @@ public class KeyMetricsServiceTests
             $"/{hwType}/{hwName}/{sensorType}/{sensorName}".ToLowerInvariant());
 
     private static HardwareGroup Group(
-        string name, string type, SensorReading[] sensors, HardwareGroup[]? subs = null) =>
-        new(name, type, sensors, subs ?? Array.Empty<HardwareGroup>());
+        string name, string type, SensorReading[] sensors, HardwareGroup[]? subs = null,
+        string identifier = "") =>
+        new(name, type, sensors, subs ?? Array.Empty<HardwareGroup>(), identifier);
+
+    [Fact]
+    public void Extract_LevySaaLaitteenPysyvanTunnisteen()
+    {
+        var nvme = Group("Samsung SSD 970 EVO Plus 1TB", "Storage", new[]
+        {
+            Reading("nvme", "Storage", "Temperature", "Temperature", 60f),
+        }, identifier: "/nvme/0");
+
+        KeyMetrics m = KeyMetricsService.Extract(new[] { nvme });
+
+        Assert.Equal("/nvme/0", m.Disks[0].Identifier);
+    }
 
     [Fact]
     public void Extract_TyhjaLista_PalauttaaNullArvotEikaHeitaPoikkeusta()
