@@ -82,11 +82,10 @@ Notes for contributors:
 
 ## About
 
-A hobby project by [jrs8205](https://github.com/jrs8205), built for a home
-machine (i9-9900K / RTX 2060 / ASUS Z390-F) and developed in pair with an
-AI assistant (Claude). The codebase went through an external AI bug review
-before the 1.0 release — all 26 findings were triaged and fixed
-(`docs/review-triage.md`, in Finnish).
+A hobby project by [jrs8205](https://github.com/jrs8205), built for and
+tested on a home machine (i9-9900K / RTX 2060 / ASUS Z390-F). The codebase
+went through an external bug review before the 1.0 release — all 26
+findings were triaged and fixed (`docs/review-triage.md`, in Finnish).
 
 ## License
 
