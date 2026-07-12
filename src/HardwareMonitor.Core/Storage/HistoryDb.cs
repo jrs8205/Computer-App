@@ -21,6 +21,7 @@ public sealed class HistoryDb : IDisposable
 {
     private readonly SqliteConnection _connection;
     private readonly object _lock = new();
+    private bool _disposed;
 
     public HistoryDb(string? directory = null)
     {
@@ -278,11 +279,13 @@ public sealed class HistoryDb : IDisposable
     }
 
     /// <summary>
-    /// Kirjoittaa tapahtumat ja meta-arvon (esim. Windows-lokin kirjanmerkin)
-    /// yhtenä transaktiona — joko kaikki tai ei mitään.
+    /// Kirjoittaa tapahtumat ja yhden tai useamman meta-arvon (esim.
+    /// Windows-lokin kirjanmerkin JA sukupolven) yhtenä transaktiona — joko
+    /// kaikki tai ei mitään, joten keskeytynyt skannaus ei jätä bookmarkkia
+    /// ja sukupolvea eri tahtiin.
     /// </summary>
     public void InsertEventsWithMeta(
-        IReadOnlyList<EventRow> events, string metaKey, string metaValue)
+        IReadOnlyList<EventRow> events, IReadOnlyList<(string Key, string Value)> meta)
     {
         lock (_lock)
         {
@@ -306,15 +309,18 @@ public sealed class HistoryDb : IDisposable
                 cmd.ExecuteNonQuery();
             }
 
-            using var metaCmd = _connection.CreateCommand();
-            metaCmd.Transaction = tx;
-            metaCmd.CommandText = """
-                INSERT INTO meta (key, value) VALUES ($key, $value)
-                ON CONFLICT(key) DO UPDATE SET value = excluded.value;
-                """;
-            metaCmd.Parameters.AddWithValue("$key", metaKey);
-            metaCmd.Parameters.AddWithValue("$value", metaValue);
-            metaCmd.ExecuteNonQuery();
+            foreach ((string key, string value) in meta)
+            {
+                using var metaCmd = _connection.CreateCommand();
+                metaCmd.Transaction = tx;
+                metaCmd.CommandText = """
+                    INSERT INTO meta (key, value) VALUES ($key, $value)
+                    ON CONFLICT(key) DO UPDATE SET value = excluded.value;
+                    """;
+                metaCmd.Parameters.AddWithValue("$key", key);
+                metaCmd.Parameters.AddWithValue("$value", value);
+                metaCmd.ExecuteNonQuery();
+            }
 
             tx.Commit();
         }
@@ -426,17 +432,21 @@ public sealed class HistoryDb : IDisposable
             var fans = new List<FanStat>();
             using (var fanCmd = _connection.CreateCommand())
             {
+                // Ryhmittely tunnisteella (ei nimellä): samannimiset eri
+                // tuulettimet eivät saa sulautua yhdeksi. Nimi valitaan
+                // ryhmän edustajaksi (MIN).
                 fanCmd.CommandText = """
-                    SELECT f.name, AVG(f.rpm_avg), MAX(f.rpm_max)
+                    SELECT f.identifier, MIN(f.name), AVG(f.rpm_avg), MAX(f.rpm_max)
                     FROM fan_samples f JOIN samples s ON s.id = f.sample_id
-                    WHERE s.ts >= $since GROUP BY f.name ORDER BY f.name;
+                    WHERE s.ts >= $since GROUP BY f.identifier ORDER BY MIN(f.name);
                     """;
                 fanCmd.Parameters.AddWithValue("$since", cutoff);
                 using SqliteDataReader reader = fanCmd.ExecuteReader();
                 while (reader.Read())
                 {
-                    MetricStat stat = ReadStat(reader, 1);
-                    fans.Add(new FanStat(reader.GetString(0), stat.Avg, stat.Max));
+                    MetricStat stat = ReadStat(reader, 2);
+                    fans.Add(new FanStat(reader.GetString(1), stat.Avg, stat.Max,
+                        Identifier: reader.GetString(0)));
                 }
             }
 
@@ -485,7 +495,7 @@ public sealed class HistoryDb : IDisposable
             using (var fanCmd = _connection.CreateCommand())
             {
                 fanCmd.CommandText = """
-                    SELECT f.sample_id, f.name, f.rpm_avg, f.rpm_min
+                    SELECT f.sample_id, f.name, f.rpm_avg, f.rpm_min, f.identifier
                     FROM fan_samples f JOIN samples s ON s.id = f.sample_id
                     WHERE s.ts >= $since;
                     """;
@@ -502,7 +512,8 @@ public sealed class HistoryDb : IDisposable
                     list.Add(new FanSampleValue(
                         r.GetString(1),
                         r.IsDBNull(2) ? null : r.GetDouble(2),
-                        r.IsDBNull(3) ? null : r.GetDouble(3)));
+                        r.IsDBNull(3) ? null : r.GetDouble(3),
+                        Identifier: r.GetString(4)));
                 }
             }
 
@@ -600,16 +611,19 @@ public sealed class HistoryDb : IDisposable
             var fansByBucket = new Dictionary<long, List<FanSampleValue>>();
             using (var fanCmd = _connection.CreateCommand())
             {
-                // SpinShare: pyörivien 5 s rivien osuus — bucket-keskiarvo
-                // laimenee (yksi pyörähdys → pieni positiivinen avg), joten
-                // graafin 5 % -näkyvyysraja lasketaan tästä, ei keskiarvosta.
+                // Ryhmittely tunnisteella (samannimiset eri tuulettimet eivät
+                // sulaudu). Pyörivien ja tunnettujen 5 s rivien lukumäärät
+                // kuljetetaan mukana, jotta graafin 5 % -näkyvyysraja voidaan
+                // laskea raakariveillä painotettuna (bucket-osuuksien keskiarvo
+                // yliedustaisi pieniä bucketteja).
                 fanCmd.CommandText = """
-                    SELECT s.ts / $bucket, f.name, AVG(f.rpm_avg), MIN(f.rpm_min),
-                        AVG(CASE WHEN f.rpm_avg IS NULL THEN NULL
-                                 WHEN f.rpm_avg > 0 THEN 1.0 ELSE 0.0 END)
+                    SELECT s.ts / $bucket, f.identifier, MIN(f.name),
+                        AVG(f.rpm_avg), MIN(f.rpm_min),
+                        SUM(CASE WHEN f.rpm_avg > 0 THEN 1 ELSE 0 END),
+                        COUNT(f.rpm_avg)
                     FROM fan_samples f JOIN samples s ON s.id = f.sample_id
                     WHERE s.ts >= $since
-                    GROUP BY s.ts / $bucket, f.name;
+                    GROUP BY s.ts / $bucket, f.identifier;
                     """;
                 fanCmd.Parameters.AddWithValue("$since", cutoff);
                 fanCmd.Parameters.AddWithValue("$bucket", bucketSeconds);
@@ -623,7 +637,10 @@ public sealed class HistoryDb : IDisposable
                     }
 
                     list.Add(new FanSampleValue(
-                        r.GetString(1), Opt(r, 2), Opt(r, 3), Opt(r, 4)));
+                        r.GetString(2), Opt(r, 3), Opt(r, 4),
+                        Identifier: r.GetString(1),
+                        SpinningRows: (int)r.GetInt64(5),
+                        KnownRows: (int)r.GetInt64(6)));
                 }
             }
 
@@ -797,13 +814,14 @@ public sealed class HistoryDb : IDisposable
         using (var fanCmd = _connection.CreateCommand())
         {
             fanCmd.CommandText = """
-                SELECT name, rpm_avg, rpm_min FROM fan_samples WHERE sample_id = $id;
+                SELECT name, rpm_avg, rpm_min, identifier FROM fan_samples WHERE sample_id = $id;
                 """;
             fanCmd.Parameters.AddWithValue("$id", id);
             using SqliteDataReader r = fanCmd.ExecuteReader();
             while (r.Read())
             {
-                fans.Add(new FanSampleValue(r.GetString(0), Opt(r, 1), Opt(r, 2)));
+                fans.Add(new FanSampleValue(
+                    r.GetString(0), Opt(r, 1), Opt(r, 2), Identifier: r.GetString(3)));
             }
         }
 
@@ -849,10 +867,24 @@ public sealed class HistoryDb : IDisposable
 
     public void Dispose()
     {
-        // Microsoft.Data.Sqlite poolaa yhteydet: pelkkä Dispose jättäisi
-        // tiedostokahvan poolin haltuun eikä kantatiedostoa voisi poistaa.
-        _connection.Close();
-        SqliteConnection.ClearPool(_connection);
-        _connection.Dispose();
+        // Sulkeminen saman _lockin alla kuin kaikki operaatiot: taustatehtävä
+        // (sample-, Windows-event-, historia- tai insights-kirjoitus) voi olla
+        // aktiivinen tai jonossa lukolle, eikä yhteyttä saa sulkea sen alta.
+        // _disposed estää uudet operaatiot; jo alkaneet valmistuvat ensin.
+        lock (_lock)
+        {
+            if (_disposed)
+            {
+                return;
+            }
+
+            _disposed = true;
+
+            // Microsoft.Data.Sqlite poolaa yhteydet: pelkkä Dispose jättäisi
+            // tiedostokahvan poolin haltuun eikä kantatiedostoa voisi poistaa.
+            _connection.Close();
+            SqliteConnection.ClearPool(_connection);
+            _connection.Dispose();
+        }
     }
 }

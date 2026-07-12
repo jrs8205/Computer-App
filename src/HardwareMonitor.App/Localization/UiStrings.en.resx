@@ -103,6 +103,7 @@
   <data name="Dlg_InsightsEmpty" xml:space="preserve"><value>The AI report cannot be created yet — no sensor data has accumulated.</value></data>
   <data name="Dlg_InsightsCopied" xml:space="preserve"><value>AI report copied to the clipboard. Paste it into an AI chat (Ctrl+V).</value></data>
   <data name="Dlg_SaveFailed" xml:space="preserve"><value>Saving failed: {0}</value></data>
+  <data name="Dlg_SavedNotOpened" xml:space="preserve"><value>The file was saved, but could not be opened: {0}</value></data>
   <data name="Status_Starting" xml:space="preserve"><value>Starting sensors…</value></data>
   <data name="Status_StartError" xml:space="preserve"><value>Error starting sensors: {0}</value></data>
   <data name="Status_UpdateError" xml:space="preserve"><value>Error during update: {0}</value></data>

@@ -37,13 +37,31 @@ public sealed class SettingsService
                 return new AppSettings();
             }
 
-            return JsonSerializer.Deserialize<AppSettings>(File.ReadAllText(_path), Options)
-                   ?? new AppSettings();
+            AppSettings settings =
+                JsonSerializer.Deserialize<AppSettings>(File.ReadAllText(_path), Options)
+                ?? new AppSettings();
+            return Normalize(settings);
         }
         catch (Exception ex) when (ex is JsonException or IOException or UnauthorizedAccessException)
         {
             return new AppSettings();
         }
+    }
+
+    /// <summary>
+    /// Täydentää nulliksi deserialisoituneet sisäoliot oletuksilla. Esim.
+    /// {"Logging":null} tuottaa AppSettingsin, jossa Logging on null; sitä
+    /// heti dereferoiva UI kaatuisi ennen ikkunan näyttämistä.
+    /// </summary>
+    private static AppSettings Normalize(AppSettings s)
+    {
+        s.Overlay ??= new OverlaySettings();
+        s.Logging ??= new LoggingSettings();
+        s.Thresholds ??= new ThresholdSettings();
+        s.FanLabels ??= new Dictionary<string, string>();
+        s.Language ??= "";
+        s.InsightsNotes ??= "";
+        return s;
     }
 
     public void Save(AppSettings settings)

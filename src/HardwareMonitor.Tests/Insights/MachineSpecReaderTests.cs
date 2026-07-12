@@ -90,6 +90,23 @@ public class MachineSpecReaderTests
     }
 
     [Fact]
+    public void HybridiKone_ValitseeSamanEnsisijaisenGpunKuinMittaukset()
+    {
+        // iGPU tulee listassa ensin, mutta KeyMetricsService poimii kaikki
+        // GPU-tasot dGPU:sta — kokoonpanoon pitää valita SAMA dGPU, ettei
+        // raportti yhdistä väärää GPU-nimeä dGPU:n mittauksiin.
+        var igpu = Group("Intel UHD Graphics 630", "GpuIntel",
+            new SensorReading("igpu", "GpuIntel", "GPU Core", "Temperature", 40f, "°C", "/gpu-intel/0/temp"));
+        var dgpu = Group("NVIDIA GeForce RTX 2060", "GpuNvidia",
+            new SensorReading("dgpu", "GpuNvidia", "GPU Core", "Load", 33f, "%", "/gpu-nvidia/0/load"),
+            new SensorReading("dgpu", "GpuNvidia", "GPU Core", "Temperature", 49f, "°C", "/gpu-nvidia/0/temp"));
+
+        MachineSpec spec = MachineSpecReader.Read(new[] { igpu, dgpu }, "", "");
+
+        Assert.Equal("NVIDIA GeForce RTX 2060", spec.GpuName);
+    }
+
+    [Fact]
     public void PuuttuvatLaitteet_PalauttaaNullitJaTyhjanLevylistan()
     {
         MachineSpec spec = MachineSpecReader.Read(

@@ -26,6 +26,22 @@ public partial class App : Application
 
         bool startInTray = e.Args.Contains(TrayArgument, StringComparer.OrdinalIgnoreCase);
 
+        // Näyttöeventti luodaan ENNEN mutex-kilpailua ja pidetään kentässä
+        // koko prosessin eliniän ajan (kaikki instanssit). Näin nimetyllä
+        // objektilla on aina vähintään yksi elävä kahva niin kauan kuin jokin
+        // instanssi on käynnissä — se ei katoa toisen instanssin signaloinnin
+        // ja sulkemisen välissä (muuten ensimmäinen loisi myöhemmin uuden,
+        // signaloimattoman eventin ja --tray jäisi piiloon).
+        try
+        {
+            _showEvent = new EventWaitHandle(
+                initialState: false, EventResetMode.AutoReset, ShowEventName);
+        }
+        catch (Exception)
+        {
+            _showEvent = null; // eri oikeustaso tms. — jatketaan ilman signalointia
+        }
+
         // Toinen samanaikainen instanssi mittaisi samaan kantaan tuplarivit ja
         // kilpailisi settings/last_state-tiedostoista — sallitaan vain yksi.
         bool isFirstInstance;
@@ -44,18 +60,22 @@ public partial class App : Application
         {
             if (!startInTray)
             {
-                SignalExistingInstance();
+                // Signaloidaan kentässä pidetyn kahvan kautta; kahva pysyy
+                // elossa kunnes tämä prosessi sulkeutuu, joten objekti ei katoa
+                // ennen kuin ensimmäinen instanssi ehtii kuluttaa signaalin.
+                try
+                {
+                    _showEvent?.Set();
+                }
+                catch (Exception)
+                {
+                    // Poistutaan silti hiljaa — instansseja on jo yksi.
+                }
             }
 
             Shutdown();
             return;
         }
-
-        // Event luodaan HETI mutexin jälkeen: jos toinen instanssi ehtii
-        // signaloida ennen kuin ikkuna on valmis, AutoReset-event säilyttää
-        // signaalin kunnes kuuntelija käynnistyy.
-        _showEvent = new EventWaitHandle(
-            initialState: false, EventResetMode.AutoReset, ShowEventName);
 
         // Kieli asetuksista ennen ikkunoiden luontia; DefaultThreadCurrentUICulture
         // kattaa myös taustasäikeet (raportit, analyysit, insights).
@@ -78,28 +98,14 @@ public partial class App : Application
         }
     }
 
-    /// <summary>Pyytää jo käynnissä olevaa instanssia näyttämään pääikkunansa.</summary>
-    private static void SignalExistingInstance()
-    {
-        try
-        {
-            // Luo-tai-avaa: jos ensimmäinen instanssi ei ole vielä ehtinyt
-            // luoda eventtiä, signaali jää silti talteen (AutoReset säilyy
-            // asetettuna kunnes joku odottaa sitä).
-            using var showEvent = new EventWaitHandle(
-                initialState: false, EventResetMode.AutoReset, ShowEventName);
-            showEvent.Set();
-        }
-        catch (Exception)
-        {
-            // Ei saatu yhteyttä (eri oikeustason instanssi tms.) —
-            // poistutaan silti hiljaa, instansseja on jo yksi.
-        }
-    }
-
     /// <summary>Kuuntelee toisen instanssin näyttöpyyntöjä taustasäikeessä.</summary>
     private void StartShowWindowListener()
     {
+        if (_showEvent is null)
+        {
+            return;
+        }
+
         var listener = new Thread(() =>
         {
             while (_showEvent!.WaitOne())

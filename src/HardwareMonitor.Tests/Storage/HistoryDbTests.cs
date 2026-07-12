@@ -272,10 +272,34 @@ public sealed class HistoryDbTests : IDisposable
 
         // Bucket-koosterivi on raakapäätepisteiden välissä.
         SampleRow bucketRow = Assert.Single(
-            rows, r => r.Fans.Any(f => f.SpinShare is not null));
+            rows, r => r.Fans.Any(f => f.KnownRows is not null));
         FanSampleValue fan = Assert.Single(bucketRow.Fans);
         Assert.Equal(250, fan.RpmAvg);
-        Assert.Equal(0.25, fan.SpinShare);
+        Assert.Equal(1, fan.SpinningRows);  // vain 1000 RPM -rivi pyöri
+        Assert.Equal(4, fan.KnownRows);
+        Assert.Equal("/gpu/fan/1", fan.Identifier);
+    }
+
+    [Fact]
+    public void ReadSampleRowsDownsampled_SamannimisetEriTunnisteet_PysyvatErillaan()
+    {
+        AggregatedSample TwoFans(DateTimeOffset ts) => Sample(ts) with
+        {
+            Fans = new[]
+            {
+                new FanAggregate("/mb/fan/1", "Fan #1", new MetricAggregate(500, 500, 500)),
+                new FanAggregate("/gpu/fan/1", "Fan #1", new MetricAggregate(1500, 1500, 1500)),
+            },
+        };
+        _db.InsertSample(TwoFans(Now));
+        _db.InsertSample(TwoFans(Now.AddSeconds(5)));
+
+        IReadOnlyList<SampleRow> rows =
+            _db.ReadSampleRowsDownsampled(Now.AddHours(-1), bucketSeconds: 60);
+
+        SampleRow row = rows.First(r => r.Fans.Count == 2);
+        Assert.Contains(row.Fans, f => f.Identifier == "/mb/fan/1" && f.RpmAvg == 500);
+        Assert.Contains(row.Fans, f => f.Identifier == "/gpu/fan/1" && f.RpmAvg == 1500);
     }
 
     [Fact]
@@ -372,10 +396,15 @@ public sealed class HistoryDbTests : IDisposable
             new EventRow(Now.AddMinutes(1), "CRITICAL", "Järjestelmä", "kernel", 41, null, "Kernel-Power 41"),
         };
 
-        _db.InsertEventsWithMeta(rows, "windows_last_record_id", "123");
+        _db.InsertEventsWithMeta(rows, new[]
+        {
+            ("windows_last_record_id", "123"),
+            ("windows_log_created_utc", "456"),
+        });
 
         Assert.Equal(2, _db.ReadRecentEvents(10).Count);
         Assert.Equal("123", _db.GetMeta("windows_last_record_id"));
+        Assert.Equal("456", _db.GetMeta("windows_log_created_utc"));
     }
 
     [Fact]

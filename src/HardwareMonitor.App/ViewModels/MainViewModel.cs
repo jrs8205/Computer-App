@@ -701,7 +701,10 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
 
                 if (BuildMachineInsights() is { } markdown)
                 {
-                    File.WriteAllText(MachineInsightsPath, markdown);
+                    // Atominen korvaus: levytila loppuessa tai kaatuessa aiempi
+                    // kelvollinen raportti säilyy (ei tyhjää/osittaista tiedostoa).
+                    HardwareMonitor.Core.IO.AtomicFile.WriteAllText(
+                        MachineInsightsPath, markdown, System.Text.Encoding.UTF8);
                 }
             }
             catch (Exception ex)
@@ -853,8 +856,15 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
                     (int)Math.Ceiling(hours * 3600 / (double)ChartMaxPoints));
                 IReadOnlyList<SampleRow> rows = db.ReadSampleRowsDownsampled(
                     DateTimeOffset.Now.AddHours(-hours), bucketSeconds);
+
+                // SQL on jo harventanut rivit (+ raakapäätepisteet ja
+                // null-katkosrivit), joten builderin ei pidä harventaa niitä
+                // uudelleen — muuten se ryhmittäisi rivit pareittain ja voisi
+                // pudottaa null-katkokset ja vetää viivan aukon yli. maxPoints
+                // ≥ rivimäärä pitää builderin harvennuksen pois päältä.
+                int maxPoints = Math.Max(ChartMaxPoints, rows.Count);
                 ChartHistory history =
-                    ChartHistoryBuilder.Build(rows, ChartMaxPoints, BuildFanLabelMap());
+                    ChartHistoryBuilder.Build(rows, maxPoints, BuildFanLabelMap());
                 System.Windows.Application.Current?.Dispatcher.InvokeAsync(() =>
                 {
                     // Vanhentuneen aikavälin tulosta ei sovelleta: valitsin
@@ -883,19 +893,18 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
         });
     }
 
-    /// <summary>Tuulettimen raakanimi → käyttäjän nimilappu (graafien selitteisiin).</summary>
+    /// <summary>Tuulettimen tunniste → käyttäjän nimilappu (graafien selitteisiin).</summary>
     private Dictionary<string, string> BuildFanLabelMap()
     {
+        // Nimilaput ovat jo tunnisteavaimisia (AppSettings.FanLabels), joten
+        // kopioidaan vain ei-tyhjät. Graafibuilder avaintaa tuulettimet
+        // tunnisteella, joten kartta on suoraan yhteensopiva.
         var map = new Dictionary<string, string>();
-        if (_latestMetrics is { } m)
+        foreach ((string identifier, string label) in _settings.FanLabels)
         {
-            foreach (FanMetrics fan in m.Fans)
+            if (label.Length > 0)
             {
-                if (_settings.FanLabels.TryGetValue(fan.Identifier, out string? label)
-                    && label.Length > 0)
-                {
-                    map[fan.Name] = label;
-                }
+                map[identifier] = label;
             }
         }
 

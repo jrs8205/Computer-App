@@ -32,18 +32,12 @@ public sealed class WindowsEventCollector
         // luontiaika muuttuu. Tämä huomaa tyhjennyksen myös silloin, kun
         // uusi loki on ehtinyt kasvaa vanhan kirjanmerkin ohi (RecordID-
         // vertailu ei sitä erottaisi).
-        DateTime? created = _source.ReadLogCreationTimeUtc();
-        string? createdValue = created?.Ticks.ToString();
+        string? createdValue = _source.ReadLogCreationTimeUtc()?.Ticks.ToString();
         string? storedCreated = _db.GetMeta(LogCreatedKey);
-        if (createdValue is not null && storedCreated is not null
-            && storedCreated != createdValue)
+        bool generationChanged = createdValue is not null && storedCreated != createdValue;
+        if (generationChanged && storedCreated is not null)
         {
             lastRecordId = 0;
-        }
-
-        if (createdValue is not null && storedCreated != createdValue)
-        {
-            _db.SetMeta(LogCreatedKey, createdValue);
         }
 
         // Jos loki on tyhjennetty, RecordID:t alkavat taas pienestä — vanha
@@ -54,10 +48,6 @@ public sealed class WindowsEventCollector
         }
 
         IReadOnlyList<WindowsLogEvent> events = _source.ReadSince(lastRecordId, MaxAge);
-        if (events.Count == 0)
-        {
-            return 0;
-        }
 
         var rows = new List<EventRow>();
         long maxRecordId = lastRecordId;
@@ -75,9 +65,24 @@ public sealed class WindowsEventCollector
                 Sensor: e.Provider, Value: e.EventId, Threshold: null, Message: c.Message));
         }
 
-        // Tapahtumat ja kirjanmerkki samassa transaktiossa — keskeytynyt
-        // skannaus ei saa tuottaa duplikaatteja seuraavalla kierroksella.
-        _db.InsertEventsWithMeta(rows, BookmarkKey, maxRecordId.ToString());
+        // Jos mitään ei muuttunut (ei tapahtumia, sama sukupolvi, ei nollausta),
+        // ei kannata kirjoittaa. Muutoin kaikki muutokset yhteen transaktioon.
+        bool bookmarkChanged = maxRecordId != lastRecordId || generationChanged;
+        if (rows.Count == 0 && !bookmarkChanged)
+        {
+            return 0;
+        }
+
+        var meta = new List<(string, string)> { (BookmarkKey, maxRecordId.ToString()) };
+        if (createdValue is not null)
+        {
+            // Sukupolvi kirjoitetaan SAMASSA transaktiossa kuin bookmark ja
+            // tapahtumat — ei enää erillistä SetMetaa, joka voisi tallentua
+            // vaikka tapahtumien luku/kirjoitus epäonnistuisi.
+            meta.Add((LogCreatedKey, createdValue));
+        }
+
+        _db.InsertEventsWithMeta(rows, meta);
         return rows.Count;
     }
 }

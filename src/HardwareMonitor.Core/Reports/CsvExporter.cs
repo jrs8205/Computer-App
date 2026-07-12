@@ -18,6 +18,9 @@ public static class CsvExporter
     /// <summary>Levysarake: monesko samanniminen levy rivillä + näyttönimi.</summary>
     private sealed record DiskColumn(string Name, int Occurrence, string Display);
 
+    /// <summary>Tuuletinsarake: pysyvä tunniste (avain) + näyttönimi otsikkoon.</summary>
+    private sealed record FanColumn(string Identifier, string Display);
+
     public static string Build(IReadOnlyList<SampleRow> rows, CultureInfo culture)
     {
         // Sarakkeiden unioni kaikista riveistä esiintymisjärjestyksessä —
@@ -25,18 +28,52 @@ public static class CsvExporter
         // Samannimiset levyt (kaksi identtistä 860 EVO:ta) saavat omat
         // sarakkeensa esiintymänumerolla kuten graafeissa (invariantti 10).
         List<DiskColumn> diskColumns = DiskColumns(rows);
-        List<string> fanNames = rows.SelectMany(r => r.Fans.Select(f => f.Name))
-            .Distinct().ToList();
+        List<FanColumn> fanColumns = FanColumns(rows);
 
         var sb = new StringBuilder();
-        AppendHeader(sb, diskColumns, fanNames);
+        AppendHeader(sb, diskColumns, fanColumns);
 
         foreach (SampleRow row in rows)
         {
-            AppendRow(sb, row, diskColumns, fanNames, culture);
+            AppendRow(sb, row, diskColumns, fanColumns, culture);
         }
 
         return sb.ToString();
+    }
+
+    /// <summary>
+    /// Tuuletinsarakkeet tunnisteella (samannimiset eri tuulettimet eivät
+    /// katoa). Jos kaksi tunnistetta jakaa nimen, otsikot erotellaan #n.
+    /// </summary>
+    private static List<FanColumn> FanColumns(IReadOnlyList<SampleRow> rows)
+    {
+        var nameByIdentifier = new Dictionary<string, string>();
+        foreach (SampleRow row in rows)
+        {
+            foreach (FanSampleValue fan in row.Fans)
+            {
+                nameByIdentifier.TryAdd(fan.Identifier, fan.Name);
+            }
+        }
+
+        var nameCounts = nameByIdentifier.Values
+            .GroupBy(n => n).ToDictionary(g => g.Key, g => g.Count());
+        var seen = new Dictionary<string, int>();
+        var columns = new List<FanColumn>();
+        foreach ((string identifier, string name) in nameByIdentifier)
+        {
+            string display = name;
+            if (nameCounts[name] > 1)
+            {
+                int n = seen.TryGetValue(name, out int c) ? c + 1 : 1;
+                seen[name] = n;
+                display = $"{name} #{n}";
+            }
+
+            columns.Add(new FanColumn(identifier, display));
+        }
+
+        return columns;
     }
 
     private static List<DiskColumn> DiskColumns(IReadOnlyList<SampleRow> rows)
@@ -86,7 +123,7 @@ public static class CsvExporter
     }
 
     private static void AppendHeader(
-        StringBuilder sb, List<DiskColumn> diskColumns, List<string> fanNames)
+        StringBuilder sb, List<DiskColumn> diskColumns, List<FanColumn> fanColumns)
     {
         static string Avg(string name) => $"{name} {Strings.Csv_SuffixAvg}";
         static string Max(string name) => $"{name} {Strings.Csv_SuffixMax}";
@@ -113,14 +150,14 @@ public static class CsvExporter
                 Avg(string.Format(Strings.Csv_DiskTemp, c.Display)),
                 Max(string.Format(Strings.Csv_DiskTemp, c.Display)),
             }));
-        columns.AddRange(fanNames.Select(n => string.Format(Strings.Csv_FanRpm, n)));
+        columns.AddRange(fanColumns.Select(c => string.Format(Strings.Csv_FanRpm, c.Display)));
 
         sb.AppendLine(string.Join(Separator, columns.Select(Escape)));
     }
 
     private static void AppendRow(
         StringBuilder sb, SampleRow row,
-        List<DiskColumn> diskColumns, List<string> fanNames, CultureInfo culture)
+        List<DiskColumn> diskColumns, List<FanColumn> fanColumns, CultureInfo culture)
     {
         var fields = new List<string>
         {
@@ -153,10 +190,10 @@ public static class CsvExporter
         }
 
         Dictionary<string, FanSampleValue> fans = row.Fans
-            .GroupBy(f => f.Name).ToDictionary(g => g.Key, g => g.First());
-        foreach (string name in fanNames)
+            .GroupBy(f => f.Identifier).ToDictionary(g => g.Key, g => g.First());
+        foreach (FanColumn column in fanColumns)
         {
-            fields.Add(fans.TryGetValue(name, out FanSampleValue? fan)
+            fields.Add(fans.TryGetValue(column.Identifier, out FanSampleValue? fan)
                 ? Num(fan.RpmAvg, culture)
                 : "");
         }

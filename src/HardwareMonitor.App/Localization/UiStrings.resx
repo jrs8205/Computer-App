@@ -103,6 +103,7 @@
   <data name="Dlg_InsightsEmpty" xml:space="preserve"><value>AI-raporttia ei voi vielä luoda — sensoridataa ei ole ehtinyt kertyä.</value></data>
   <data name="Dlg_InsightsCopied" xml:space="preserve"><value>AI-raportti kopioitu leikepöydälle. Liitä se tekoälychattiin (Ctrl+V).</value></data>
   <data name="Dlg_SaveFailed" xml:space="preserve"><value>Tallennus epäonnistui: {0}</value></data>
+  <data name="Dlg_SavedNotOpened" xml:space="preserve"><value>Tiedosto tallennettiin, mutta sitä ei voitu avata: {0}</value></data>
   <data name="Status_Starting" xml:space="preserve"><value>Käynnistetään sensorit…</value></data>
   <data name="Status_StartError" xml:space="preserve"><value>Virhe sensorien käynnistyksessä: {0}</value></data>
   <data name="Status_UpdateError" xml:space="preserve"><value>Virhe päivityksessä: {0}</value></data>

@@ -1,4 +1,6 @@
+using System.Text;
 using System.Text.Json;
+using HardwareMonitor.Core.IO;
 using HardwareMonitor.Core.Metrics;
 
 namespace HardwareMonitor.Core.Analysis;
@@ -103,6 +105,9 @@ public sealed class LastStateService
     private void Save(LastState state)
     {
         _current = state;
-        File.WriteAllText(FilePath, JsonSerializer.Serialize(state, JsonOptions));
+        // Atominen korvaus: kaatuminen kesken kirjoituksen ei saa jättää
+        // katkaistua JSONia, jolloin edellinen tila jäisi raportoimatta.
+        AtomicFile.WriteAllText(
+            FilePath, JsonSerializer.Serialize(state, JsonOptions), Encoding.UTF8);
     }
 }

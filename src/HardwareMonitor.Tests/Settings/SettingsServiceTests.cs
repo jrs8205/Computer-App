@@ -110,4 +110,24 @@ public sealed class SettingsServiceTests : IDisposable
 
         Assert.False(settings.Overlay.Enabled);
     }
+
+    [Fact]
+    public void Load_NulliksiAsetetutSisaoliot_TaydennetaanOletuksilla()
+    {
+        // Syntaktisesti kelvollinen JSON voi asettaa sisäoliot nulliksi;
+        // MainViewModel dereferoi ne heti konstruktorissa → kaatuisi.
+        Directory.CreateDirectory(_dir);
+        File.WriteAllText(Path.Combine(_dir, "settings.json"),
+            """{"Logging":null,"Thresholds":null,"Overlay":null,"FanLabels":null}""");
+        var service = new SettingsService(_dir);
+
+        AppSettings settings = service.Load();
+
+        Assert.NotNull(settings.Logging);
+        Assert.NotNull(settings.Thresholds);
+        Assert.NotNull(settings.Overlay);
+        Assert.NotNull(settings.FanLabels);
+        Assert.Equal(5, settings.Logging.SensorIntervalSeconds); // oletus
+        Assert.Equal(85, settings.Thresholds.CpuWarningTemp);    // oletus
+    }
 }

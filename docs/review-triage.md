@@ -115,3 +115,49 @@ Kaikki 12 löydöstä vahvistuivat ja korjattiin:
     kun SampleCount > 0; muuten havainto-osio jää pois.
 12. **[P2] publish-siivous**: install.ps1 tyhjentää publish-hakemiston
     ennen dotnet publishia (vanhat DLL:t eivät jää pakettiin).
+
+# Kolmas katselmointi (12.7.2026, v1.0.2:n jälkeen) — korjattu v1.0.3 ✅
+
+Kaikki 16 löydöstä vahvistuivat ja korjattiin (206 testiä). P1:t:
+
+1. **[P1] ProtectedPaths ACL vain 4 SID:iä**: pelkkä neljän yleisen SID:n
+   esto ei tunnistanut suoraa kirjoitusoikeutta käyttäjän omalle SID:lle
+   tai mukautetulle ryhmälle → allowlist-periaate: vain admin/SYSTEM/
+   TrustedInstaller-kirjoitus sallitaan, kaikki muu tekee polusta turvattoman.
+2. **[P1] Vaarallista autostart-tehtävää ei poistettu**: RefreshIfEnabled
+   lukee nyt olemassa olevan tehtävän kohdepolun (schtasks /XML) ja poistaa
+   tehtävän, jos se osoittaa suojaamattomaan polkuun (vanha versio tai
+   muuttunut ACL). Todennettu: Downloads-tehtävä poistettiin + luotiin
+   uudelleen Program Filesiin.
+3. **[P1] Lokisukupolvi eri transaktiossa**: SetMeta(sukupolvi) tapahtui
+   ennen tapahtumia ja palasi ne 0-tapahtumatilanteessa → sukupolvi,
+   tapahtumat ja bookmark kirjoitetaan nyt YHTEEN transaktioon
+   (InsertEventsWithMeta ottaa monta meta-avainta); 0 tapahtumaa + sukupolven
+   muutos → bookmark nollataan ja sukupolvi tallennetaan yhdessä.
+
+P2:t:
+
+4. Single-instance-event luodaan ennen mutex-kilpailua ja pidetään kentässä
+   elossa kaikilla instansseilla (objekti ei katoa signaloinnin ja
+   sulkemisen välissä). Todennettu: 2. käynnistys näytti 1. ikkunan.
+5. AI-raportin rakennus taustasäikeessä (raskaat DB-kyselyt pois UI:lta) +
+   koko rakennus lokalisoidun try/catchin sisällä; kopio/tallennus ei
+   karkaa WPF-tapahtumasta. Todennettu: kopio 3693 merkkiä.
+6. Atominen tiedostonkirjoitus (AtomicFile: temp + File.Move): machine-
+   insights.md ja last_state.json eivät korruptoidu kesken kirjoituksen.
+7. Graafit: SQL-tulosta ei harvenneta uudelleen (maxPoints ≥ rivimäärä) —
+   päätepisteet ja null-katkokset säilyvät.
+8. Tuulettimen 5 % -näkyvyysraja painotetaan raakarivien lukumäärillä
+   (SpinningRows/KnownRows), ei bucket-osuuksien keskiarvolla.
+9. Tuulettimet ryhmitellään pysyvällä tunnisteella (ei nimellä) kaikissa
+   poluissa (stats/downsample/CSV/graafit) — samannimiset eivät sulaudu.
+10. HistoryDb.Dispose sarjallistetaan _lockin alle (+ _disposed-lippu) —
+    yhteyttä ei suljeta aktiivisen taustatehtävän alta.
+11. MachineSpecReader käyttää samaa ensisijaisen GPU:n valintaa
+    (GpuSelector) kuin mittaukset — raportin GPU-nimi vastaa mittauksia.
+12. SettingsService täydentää nulliksi deserialisoituneet sisäoliot
+    oletuksilla ({"Logging":null} ei enää kaada käynnistystä).
+13. SaveAndOpen erottaa kirjoitus- ja avausvirheen (tiedosto tallentui
+    muttei auennut ei enää valehtele "tallennus epäonnistui").
+14. setup.iss-resepti dokumentoi publish-kansion tyhjennyksen ennen
+    julkaisua (vanhat DLL:t eivät jää installeriin).

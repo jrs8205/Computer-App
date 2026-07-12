@@ -176,10 +176,31 @@ public sealed class WindowsEventCollectorTests : IDisposable
     {
         var created = new DateTime(2026, 7, 1, 0, 0, 0, DateTimeKind.Utc);
         var source = new FakeSource { LogCreationTimeUtc = created };
+        source.Events.Add(new WindowsLogEvent(Now,
+            "Microsoft-Windows-Kernel-Power", 41, WindowsLevel: 1, RecordId: 5));
 
         new WindowsEventCollector(source, _db).Scan();
 
         Assert.Equal(created.Ticks.ToString(), _db.GetMeta("windows_log_created_utc"));
+    }
+
+    [Fact]
+    public void Scan_LokiTyhjennettyIlmanUusiaTapahtumia_NollaaBookmarkinJaTallentaaSukupolven()
+    {
+        // Loki tyhjennetty (sukupolvi muuttunut) mutta uusia luokiteltavia
+        // tapahtumia ei vielä ole: bookmarkin ja sukupolven pitää silti
+        // siirtyä yhdessä, muuten seuraava skannaus näkee saman sukupolven
+        // ja käyttää vanhaa korkeaa bookmarkia (alkupään tapahtumat hukkuisivat).
+        _db.SetMeta("windows_last_record_id", "5000");
+        _db.SetMeta("windows_log_created_utc",
+            new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc).Ticks.ToString());
+        var newGen = new DateTime(2026, 7, 1, 0, 0, 0, DateTimeKind.Utc);
+        var source = new FakeSource { LogCreationTimeUtc = newGen }; // tyhjä loki, 0 tapahtumaa
+
+        new WindowsEventCollector(source, _db).Scan();
+
+        Assert.Equal("0", _db.GetMeta("windows_last_record_id"));
+        Assert.Equal(newGen.Ticks.ToString(), _db.GetMeta("windows_log_created_utc"));
     }
 
     [Fact]

@@ -119,6 +119,7 @@ public static class UiStrings
     public static string Dlg_InsightsEmpty => T(nameof(Dlg_InsightsEmpty));
     public static string Dlg_InsightsCopied => T(nameof(Dlg_InsightsCopied));
     public static string Dlg_SaveFailed => T(nameof(Dlg_SaveFailed));
+    public static string Dlg_SavedNotOpened => T(nameof(Dlg_SavedNotOpened));
     public static string Status_Starting => T(nameof(Status_Starting));
     public static string Status_StartError => T(nameof(Status_StartError));
     public static string Status_UpdateError => T(nameof(Status_UpdateError));

@@ -240,24 +240,44 @@ public partial class MainWindow : Window
     private void MoveOverlay_Unchecked(object sender, RoutedEventArgs e) =>
         _overlay?.SetMoveMode(false);
 
-    private void CreateReport_Click(object sender, RoutedEventArgs e) =>
-        SaveAndOpen(
-            content: _viewModel.BuildReport(),
+    private async void CreateReport_Click(object sender, RoutedEventArgs e) =>
+        await BuildAndSaveAsync(
+            _viewModel.BuildReport,
             fileName: $"{UiStrings.Dlg_ReportFileName}-{DateTime.Now:yyyy-MM-dd}",
             filter: UiStrings.Dlg_ReportFilter,
             emptyMessage: UiStrings.Dlg_ReportEmpty);
 
-    private void ExportCsv_Click(object sender, RoutedEventArgs e) =>
-        SaveAndOpen(
-            content: _viewModel.BuildCsv(),
+    private async void ExportCsv_Click(object sender, RoutedEventArgs e) =>
+        await BuildAndSaveAsync(
+            _viewModel.BuildCsv,
             fileName: $"{UiStrings.Dlg_CsvFileName}-{DateTime.Now:yyyy-MM-dd}",
             filter: "CSV (Excel) (*.csv)|*.csv",
             emptyMessage: UiStrings.Dlg_CsvEmpty);
 
+    private async void SaveInsights_Click(object sender, RoutedEventArgs e) =>
+        await BuildAndSaveAsync(
+            _viewModel.BuildMachineInsights,
+            fileName: $"{UiStrings.Dlg_InsightsFileName}-{DateTime.Now:yyyy-MM-dd}",
+            filter: UiStrings.Dlg_InsightsFilter,
+            emptyMessage: UiStrings.Dlg_InsightsEmpty);
+
     /// <summary>Kopioi konetuntemus-lokin leikepöydälle tekoälychattiin liitettäväksi.</summary>
-    private void CopyInsights_Click(object sender, RoutedEventArgs e)
+    private async void CopyInsights_Click(object sender, RoutedEventArgs e)
     {
-        if (_viewModel.BuildMachineInsights() is not { } content)
+        // Rakennus taustalla: 30 pv insights käy läpi satojatuhansia koosterivejä
+        // ja pitää HistoryDb-lukkoa — UI-säie ei saa jäätyä sen ajaksi.
+        string? content;
+        try
+        {
+            content = await Task.Run(_viewModel.BuildMachineInsights);
+        }
+        catch (Exception ex)
+        {
+            ShowError(UiStrings.Dlg_SaveFailed, ex);
+            return;
+        }
+
+        if (content is null)
         {
             MessageBox.Show(this, UiStrings.Dlg_InsightsEmpty, "Hardware Monitor",
                 MessageBoxButton.OK, MessageBoxImage.Information);
@@ -273,17 +293,31 @@ public partial class MainWindow : Window
         catch (Exception ex)
         {
             // Leikepöytä voi olla toisen prosessin varaama — kerrotaan syy.
-            MessageBox.Show(this, string.Format(UiStrings.Dlg_SaveFailed, ex.Message),
-                "Hardware Monitor", MessageBoxButton.OK, MessageBoxImage.Error);
+            ShowError(UiStrings.Dlg_SaveFailed, ex);
         }
     }
 
-    private void SaveInsights_Click(object sender, RoutedEventArgs e) =>
-        SaveAndOpen(
-            content: _viewModel.BuildMachineInsights(),
-            fileName: $"{UiStrings.Dlg_InsightsFileName}-{DateTime.Now:yyyy-MM-dd}",
-            filter: UiStrings.Dlg_InsightsFilter,
-            emptyMessage: UiStrings.Dlg_InsightsEmpty);
+    /// <summary>
+    /// Rakentaa sisällön taustalla (raskaat DB-kyselyt pois UI-säikeeltä),
+    /// palaa UI-säikeelle tallennusdialogia varten. Rakennuksen poikkeus
+    /// näytetään lokalisoituna eikä karkaa WPF-tapahtumasta.
+    /// </summary>
+    private async Task BuildAndSaveAsync(
+        Func<string?> build, string fileName, string filter, string emptyMessage)
+    {
+        string? content;
+        try
+        {
+            content = await Task.Run(build);
+        }
+        catch (Exception ex)
+        {
+            ShowError(UiStrings.Dlg_SaveFailed, ex);
+            return;
+        }
+
+        SaveAndOpen(content, fileName, filter, emptyMessage);
+    }
 
     /// <summary>Kysyy tallennuspaikan, kirjoittaa tiedoston ja avaa sen oletusohjelmassa.</summary>
     private void SaveAndOpen(string? content, string fileName, string filter, string emptyMessage)
@@ -311,12 +345,27 @@ public partial class MainWindow : Window
             // BOM mukaan, jotta suomalainen Excel ja Notepad tunnistavat
             // UTF-8:n ja ääkköset näkyvät oikein.
             File.WriteAllText(dialog.FileName, content, new UTF8Encoding(true));
+        }
+        catch (Exception ex)
+        {
+            ShowError(UiStrings.Dlg_SaveFailed, ex);
+            return;
+        }
+
+        try
+        {
             Process.Start(new ProcessStartInfo(dialog.FileName) { UseShellExecute = true });
         }
         catch (Exception ex)
         {
-            MessageBox.Show(this, string.Format(UiStrings.Dlg_SaveFailed, ex.Message),
-                "Hardware Monitor", MessageBoxButton.OK, MessageBoxImage.Error);
+            // Kirjoitus onnistui; vain avaus epäonnistui (esim. .md:lle ei
+            // oletusohjelmaa) — kerrotaan ettei tiedosto ole hukassa.
+            MessageBox.Show(this, string.Format(UiStrings.Dlg_SavedNotOpened, ex.Message),
+                "Hardware Monitor", MessageBoxButton.OK, MessageBoxImage.Warning);
         }
     }
+
+    private void ShowError(string format, Exception ex) =>
+        MessageBox.Show(this, string.Format(format, ex.Message),
+            "Hardware Monitor", MessageBoxButton.OK, MessageBoxImage.Error);
 }

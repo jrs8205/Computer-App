@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.IO;
+using System.Text.RegularExpressions;
 using HardwareMonitor.Core.Security;
 
 namespace HardwareMonitor.App.Services;
@@ -62,10 +63,50 @@ public static class AutostartService
     /// </summary>
     public static void RefreshIfEnabled(Action<string>? log = null)
     {
-        if (IsEnabled())
+        if (!IsEnabled())
         {
-            SetEnabled(true, log);
+            return;
         }
+
+        // Turvasiivous: jos olemassa oleva tehtävä osoittaa suojaamattomaan
+        // polkuun (vanhemman version luoma korotettu tehtävä käyttäjän
+        // kirjoitettavassa polussa tai kohteen ACL on sittemmin muuttunut),
+        // se on korotusreitti — poistetaan se, ettei sitä jätetä aktiiviseksi.
+        string? existingTarget = ReadExistingTaskTarget();
+        if (existingTarget is not null && !IsInProtectedDirectory(existingTarget))
+        {
+            RunSchtasks($"/Delete /F /TN \"{TaskName}\"");
+            log?.Invoke(
+                "Poistettiin autostart-tehtävä, joka osoitti suojaamattomaan " +
+                "polkuun (mahdollinen korotusreitti).");
+        }
+
+        // Luo uudelleen nykyisestä exestä (SetEnabled kieltäytyy, jos nykyinen
+        // polku ei ole suojattu — silloin dangerous-tehtävä on jo poistettu).
+        SetEnabled(true, log);
+    }
+
+    /// <summary>
+    /// Olemassa olevan tehtävän käynnistettävä exe-polku (ilman argumentteja),
+    /// tai null jos sitä ei saada luettua. Luetaan schtasks /XML -tulosteesta.
+    /// </summary>
+    private static string? ReadExistingTaskTarget()
+    {
+        string? xml = RunSchtasksCapture($"/Query /TN \"{TaskName}\" /XML");
+        if (xml is null)
+        {
+            return null;
+        }
+
+        Match m = Regex.Match(xml, "<Command>(.*?)</Command>",
+            RegexOptions.Singleline | RegexOptions.IgnoreCase);
+        if (!m.Success)
+        {
+            return null;
+        }
+
+        // <Command> voi olla lainausmerkeissä; siistitään ne ja välit pois.
+        return m.Groups[1].Value.Trim().Trim('"');
     }
 
     /// <summary>
@@ -109,5 +150,34 @@ public static class AutostartService
 
         process.WaitForExit();
         return process.ExitCode;
+    }
+
+    /// <summary>Ajaa schtasksin ja palauttaa stdoutin, tai null jos epäonnistuu.</summary>
+    private static string? RunSchtasksCapture(string arguments)
+    {
+        try
+        {
+            using Process? process = Process.Start(new ProcessStartInfo
+            {
+                FileName = "schtasks.exe",
+                Arguments = arguments,
+                UseShellExecute = false,
+                CreateNoWindow = true,
+                RedirectStandardOutput = true,
+            });
+
+            if (process is null)
+            {
+                return null;
+            }
+
+            string output = process.StandardOutput.ReadToEnd();
+            process.WaitForExit();
+            return process.ExitCode == 0 ? output : null;
+        }
+        catch (Exception)
+        {
+            return null;
+        }
     }
 }

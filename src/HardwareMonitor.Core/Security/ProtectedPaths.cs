@@ -35,13 +35,17 @@ public static class ProtectedPaths
         return false;
     }
 
-    /// <summary>SID:t, joiden kirjoitusoikeus tarkoittaa ettei polku ole suojattu.</summary>
-    private static readonly SecurityIdentifier[] NonAdminSids =
+    // TrustedInstaller (NT SERVICE\TrustedInstaller) — Program Filesin todellinen
+    // omistaja; ei WellKnownSidType-vakiota, joten SID kirjoitettuna.
+    private const string TrustedInstallerSid =
+        "S-1-5-80-956008885-3418522649-1831038044-1853292631-2271478464";
+
+    /// <summary>Ainoat SID:t, joiden kirjoitusoikeus EI tee polusta turvatonta.</summary>
+    private static readonly SecurityIdentifier[] AdminSids =
     {
-        new(WellKnownSidType.WorldSid, null),             // Everyone
-        new(WellKnownSidType.AuthenticatedUserSid, null),
-        new(WellKnownSidType.BuiltinUsersSid, null),
-        new(WellKnownSidType.InteractiveSid, null),
+        new(WellKnownSidType.BuiltinAdministratorsSid, null),
+        new(WellKnownSidType.LocalSystemSid, null),
+        new(TrustedInstallerSid),
     };
 
     private const FileSystemRights WriteRights =
@@ -53,9 +57,12 @@ public static class ProtectedPaths
         | FileSystemRights.TakeOwnership;
 
     /// <summary>
-    /// True, jos tavallinen (ei-admin) käyttäjä voi kirjoittaa polkuun —
-    /// eli polusta EI saa käynnistää korotettua tehtävää. Virhetilanteessa
-    /// (polku puuttuu, ACL ei luettavissa) tulkitaan turvattomaksi.
+    /// True, jos joku muu kuin hallinnollinen taho (admin/SYSTEM/
+    /// TrustedInstaller) voi kirjoittaa polkuun — eli polusta EI saa
+    /// käynnistää korotettua tehtävää. Allowlist-periaate: mikä tahansa
+    /// kirjoitus-ACE, jonka SID ei ole varmasti hallinnollinen (esim.
+    /// käyttäjän oma SID, Users, mukautettu ryhmä), tekee polusta turvattoman.
+    /// Virhetilanteessa (polku puuttuu, ACL ei luettavissa) turvaton.
     /// </summary>
     public static bool HasNonAdminWriteAccess(string path)
     {
@@ -86,10 +93,10 @@ public static class ProtectedPaths
                     continue;
                 }
 
-                if (rule.IdentityReference is SecurityIdentifier sid
-                    && Array.Exists(NonAdminSids, s => s.Equals(sid)))
+                if (rule.IdentityReference is not SecurityIdentifier sid
+                    || !Array.Exists(AdminSids, s => s.Equals(sid)))
                 {
-                    return true;
+                    return true; // ei-hallinnollinen kirjoitus → turvaton
                 }
             }
 

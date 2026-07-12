@@ -4,11 +4,16 @@ public sealed record DiskSampleValue(
     string Name, double? TempAvg, double? TempMax, double? TempMin = null);
 
 /// <summary>
-/// SpinShare = pyörimässä olleiden 5 s rivien osuus (0–1) harvennetussa
-/// bucketissa; null raakariveillä (silloin RpmAvg > 0 kertoo saman asian).
+/// Yhden tuulettimen kooterivi. Identifier on LHM:n pysyvä tunniste —
+/// samannimiset eri tuulettimet (esim. emolevyn ja GPU:n "Fan #1") pysyvät
+/// erillään sillä. SpinningRows/KnownRows ovat pyörivien ja tunnettujen 5 s
+/// raakarivien lukumäärät harvennetussa bucketissa; niistä lasketaan
+/// graafin 5 % -näkyvyysraja painotettuna (bucket-osuuksien keskiarvo
+/// yliedustaisi pieniä bucketteja). Null raakariveillä.
 /// </summary>
 public sealed record FanSampleValue(
-    string Name, double? RpmAvg, double? RpmMin = null, double? SpinShare = null);
+    string Name, double? RpmAvg, double? RpmMin = null, string Identifier = "",
+    int? SpinningRows = null, int? KnownRows = null);
 
 /// <summary>
 /// Yksi 5 s kooste lapsiriveineen CSV-vientiä varten (määrittelyn luku 21).

@@ -24,7 +24,7 @@ public static class ChartHistoryBuilder
 {
     public static ChartHistory Build(
         IReadOnlyList<SampleRow> rows, int maxPoints,
-        IReadOnlyDictionary<string, string> fanLabelsByRawName)
+        IReadOnlyDictionary<string, string> fanLabelsByIdentifier)
     {
         IReadOnlyList<IReadOnlyList<SampleRow>> buckets = Bucketize(rows, maxPoints);
         DateTimeOffset[] stamps = Timestamps(buckets, rows);
@@ -50,35 +50,50 @@ public static class ChartHistoryBuilder
         };
 
         var fans = new List<ChartSeries>();
-        foreach (string name in rows.SelectMany(r => r.Fans.Select(f => f.Name)).Distinct())
+        // Avaimena tunniste (ei nimi): samannimiset eri tuulettimet ovat eri
+        // sarjoja. Näyttönimi ja käyttäjän nimilappu haetaan tunnisteella.
+        foreach (string identifier in
+                 rows.SelectMany(r => r.Fans.Select(f => f.Identifier)).Distinct())
         {
+            string rawName = rows.SelectMany(r => r.Fans)
+                .First(f => f.Identifier == identifier).Name;
             string display =
-                fanLabelsByRawName.TryGetValue(name, out string? label) && label.Length > 0
-                    ? label : name;
+                fanLabelsByIdentifier.TryGetValue(identifier, out string? label) && label.Length > 0
+                    ? label : rawName;
             ChartSeries series = Series(display, buckets, stamps, gapAfter, rows,
-                r => r.Fans.FirstOrDefault(f => f.Name == name)?.RpmAvg);
+                r => r.Fans.FirstOrDefault(f => f.Identifier == identifier)?.RpmAvg);
 
             // Sarja vain tuulettimelle joka pyörii vähintään 5 % tunnetusta
-            // ajasta (käyttäjän palaute 9.7.2026). Osuus lasketaan rivien
-            // SpinSharesta — harvennetun bucketin keskiarvo laimenee, joten
-            // pisteistä laskettu osuus liioittelisi satunnaisia pyörähdyksiä.
-            double shareSum = 0;
-            int shareCount = 0;
+            // ajasta (käyttäjän palaute 9.7.2026). Osuus lasketaan RAAKArivien
+            // lukumääristä painotettuna: bucket-osuuksien keskiarvo antaisi
+            // pienelle bucketille saman painon kuin suurelle (yksi pyörähdys
+            // täydessä pysähtyneessä bucketissa näyttäisi liian suurelta).
+            long spinning = 0, known = 0;
             foreach (SampleRow row in rows)
             {
-                FanSampleValue? fan = row.Fans.FirstOrDefault(f => f.Name == name);
-                double? share = fan is null
-                    ? null
-                    : fan.SpinShare
-                      ?? (fan.RpmAvg is { } rpm ? (rpm > 0 ? 1.0 : 0.0) : null);
-                if (share is { } s)
+                FanSampleValue? fan = row.Fans.FirstOrDefault(f => f.Identifier == identifier);
+                if (fan is null)
                 {
-                    shareSum += s;
-                    shareCount++;
+                    continue;
+                }
+
+                if (fan.KnownRows is { } k)
+                {
+                    spinning += fan.SpinningRows ?? 0;
+                    known += k;
+                }
+                else if (fan.RpmAvg is { } rpm)
+                {
+                    // Raakarivi (ei harvennettu): yksi tunnettu rivi.
+                    known++;
+                    if (rpm > 0)
+                    {
+                        spinning++;
+                    }
                 }
             }
 
-            if (shareSum > 0 && shareSum * 20 >= shareCount)
+            if (spinning > 0 && spinning * 20 >= known)
             {
                 fans.Add(series);
             }

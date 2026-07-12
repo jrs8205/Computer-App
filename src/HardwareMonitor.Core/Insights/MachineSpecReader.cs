@@ -12,9 +12,14 @@ public static class MachineSpecReader
     public static MachineSpec Read(
         IReadOnlyList<HardwareGroup> groups, string osDescription, string userNotes)
     {
-        string? cpu = null, gpu = null, motherboard = null;
+        string? cpu = null, motherboard = null;
         int? ramGb = null;
         var disks = new List<string>();
+
+        // GPU-nimi valitaan SAMALLA logiikalla kuin GPU-mittaukset
+        // (KeyMetricsService) — hybridikoneessa raportti ei saa yhdistää iGPU:n
+        // nimeä dGPU:n mittauksiin.
+        string? gpu = GpuSelector.SelectPrimary(groups)?.Name.Trim();
 
         foreach (HardwareGroup group in groups)
         {
@@ -30,13 +35,6 @@ public static class MachineSpecReader
                 case "Cpu": cpu ??= name; break;
                 case "Motherboard": motherboard ??= name; break;
                 case "Storage": disks.Add(name); break;
-                default:
-                    if (group.HardwareType.StartsWith("Gpu", StringComparison.Ordinal))
-                    {
-                        gpu ??= name;
-                    }
-
-                    break;
             }
         }
 

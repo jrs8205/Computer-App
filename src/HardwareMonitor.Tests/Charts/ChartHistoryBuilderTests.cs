@@ -81,6 +81,26 @@ public class ChartHistoryBuilderTests
     }
 
     [Fact]
+    public void JoHarvennettuNullKatkos_SailyyKunEiHarvennetaUudelleen()
+    {
+        // SQL-harvennettu tulos sisältää valmiit null-katkosrivit; kun
+        // maxPoints ≥ rivimäärä, builder ei ryhmitä niitä uudelleen vaan
+        // säilyttää katkoksen (MainViewModel luottaa tähän).
+        var rows = new[]
+        {
+            Row(0, cpuTemp: 40),
+            Row(60),                 // kaikki null = katkos
+            Row(120, cpuTemp: 50),
+        };
+
+        ChartHistory h = ChartHistoryBuilder.Build(rows, rows.Length, NoLabels);
+
+        ChartSeries cpu = Cpu(h);
+        Assert.Equal(3, cpu.Points.Count);
+        Assert.Null(cpu.Points[1].Value);
+    }
+
+    [Fact]
     public void PaatepisteenPuuttuvaArvo_SailyyAukkona()
     {
         // Jos päätepisterivin mittaus puuttuu, pisteen pitää jäädä nulliksi —
@@ -123,21 +143,56 @@ public class ChartHistoryBuilderTests
     }
 
     [Fact]
-    public void HarvoinPyoriva_SuodattuuMyosSpinSharella()
+    public void HarvoinPyoriva_SuodattuuRaakarivienMaaralla()
     {
-        // SQL-harvennetun rivin RpmAvg voi olla positiivinen vaikka tuuletin
-        // pyöri vain 1 % ajasta — osuus tulee SpinShare-kentästä, ei pisteistä.
-        SampleRow[] rows = Enumerable.Range(0, 100).Select(i =>
-            Row(i * 300, fans: new[]
+        // Painotus raakarivien lukumäärillä: yksi bucket 99 pysähtynyttä riviä,
+        // toinen 1 pyörivä rivi → osuuksien keskiarvo (0 ja 1) olisi 50 %,
+        // mutta todellinen osuus 1/100 = 1 % < 5 % → GPU Fan suodattuu.
+        var rows = new[]
+        {
+            Row(0, fans: new[]
             {
-                new FanSampleValue("GPU Fan 1", 8, null, SpinShare: 0.01),
-                new FanSampleValue("Fan #1", 600, null, SpinShare: 1.0),
-            })).ToArray();
+                new FanSampleValue("GPU Fan 1", 0, Identifier: "/gpu/fan/1",
+                    SpinningRows: 0, KnownRows: 99),
+                new FanSampleValue("Fan #1", 600, Identifier: "/mb/fan/1",
+                    SpinningRows: 99, KnownRows: 99),
+            }),
+            Row(300, fans: new[]
+            {
+                new FanSampleValue("GPU Fan 1", 8, Identifier: "/gpu/fan/1",
+                    SpinningRows: 1, KnownRows: 1),
+                new FanSampleValue("Fan #1", 600, Identifier: "/mb/fan/1",
+                    SpinningRows: 1, KnownRows: 1),
+            }),
+        };
 
         ChartHistory h = ChartHistoryBuilder.Build(rows, 500, NoLabels);
 
         ChartSeries fan = Assert.Single(h.Fans);
         Assert.Equal("Fan #1", fan.Name);
+    }
+
+    [Fact]
+    public void SamannimisetEriTunnisteet_OvatEriSarjat()
+    {
+        // Emolevyn ja GPU:n "Fan #1" ovat eri tuulettimia — eivät saa sulautua.
+        var rows = new[]
+        {
+            Row(0, fans: new[]
+            {
+                new FanSampleValue("Fan #1", 600, Identifier: "/mb/fan/1",
+                    SpinningRows: 1, KnownRows: 1),
+                new FanSampleValue("Fan #1", 1500, Identifier: "/gpu/fan/1",
+                    SpinningRows: 1, KnownRows: 1),
+            }),
+        };
+        var labels = new Dictionary<string, string> { ["/gpu/fan/1"] = "GPU-tuuletin" };
+
+        ChartHistory h = ChartHistoryBuilder.Build(rows, 500, labels);
+
+        Assert.Equal(2, h.Fans.Count);
+        Assert.Contains(h.Fans, s => s.Name == "Fan #1");       // emolevy, ei lappua
+        Assert.Contains(h.Fans, s => s.Name == "GPU-tuuletin"); // lappu tunnisteella
     }
 
     [Fact]
@@ -190,8 +245,11 @@ public class ChartHistoryBuilderTests
     [Fact]
     public void Tuuletin_SaaNimilapun()
     {
-        var rows = new[] { Row(0, fans: new[] { new FanSampleValue("Fan #2", 1950) }) };
-        var labels = new Dictionary<string, string> { ["Fan #2"] = "AIO-pumppu" };
+        var rows = new[]
+        {
+            Row(0, fans: new[] { new FanSampleValue("Fan #2", 1950, Identifier: "/fan/2") }),
+        };
+        var labels = new Dictionary<string, string> { ["/fan/2"] = "AIO-pumppu" };
 
         ChartHistory h = ChartHistoryBuilder.Build(rows, 500, labels);
 
@@ -205,8 +263,16 @@ public class ChartHistoryBuilderTests
     {
         var rows = new[]
         {
-            Row(0, fans: new[] { new FanSampleValue("Fan #5", 0), new FanSampleValue("Fan #1", 600) }),
-            Row(5, fans: new[] { new FanSampleValue("Fan #5", null), new FanSampleValue("Fan #1", 620) }),
+            Row(0, fans: new[]
+            {
+                new FanSampleValue("Fan #5", 0, Identifier: "/fan/5"),
+                new FanSampleValue("Fan #1", 600, Identifier: "/fan/1"),
+            }),
+            Row(5, fans: new[]
+            {
+                new FanSampleValue("Fan #5", null, Identifier: "/fan/5"),
+                new FanSampleValue("Fan #1", 620, Identifier: "/fan/1"),
+            }),
         };
 
         ChartHistory h = ChartHistoryBuilder.Build(rows, 500, NoLabels);
@@ -223,8 +289,8 @@ public class ChartHistoryBuilderTests
         SampleRow[] rows = Enumerable.Range(0, 100).Select(i =>
             Row(i * 5, fans: new[]
             {
-                new FanSampleValue("GPU Fan 1", i < 2 ? 1500 : 0),
-                new FanSampleValue("Fan #1", 600),
+                new FanSampleValue("GPU Fan 1", i < 2 ? 1500 : 0, Identifier: "/gpu/fan/1"),
+                new FanSampleValue("Fan #1", 600, Identifier: "/fan/1"),
             })).ToArray();
 
         ChartHistory h = ChartHistoryBuilder.Build(rows, 500, NoLabels);

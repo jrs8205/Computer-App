@@ -37,6 +37,26 @@ public class ProtectedPathsTests : IDisposable
     }
 
     [Fact]
+    public void NykyiselleKayttajalleMyonnettyKirjoitus_EiOleSuojattu()
+    {
+        // Jos ACL myöntää kirjoituksen suoraan nykyiselle käyttäjälle (tai
+        // mukautetulle ei-hallinnolliselle ryhmälle), polku EI ole suojattu —
+        // vain admin/SYSTEM/TrustedInstaller-kirjoitus sallitaan.
+        var info = Directory.CreateDirectory(_dir);
+        DirectorySecurity security = info.GetAccessControl();
+        security.SetAccessRuleProtection(isProtected: true, preserveInheritance: false);
+        security.AddAccessRule(new FileSystemAccessRule(
+            new SecurityIdentifier(WellKnownSidType.BuiltinAdministratorsSid, null),
+            FileSystemRights.FullControl, AccessControlType.Allow));
+        security.AddAccessRule(new FileSystemAccessRule(
+            WindowsIdentity.GetCurrent().User!,
+            FileSystemRights.Modify, AccessControlType.Allow));
+        info.SetAccessControl(security);
+
+        Assert.True(ProtectedPaths.HasNonAdminWriteAccess(_dir));
+    }
+
+    [Fact]
     public void VainAdminKirjoitettavaHakemisto_OnSuojattu()
     {
         var info = Directory.CreateDirectory(_dir);

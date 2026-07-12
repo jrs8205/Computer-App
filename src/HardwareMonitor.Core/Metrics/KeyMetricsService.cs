@@ -120,7 +120,7 @@ public static class KeyMetricsService
             CollectFans(group, fans);
         }
 
-        if (SelectPrimaryGpu(gpuGroups) is { } gpu)
+        if (GpuSelector.SelectPrimary(gpuGroups) is { } gpu)
         {
             foreach (SensorReading s in gpu.Sensors)
             {
@@ -165,16 +165,6 @@ public static class KeyMetricsService
             Disks: disks,
             Fans: fans);
     }
-
-    /// <summary>
-    /// Ensisijainen GPU: erillisnäytönohjain (Nvidia/AMD) ennen Inteliä,
-    /// tasapelissä eniten sensoreita tarjoava (erilliskortti on rikkaampi).
-    /// </summary>
-    private static HardwareGroup? SelectPrimaryGpu(List<HardwareGroup> gpuGroups) =>
-        gpuGroups
-            .OrderBy(g => g.HardwareType == "GpuIntel" ? 1 : 0)
-            .ThenByDescending(g => g.Sensors.Count)
-            .FirstOrDefault();
 
     /// <summary>Kerää Fan-tyyppiset sensorit laitteesta ja sen alalaitteista rekursiivisesti.</summary>
     private static void CollectFans(HardwareGroup group, List<FanMetrics> fans)

@@ -5,7 +5,8 @@ public sealed record MetricStat(double? Avg, double? Max);
 
 public sealed record DiskStat(string Name, double? TempAvg, double? TempMax);
 
-public sealed record FanStat(string Name, double? RpmAvg, double? RpmMax);
+public sealed record FanStat(
+    string Name, double? RpmAvg, double? RpmMax, string Identifier = "");
 
 /// <summary>
 /// Aikavälin koosteet samples-tauluista riskianalyysia ja konetuntemus-lokia
