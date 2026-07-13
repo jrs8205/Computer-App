@@ -130,15 +130,15 @@ Todennettu ajossa: nappi kopioi 3693 merkkiä tuoretta sisältöä + vahvistus.
 
 ## Seuraavaksi (ei mitään pakollista kesken — ideoita)
 
-1. **Aito code signing** (Azure Trusted Signing ~10 $/kk tai Certum OSS
-   -varmenne) → poistaisi SmartScreen-varoituksen "tuntematon julkaisija".
-   TÄMÄ on selkein aiemmissa istunnoissa puhuttu avoin kohta; muuta
-   pakollista ei ole. Vaatii tilin/varmenteen hankinnan ja henkilöllisyyden
-   varmennuksen (päiviä).
-2. ROADMAPin jatkokehitysideat (PresentMon/FPS-mittaus ym.).
-3. (valinnainen) Muodollinen lisenssitarkastus ennen laajaa jakelua
-   (kirjattu THIRD-PARTY-NOTICES.md:hen).
-4. (valinnainen) Events-taulussa on yhä vanhoja testihälytyksiä (raja 30 °C)
+**Laajuuspäätös 13.7.2026**: sovellus on henkilökohtainen työkalu — muita
+käyttäjiä ei odoteta. Siksi maksullinen code signing (Azure Trusted
+Signing / Certum; poistaisi SmartScreen-varoituksen vain muilta) ja
+muodollinen lisenssitarkastus "laajaa jakelua varten" POISTETTU
+ideoista — ei ehdoteta ellei käyttäjä itse nosta esiin. Samoin päätetty:
+koodikommentit ja testinimet pysyvät suomeksi.
+
+1. ROADMAPin jatkokehitysideat (PresentMon/FPS-mittaus ym.).
+2. (valinnainen) Events-taulussa on yhä vanhoja testihälytyksiä (raja 30 °C)
    — dataa, ei bugi; voi siivota käyttäjän pyynnöstä.
 
 ## Build- ja ajokomennot + sudenkuopat
