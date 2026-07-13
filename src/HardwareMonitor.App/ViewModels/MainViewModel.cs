@@ -12,6 +12,7 @@ using HardwareMonitor.Core.Insights;
 using HardwareMonitor.Core.Logging;
 using HardwareMonitor.Core.Metrics;
 using HardwareMonitor.Core.Notifications;
+using HardwareMonitor.Core.Power;
 using HardwareMonitor.Core.Reports;
 using HardwareMonitor.Core.Sensors;
 using HardwareMonitor.Core.Settings;
@@ -124,6 +125,13 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
     /// <summary>Jälki debug-lokiin, kun overlay sulkeutui ilman sovelluksen omaa kutsua.</summary>
     public void LogOverlayUnexpectedClose() =>
         _logger.Log("[WARNING] Overlay-ikkuna sulkeutui odottamatta — luodaan uudelleen.");
+
+    /// <summary>
+    /// Jälki debug-lokiin, kun overlay luotiin uudelleen herätyksen jälkeen
+    /// (läpinäkyvän ikkunan sisältö voi jäädä tyhjäksi näytön unen jälkeen).
+    /// </summary>
+    public void LogOverlayRecovered(PowerSessionEvent trigger) =>
+        _logger.Log($"Overlay luotu uudelleen herätyksen jälkeen (syy: {trigger}).");
 
     /// <summary>Tallentaa käyttäjän raahaaman overlay-sijainnin.</summary>
     public void SetOverlayCustomPosition(double left, double top)

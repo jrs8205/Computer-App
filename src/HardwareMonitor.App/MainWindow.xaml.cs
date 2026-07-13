@@ -7,13 +7,16 @@ using System.Windows.Input;
 using HardwareMonitor.App.Localization;
 using HardwareMonitor.App.ViewModels;
 using HardwareMonitor.Core.Notifications;
+using HardwareMonitor.Core.Power;
 
 namespace HardwareMonitor.App;
 
 public partial class MainWindow : Window
 {
     private readonly MainViewModel _viewModel = new();
+    private readonly OverlayRecoveryPolicy _recoveryPolicy = new();
     private OverlayWindow? _overlay;
+    private PowerSessionEventSource? _powerEvents;
     private System.Windows.Forms.NotifyIcon? _trayIcon;
     private bool _reallyExiting;
     private bool _monitoringStarted;
@@ -23,6 +26,12 @@ public partial class MainWindow : Window
         InitializeComponent();
         DataContext = _viewModel;
         CreateTrayIcon();
+
+        // Läpinäkyvä overlay voi jäädä tyhjäksi näytön unen, lepotilan tai
+        // istunnon lukituksen jälkeen (HWND jää näkyväksi mutta sisältöä ei
+        // piirretä) — kuunnellaan herätykset ja luodaan ikkuna uudelleen.
+        _powerEvents = new PowerSessionEventSource(this);
+        _powerEvents.EventReceived += OnPowerSessionEvent;
 
         // Trayhin käynnistyttäessä ikkunaa ei näytetä, joten Loaded ei laukea
         // — mittaus ja overlay on käynnistettävä heti tässä.
@@ -54,6 +63,7 @@ public partial class MainWindow : Window
 
         Closed += (_, _) =>
         {
+            _powerEvents?.Dispose();
             _trayIcon?.Dispose();
 
             // Viite nollataan ennen sulkemista, ettei overlayn Closed-
@@ -232,6 +242,39 @@ public partial class MainWindow : Window
             _viewModel.LogOverlayUnexpectedClose();
             ApplyOverlaySettings();
         }
+    }
+
+    /// <summary>
+    /// Virta-/istuntotapahtumat voivat laueta taustasäikeessä — tilakone ja
+    /// ikkunaoperaatiot ajetaan aina UI-säikeessä, jolloin ne ovat myös
+    /// sarjallisia (ei kilpailua päällekkäisistä herätysilmoituksista).
+    /// </summary>
+    private void OnPowerSessionEvent(PowerSessionEvent e) =>
+        Dispatcher.BeginInvoke(() =>
+        {
+            if (_recoveryPolicy.ShouldRecreateOverlay(e))
+            {
+                RecreateOverlay(e);
+            }
+        });
+
+    /// <summary>
+    /// Luo overlayn uudelleen herätyksen jälkeen: sama hallittu sulkemispolku
+    /// kuin asetusmuutoksissa (viite nollataan ennen sulkemista, ettei
+    /// OnOverlayClosed tulkitse tätä odottamattomaksi).
+    /// </summary>
+    private void RecreateOverlay(PowerSessionEvent trigger)
+    {
+        if (_overlay is null)
+        {
+            return;
+        }
+
+        _viewModel.LogOverlayRecovered(trigger);
+        OverlayWindow closing = _overlay;
+        _overlay = null;
+        closing.Close();
+        ApplyOverlaySettings();
     }
 
     private void MoveOverlay_Checked(object sender, RoutedEventArgs e) =>

@@ -1,15 +1,38 @@
-# HANDOFF — 12.7.2026 istunnon päätös: v1.0.4 julkaistu, repo julkinen
+# HANDOFF — 13.7.2026 istunnon päätös: v1.0.5 julkaistu (overlay-korjaus)
 
 Tämä tiedosto kertoo mihin jäätiin ja miten jatketaan. Lue tämä ensin,
 sitten `docs/review-triage.md` ja `docs/ROADMAP.md`.
 
 ## Tilanne yhdellä lauseella
 
-**Projekti on julkaisukunnossa eikä aktiivista työtä ole kesken**: v1.0.4
-julkaistu GitHubiin (4 bugitarkastusta = 70 löydöstä korjattu TDD:llä,
-217 testiä; AI-raportin napit yläpalkissa), repo JULKINEN, README
-kaksikielinen, exet allekirjoitettu, lisenssitekstit paketissa ja
-git-historia puhdistettu (vain käyttäjä Contributors-listassa).
+**Projekti on julkaisukunnossa eikä aktiivista työtä ole kesken**: v1.0.5
+julkaistu GitHubiin (käyttäjän raportoima overlayn katoamisbugi korjattu
+TDD:llä, 226 testiä), repo JULKINEN, README kaksikielinen, exet
+allekirjoitettu, lisenssitekstit paketissa ja git-historia puhdistettu.
+
+## Uusinta (v1.0.5): overlay ei kadonnut — se lakkasi piirtymästä
+
+Käyttäjä raportoi overlayn "katoavan itsestään". Diagnoosi 13.7.2026
+ajossa olevasta sovelluksesta: overlayn HWND jäi elämään (visible,
+topmost, oikea sijainti EnumWindowsilla todennettu), mutta läpinäkyvän
+ikkunan (`AllowsTransparency` → WS_EX_LAYERED) sisältö tyhjeni näytön
+unen jälkeen — kuvakaappaus paikalta oli tyhjä. Vanha itsekorjausvahti
+(OnOverlayClosed) ei lauennut, koska ikkuna ei sulkeutunut. Lokien
+"istunto päättyi yllättäen" -rivit olivat erillinen asia: koneen
+uudelleenkäynnistyksiä, ei kaatumisia (Application-lokissa 0 kaatumista).
+
+Korjaus: `Core/Power/OverlayRecoveryPolicy` (puhdas tilakone, 9 testiä):
+riskitapahtuma (DisplayOff/Suspend/SessionLock) virittää, ensimmäinen
+herätys (DisplayOn/Resume/SessionUnlock) laukaisee uudelleenluonnin —
+vain kerran per jakso. `App/PowerSessionEventSource` kuuntelee
+WM_POWERBROADCAST-ilmoituksia (RegisterPowerSettingNotification,
+GUID_CONSOLE_DISPLAY_STATE; kahva EnsureHandlella, koska tray-tilassa
+pääikkunaa ei näytetä) sekä SystemEventsin lepotila-/istuntotapahtumia.
+MainWindow ajaa tilakoneen ja uudelleenluonnin aina UI-säikeessä
+(Dispatcher.BeginInvoke) hallitulla sulkemispolulla. Todennettu ajossa:
+näytön ohjelmallinen sammutus/herätys (SC_MONITORPOWER) → lokirivi
+"Overlay luotu uudelleen herätyksen jälkeen (syy: DisplayOn)" +
+kuvakaappauksessa elävä overlay.
 
 ## JULKAISU VAIN tools/release.ps1:llä (v1.0.4)
 
@@ -58,10 +81,10 @@ Todennettu ajossa: nappi kopioi 3693 merkkiä tuoretta sisältöä + vahvistus.
 - **Repo**: https://github.com/jrs8205/Computer-App — JULKINEN.
   **main = julkaisuhaara** (sama kärki kuin työhaara
   `claude/windows-11-program-setup-rxuyhn`). About-osio + topicit asetettu.
-- **Release**: v1.0.4, liitteenä allekirjoitettu
-  `HardwareMonitor-Setup-1.0.4.exe` (self-contained; sisältää LICENSE.txt
-  + THIRD-PARTY-NOTICES.md). v1.0.0–1.0.3 jäävät historiaan.
-- **Asennettuna koneella**: `C:\Program Files\Hardware Monitor` (v1.0.4,
+- **Release**: v1.0.5, liitteenä allekirjoitettu
+  `HardwareMonitor-Setup-1.0.5.exe` (self-contained; sisältää LICENSE.txt
+  + THIRD-PARTY-NOTICES.md). v1.0.0–1.0.4 jäävät historiaan.
+- **Asennettuna koneella**: `C:\Program Files\Hardware Monitor` (v1.0.5,
   allekirjoitettu; autostart-tehtävä HighestAvailable).
 - **README.md = englanti** (julkinen etusivu), **README.fi.md = suomi**,
   ristiinlinkitetty. About-osiossa EI AI-mainintoja (käyttäjän päätös).
@@ -122,7 +145,7 @@ Todennettu ajossa: nappi kopioi 3693 merkkiä tuoretta sisältöä + vahvistus.
 
 ```powershell
 dotnet build HardwareMonitor.sln    # AINA UI-muutosten jälkeen!
-dotnet test src/HardwareMonitor.Tests/HardwareMonitor.Tests.csproj  # 184 ✓
+dotnet test src/HardwareMonitor.Tests/HardwareMonitor.Tests.csproj  # 226 ✓
 .\tools\install.ps1                 # kehittäjän pika-asennus Program Filesiin
 .\run.ps1 -AsAdmin                  # kehitysajo (huom: manifest kysyy UAC:n)
 ```
