@@ -25,9 +25,9 @@ public static class VendorLinkResolver
 
         if (name.Contains("NVIDIA", StringComparison.OrdinalIgnoreCase))
         {
-            return finnish
-                ? "https://www.nvidia.com/fi-fi/drivers/"
-                : "https://www.nvidia.com/Download/index.aspx";
+            // NVIDIAlla ei ole suomenkielistä sivustoa (fi-fi/drivers → 404) —
+            // globaali ajurihakusivu toimii kaikilla kielillä.
+            return "https://www.nvidia.com/Download/index.aspx";
         }
 
         if (name.Contains("Samsung SSD", StringComparison.OrdinalIgnoreCase))

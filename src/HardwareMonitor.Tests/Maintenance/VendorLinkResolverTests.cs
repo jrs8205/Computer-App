@@ -15,9 +15,12 @@ public class VendorLinkResolverTests
     }
 
     [Fact]
-    public void Nvidia_gpu_ohjautuu_ajurisivulle()
+    public void Nvidia_gpu_ohjautuu_globaalille_ajurihakusivulle()
     {
-        Assert.Equal("https://www.nvidia.com/fi-fi/drivers/",
+        // NVIDIAlla ei ole suomenkielistä sivustoa — fi-fi/drivers palauttaa
+        // 404 (käyttäjän havainto 14.7.2026), joten kaikki kielet ohjataan
+        // globaalille ajurihakusivulle.
+        Assert.Equal("https://www.nvidia.com/Download/index.aspx",
             VendorLinkResolver.Resolve("NVIDIA GeForce RTX 2060", "fi"));
         Assert.Equal("https://www.nvidia.com/Download/index.aspx",
             VendorLinkResolver.Resolve("NVIDIA GeForce RTX 2060", "xx"));
