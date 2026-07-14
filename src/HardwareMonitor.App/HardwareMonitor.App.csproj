@@ -51,6 +51,10 @@
 
   <ItemGroup>
     <PackageReference Include="LiveChartsCore.SkiaSharpView.WPF" Version="2.0.5" />
+    <!-- WMI-luku (BIOS-, ajuri- ja firmware-versiot Ylläpito-välilehdelle).
+         Versio 10.0.2 = sama jonka LibreHardwareMonitorLib 0.9.6 tuo
+         transitiivisesti — pienempi laukaisisi NU1605-downgrade-virheen. -->
+    <PackageReference Include="System.Management" Version="10.0.2" />
   </ItemGroup>
 
 </Project>
