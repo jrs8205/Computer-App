@@ -147,4 +147,19 @@
   <data name="Upd_DownloadError" xml:space="preserve"><value>Download failed: {0}</value></data>
   <data name="Upd_SignatureError" xml:space="preserve"><value>The downloaded package's signature is invalid — installation was not started.</value></data>
   <data name="Upd_NoAsset" xml:space="preserve"><value>The release has no installer attachment.</value></data>
+  <data name="Tab_Maintenance" xml:space="preserve"><value>Maintenance</value></data>
+  <data name="Maint_Intro" xml:space="preserve"><value>Current device versions and vendor support pages. The app does not check device updates automatically — open the vendor page and compare with the latest version shown there.</value></data>
+  <data name="Maint_Motherboard" xml:space="preserve"><value>Motherboard (BIOS)</value></data>
+  <data name="Maint_Gpu" xml:space="preserve"><value>GPU</value></data>
+  <data name="Maint_Disk" xml:space="preserve"><value>Disk</value></data>
+  <data name="Maint_BiosFormat" xml:space="preserve"><value>BIOS {0}</value></data>
+  <data name="Maint_DriverFormat" xml:space="preserve"><value>Driver {0}</value></data>
+  <data name="Maint_FirmwareFormat" xml:space="preserve"><value>Firmware {0}</value></data>
+  <data name="Maint_CopyModel" xml:space="preserve"><value>Copy model</value></data>
+  <data name="Maint_OpenVendorPage" xml:space="preserve"><value>Vendor support page</value></data>
+  <data name="Maint_AppVersion" xml:space="preserve"><value>Hardware Monitor {0}</value></data>
+  <data name="Maint_CheckNow" xml:space="preserve"><value>Check for updates</value></data>
+  <data name="Maint_CheckUpToDate" xml:space="preserve"><value>You have the latest version (checked {0})</value></data>
+  <data name="Maint_CheckFound" xml:space="preserve"><value>New version available (checked {0})</value></data>
+  <data name="Maint_CheckFailed" xml:space="preserve"><value>Check failed ({0})</value></data>
 </root>

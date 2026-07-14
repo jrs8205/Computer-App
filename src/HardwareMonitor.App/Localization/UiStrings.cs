@@ -59,6 +59,23 @@ public static class UiStrings
     public static string Tab_AllSensors => T(nameof(Tab_AllSensors));
     public static string Tab_Settings => T(nameof(Tab_Settings));
     public static string Tab_History => T(nameof(Tab_History));
+    public static string Tab_Maintenance => T(nameof(Tab_Maintenance));
+
+    // Ylläpito-välilehti
+    public static string Maint_Intro => T(nameof(Maint_Intro));
+    public static string Maint_Motherboard => T(nameof(Maint_Motherboard));
+    public static string Maint_Gpu => T(nameof(Maint_Gpu));
+    public static string Maint_Disk => T(nameof(Maint_Disk));
+    public static string Maint_BiosFormat => T(nameof(Maint_BiosFormat));
+    public static string Maint_DriverFormat => T(nameof(Maint_DriverFormat));
+    public static string Maint_FirmwareFormat => T(nameof(Maint_FirmwareFormat));
+    public static string Maint_CopyModel => T(nameof(Maint_CopyModel));
+    public static string Maint_OpenVendorPage => T(nameof(Maint_OpenVendorPage));
+    public static string Maint_AppVersion => T(nameof(Maint_AppVersion));
+    public static string Maint_CheckNow => T(nameof(Maint_CheckNow));
+    public static string Maint_CheckUpToDate => T(nameof(Maint_CheckUpToDate));
+    public static string Maint_CheckFound => T(nameof(Maint_CheckFound));
+    public static string Maint_CheckFailed => T(nameof(Maint_CheckFailed));
 
     // Dashboard
     public static string Dash_ColorLegend => T(nameof(Dash_ColorLegend));

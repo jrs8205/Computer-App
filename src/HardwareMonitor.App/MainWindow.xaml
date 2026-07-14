@@ -106,7 +106,8 @@
         </Border>
 
         <!-- Sisältö: Dashboard-kortit + raakasensoripuu välilehtinä -->
-        <TabControl Background="#1E1E1E" BorderThickness="0">
+        <TabControl x:Name="MainTabs" Background="#1E1E1E" BorderThickness="0"
+                    SelectionChanged="MainTabs_SelectionChanged">
             <TabItem Header="Dashboard">
                 <ScrollViewer VerticalScrollBarVisibility="Auto">
                     <StackPanel Margin="8" DataContext="{Binding Dashboard}">
@@ -586,6 +587,60 @@
                         </StackPanel>
                     </ScrollViewer>
                 </DockPanel>
+            </TabItem>
+
+            <TabItem x:Name="MaintenanceTab" Header="{x:Static loc:UiStrings.Tab_Maintenance}">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel Margin="16" MaxWidth="900" HorizontalAlignment="Left"
+                                DataContext="{Binding Maintenance}">
+                        <TextBlock Text="{x:Static loc:UiStrings.Maint_Intro}" Foreground="#BDBDBD"
+                                   TextWrapping="Wrap" Margin="0,0,0,12" />
+                        <ItemsControl ItemsSource="{Binding Rows}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Background="#252526" CornerRadius="8" Padding="12" Margin="0,0,0,8">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="170" />
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="Auto" />
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Text="{Binding Kind}" Foreground="#4FC3F7"
+                                                       FontWeight="SemiBold" VerticalAlignment="Center" />
+                                            <StackPanel Grid.Column="1" Margin="8,0">
+                                                <TextBlock Text="{Binding Model}" Foreground="White" />
+                                                <TextBlock Text="{Binding VersionText}" Foreground="#A5D6A7"
+                                                           Margin="0,2,0,0" />
+                                            </StackPanel>
+                                            <StackPanel Grid.Column="2" Orientation="Horizontal"
+                                                        VerticalAlignment="Center">
+                                                <Button Content="{x:Static loc:UiStrings.Maint_CopyModel}"
+                                                        Click="CopyModel_Click" Padding="8,2" />
+                                                <Button Content="{x:Static loc:UiStrings.Maint_OpenVendorPage}"
+                                                        Click="OpenVendorPage_Click"
+                                                        IsEnabled="{Binding HasLink}"
+                                                        Padding="8,2" Margin="8,0,0,0" />
+                                            </StackPanel>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                        <Border Background="#252526" CornerRadius="8" Padding="12" Margin="0,8,0,0">
+                            <StackPanel>
+                                <TextBlock Text="{Binding AppVersionText}" Foreground="White"
+                                           FontWeight="SemiBold" />
+                                <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                                    <Button x:Name="CheckUpdatesButton"
+                                            Content="{x:Static loc:UiStrings.Maint_CheckNow}"
+                                            Click="CheckUpdates_Click" Padding="10,3" />
+                                    <TextBlock Text="{Binding CheckStatus}" Foreground="#BDBDBD"
+                                               VerticalAlignment="Center" Margin="12,0,0,0" />
+                                </StackPanel>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </ScrollViewer>
             </TabItem>
         </TabControl>
     </DockPanel>

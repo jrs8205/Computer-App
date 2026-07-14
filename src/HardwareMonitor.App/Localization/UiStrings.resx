@@ -147,4 +147,19 @@
   <data name="Upd_DownloadError" xml:space="preserve"><value>Lataus epäonnistui: {0}</value></data>
   <data name="Upd_SignatureError" xml:space="preserve"><value>Ladatun paketin allekirjoitus ei kelpaa — asennusta ei käynnistetty.</value></data>
   <data name="Upd_NoAsset" xml:space="preserve"><value>Julkaisusta puuttuu asennuspaketti.</value></data>
+  <data name="Tab_Maintenance" xml:space="preserve"><value>Ylläpito</value></data>
+  <data name="Maint_Intro" xml:space="preserve"><value>Laitteiden nykyiset versiot ja valmistajien tukisivut. Sovellus ei tarkista laitepäivityksiä automaattisesti — avaa valmistajan sivu ja vertaa versiota siellä näkyvään uusimpaan.</value></data>
+  <data name="Maint_Motherboard" xml:space="preserve"><value>Emolevy (BIOS)</value></data>
+  <data name="Maint_Gpu" xml:space="preserve"><value>Näytönohjain</value></data>
+  <data name="Maint_Disk" xml:space="preserve"><value>Levy</value></data>
+  <data name="Maint_BiosFormat" xml:space="preserve"><value>BIOS {0}</value></data>
+  <data name="Maint_DriverFormat" xml:space="preserve"><value>Ajuri {0}</value></data>
+  <data name="Maint_FirmwareFormat" xml:space="preserve"><value>Firmware {0}</value></data>
+  <data name="Maint_CopyModel" xml:space="preserve"><value>Kopioi malli</value></data>
+  <data name="Maint_OpenVendorPage" xml:space="preserve"><value>Valmistajan tukisivu</value></data>
+  <data name="Maint_AppVersion" xml:space="preserve"><value>Hardware Monitor {0}</value></data>
+  <data name="Maint_CheckNow" xml:space="preserve"><value>Tarkista päivitykset</value></data>
+  <data name="Maint_CheckUpToDate" xml:space="preserve"><value>Uusin versio on käytössä (tarkistettu {0})</value></data>
+  <data name="Maint_CheckFound" xml:space="preserve"><value>Uusi versio saatavilla (tarkistettu {0})</value></data>
+  <data name="Maint_CheckFailed" xml:space="preserve"><value>Tarkistus epäonnistui ({0})</value></data>
 </root>

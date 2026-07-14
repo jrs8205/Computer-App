@@ -183,6 +183,68 @@ public partial class MainWindow : Window
     private void ResetThresholds_Click(object sender, RoutedEventArgs e) =>
         _viewModel.SettingsPage.ResetThresholds();
 
+    /// <summary>Ylläpito-välilehden tiedot ladataan vasta kun välilehti avataan.</summary>
+    private void MainTabs_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        // SelectionChanged kuplii myös välilehtien sisältä (esim. ComboBoxit) —
+        // reagoidaan vain TabControlin omaan valintaan.
+        if (ReferenceEquals(e.Source, MainTabs) && MainTabs.SelectedItem == MaintenanceTab)
+        {
+            _viewModel.EnsureMaintenanceLoaded();
+        }
+    }
+
+    private void CopyModel_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is FrameworkElement { DataContext: MaintenanceRowViewModel row })
+        {
+            try
+            {
+                Clipboard.SetText(row.Model);
+            }
+            catch (Exception)
+            {
+                // Leikepöytä voi olla toisen prosessin varaama — kopiointi vain jää tekemättä.
+            }
+        }
+    }
+
+    private void OpenVendorPage_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is FrameworkElement { DataContext: MaintenanceRowViewModel row } &&
+            row.Url is not null)
+        {
+            try
+            {
+                Process.Start(new ProcessStartInfo(row.Url) { UseShellExecute = true });
+            }
+            catch (Exception ex)
+            {
+                ShowError(UiStrings.Dlg_SaveFailed, ex);
+            }
+        }
+    }
+
+    /// <summary>Manuaalinen tarkistus: tulos statustekstiin, löytynyt päivitys dialogiin.</summary>
+    private async void CheckUpdates_Click(object sender, RoutedEventArgs e)
+    {
+        CheckUpdatesButton.IsEnabled = false;
+        try
+        {
+            UpdateCheckResult result = await _viewModel.CheckForUpdatesAsync(manual: true);
+            _viewModel.Maintenance.ReportCheckResult(result.Outcome);
+            if (result is { Outcome: UpdateCheckOutcome.UpdateAvailable, Update: not null })
+            {
+                _pendingUpdate = result.Update;
+                ShowPendingUpdateDialog();
+            }
+        }
+        finally
+        {
+            CheckUpdatesButton.IsEnabled = true;
+        }
+    }
+
     private void FanName_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
     {
         if (e.ClickCount == 2 && sender is FrameworkElement { DataContext: FanRowViewModel row })

@@ -156,6 +156,36 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
     /// <summary>Päivityskomponenttien lokikanava (UpdateDialog, UpdateInstaller).</summary>
     public void LogUpdate(string message) => _logger.Log(message);
 
+    public MaintenanceViewModel Maintenance { get; } = new();
+
+    private int _maintenanceLoaded;
+
+    /// <summary>
+    /// Lataa Ylläpito-välilehden tiedot kerran, taustasäikeessä (WMI-kyselyt
+    /// eivät saa jäädyttää UI:ta). Kutsutaan välilehden valinnasta; ennen
+    /// ensimmäistä sensoriluentaa kutsu ei tee mitään ja yrittää seuraavalla
+    /// valinnalla uudelleen.
+    /// </summary>
+    public void EnsureMaintenanceLoaded()
+    {
+        IReadOnlyList<HardwareGroup>? groups = _latestGroups;
+        if (groups is null ||
+            Interlocked.CompareExchange(ref _maintenanceLoaded, 1, 0) != 0)
+        {
+            return;
+        }
+
+        Task.Run(() =>
+        {
+            MachineSpec spec = MachineSpecReader.Read(
+                groups, OsDescriptionText, _settings.InsightsNotes);
+            DeviceVersions versions = DeviceVersionReader.Read(spec.GpuName, _logger.Log);
+            System.Windows.Application.Current.Dispatcher.BeginInvoke(() =>
+                Maintenance.Load(spec, versions,
+                    CultureInfo.CurrentUICulture.TwoLetterISOLanguageName));
+        });
+    }
+
     /// <summary>
     /// Tarkistaa päivitykset. Automaattikutsu ilmoittaa UpdateAvailable-eventillä
     /// vain kerran per versio; manuaalikutsu palauttaa aina tuloksen kutsujalle
