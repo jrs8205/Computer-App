@@ -133,4 +133,6 @@
   <data name="SensorType_Noise" xml:space="preserve"><value>Melu</value></data>
   <data name="SensorType_Humidity" xml:space="preserve"><value>Kosteus</value></data>
   <data name="SensorType_Timing" xml:space="preserve"><value>Ajoitus</value></data>
+  <data name="Set_UpdateCheck" xml:space="preserve"><value>Tarkista päivitykset automaattisesti</value></data>
+  <data name="Set_UpdateCheckTip" xml:space="preserve"><value>Hakee uusimman version tiedot GitHubista käynnistyksessä ja kerran vuorokaudessa. Sovelluksen ainoa verkkoyhteys.</value></data>
 </root>

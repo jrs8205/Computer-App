@@ -133,4 +133,6 @@
   <data name="SensorType_Noise" xml:space="preserve"><value>Noise</value></data>
   <data name="SensorType_Humidity" xml:space="preserve"><value>Humidity</value></data>
   <data name="SensorType_Timing" xml:space="preserve"><value>Timing</value></data>
+  <data name="Set_UpdateCheck" xml:space="preserve"><value>Check for updates automatically</value></data>
+  <data name="Set_UpdateCheckTip" xml:space="preserve"><value>Fetches the latest release info from GitHub at startup and once a day. The app's only network connection.</value></data>
 </root>

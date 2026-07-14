@@ -17,9 +17,20 @@ using HardwareMonitor.Core.Reports;
 using HardwareMonitor.Core.Sensors;
 using HardwareMonitor.Core.Settings;
 using HardwareMonitor.Core.Storage;
+using HardwareMonitor.Core.Updates;
 using HardwareMonitor.Core.WindowsEvents;
 
 namespace HardwareMonitor.App.ViewModels;
+
+/// <summary>Manuaalisen päivitystarkistuksen tulos Ylläpito-välilehdelle.</summary>
+public enum UpdateCheckOutcome
+{
+    UpdateAvailable,
+    UpToDate,
+    Failed,
+}
+
+public sealed record UpdateCheckResult(UpdateCheckOutcome Outcome, UpdateInfo? Update);
 
 /// <summary>
 /// Päänäkymän logiikka: käynnistää sensorien luvun, päivittää arvot 1 sekunnin
@@ -66,6 +77,8 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
 
     private string _status = UiStrings.Status_Starting;
     private int _tickCount;
+    private UpdateService? _updateService;
+    private int _updateCheckRunning;
 
     public MainViewModel()
     {
@@ -132,6 +145,59 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
     /// </summary>
     public void LogOverlayRecovered(PowerSessionEvent trigger) =>
         _logger.Log($"Overlay luotu uudelleen herätyksen jälkeen (syy: {trigger}).");
+
+    /// <summary>Sovelluksen versio kolmiosaisena (1.0.5 — ei .NET:n neljättä nollaa).</summary>
+    public static string CurrentVersion { get; } =
+        (typeof(MainViewModel).Assembly.GetName().Version ?? new Version(0, 0, 0)).ToString(3);
+
+    /// <summary>Automaattitarkistus löysi uuden version (laukeaa taustasäikeessä).</summary>
+    public event Action<UpdateInfo>? UpdateAvailable;
+
+    /// <summary>Päivityskomponenttien lokikanava (UpdateDialog, UpdateInstaller).</summary>
+    public void LogUpdate(string message) => _logger.Log(message);
+
+    /// <summary>
+    /// Tarkistaa päivitykset. Automaattikutsu ilmoittaa UpdateAvailable-eventillä
+    /// vain kerran per versio; manuaalikutsu palauttaa aina tuloksen kutsujalle
+    /// (Ylläpito-välilehden nappi näyttää dialogin itse, ei balloonia).
+    /// </summary>
+    public async Task<UpdateCheckResult> CheckForUpdatesAsync(bool manual)
+    {
+        // Vain yksi tarkistus kerrallaan (nappi + ajastus eivät kilpaile).
+        if (Interlocked.CompareExchange(ref _updateCheckRunning, 1, 0) != 0)
+        {
+            return new UpdateCheckResult(UpdateCheckOutcome.Failed, null);
+        }
+
+        try
+        {
+            _updateService ??= new UpdateService(CurrentVersion, _logger.Log);
+            UpdateInfo? info = await Task.Run(_updateService.FetchLatestAsync).ConfigureAwait(false);
+            if (info is null)
+            {
+                return new UpdateCheckResult(UpdateCheckOutcome.Failed, null);
+            }
+
+            if (!UpdateChecker.IsNewer(CurrentVersion, info.Version))
+            {
+                return new UpdateCheckResult(UpdateCheckOutcome.UpToDate, null);
+            }
+
+            if (!manual && UpdateChecker.ShouldNotify(
+                    info.Version, CurrentVersion, _settings.Updates.LastNotifiedVersion))
+            {
+                _settings.Updates.LastNotifiedVersion = info.Version;
+                _settingsService.Save(_settings);
+                UpdateAvailable?.Invoke(info);
+            }
+
+            return new UpdateCheckResult(UpdateCheckOutcome.UpdateAvailable, info);
+        }
+        finally
+        {
+            Interlocked.Exchange(ref _updateCheckRunning, 0);
+        }
+    }
 
     /// <summary>Tallentaa käyttäjän raahaaman overlay-sijainnin.</summary>
     public void SetOverlayCustomPosition(double left, double top)
@@ -311,6 +377,22 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
 
             _settings.AlertNotificationsEnabled = value;
             OnOverlaySettingChanged(nameof(AlertNotificationsEnabled));
+        }
+    }
+
+    /// <summary>Automaattinen päivitystarkistus GitHubista (Asetukset → Yleiset).</summary>
+    public bool UpdateCheckEnabled
+    {
+        get => _settings.Updates.CheckAutomatically;
+        set
+        {
+            if (_settings.Updates.CheckAutomatically == value)
+            {
+                return;
+            }
+
+            _settings.Updates.CheckAutomatically = value;
+            OnOverlaySettingChanged(nameof(UpdateCheckEnabled));
         }
     }
 
@@ -513,6 +595,13 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
             if (_tickCount % 300 == 0)
             {
                 ScanWindowsEventsInBackground();
+            }
+
+            // Päivitystarkistus: 30 s käynnistyksestä, sitten kerran vuorokaudessa.
+            if (_settings.Updates.CheckAutomatically &&
+                (_tickCount == 30 || _tickCount % 86_400 == 0))
+            {
+                _ = CheckForUpdatesAsync(manual: false);
             }
 
             // Analyysin tapahtuma- ja huippukoosteet minuutin välein.

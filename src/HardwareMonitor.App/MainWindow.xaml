@@ -418,6 +418,9 @@
                                 <CheckBox Content="{x:Static loc:UiStrings.Set_AlertNotifications}" IsChecked="{Binding AlertNotificationsEnabled}"
                                           Foreground="White" Margin="0,2"
                                           ToolTip="{x:Static loc:UiStrings.Set_AlertNotificationsTip}" />
+                                <CheckBox Content="{x:Static loc:UiStrings.Set_UpdateCheck}" IsChecked="{Binding UpdateCheckEnabled}"
+                                          Foreground="White" Margin="0,2"
+                                          ToolTip="{x:Static loc:UiStrings.Set_UpdateCheckTip}" />
                                 <StackPanel Orientation="Horizontal" Margin="0,8,0,2">
                                     <TextBlock Text="Kieli / Language" Foreground="#E0E0E0" Width="120"
                                                VerticalAlignment="Center" />

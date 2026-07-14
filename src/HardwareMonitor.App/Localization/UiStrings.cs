@@ -37,6 +37,10 @@ public static class UiStrings
     public static string Top_SaveInsightsTip => T(nameof(Top_SaveInsightsTip));
     public static string Status_DebugLog => T(nameof(Status_DebugLog));
 
+    // Päivitystarkistus (asetus)
+    public static string Set_UpdateCheck => T(nameof(Set_UpdateCheck));
+    public static string Set_UpdateCheckTip => T(nameof(Set_UpdateCheckTip));
+
     // Välilehdet
     public static string Tab_AllSensors => T(nameof(Tab_AllSensors));
     public static string Tab_Settings => T(nameof(Tab_Settings));
