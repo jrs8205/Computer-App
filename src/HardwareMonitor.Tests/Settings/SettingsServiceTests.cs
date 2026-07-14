@@ -68,6 +68,19 @@ public sealed class SettingsServiceTests : IDisposable
     }
 
     [Fact]
+    public void Load_PuuttuvaUpdatesOsio_TaydennetaanOletuksilla()
+    {
+        Directory.CreateDirectory(_dir);
+        File.WriteAllText(Path.Combine(_dir, "settings.json"), """{ "Updates": null }""");
+
+        AppSettings settings = new SettingsService(_dir).Load();
+
+        Assert.NotNull(settings.Updates);
+        Assert.True(settings.Updates.CheckAutomatically);
+        Assert.Equal("", settings.Updates.LastNotifiedVersion);
+    }
+
+    [Fact]
     public void Thresholds_OletuksetJaTallennus()
     {
         var service = new SettingsService(_dir);

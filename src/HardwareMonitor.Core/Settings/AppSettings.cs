@@ -64,6 +64,16 @@ public sealed class LoggingSettings
     public int KeepHistoryDays { get; set; } = 30;
 }
 
+/// <summary>Sovelluksen oman päivitystarkistuksen asetukset.</summary>
+public sealed class UpdateSettings
+{
+    /// <summary>Tarkista GitHub Releases käynnistyksessä + kerran vuorokaudessa.</summary>
+    public bool CheckAutomatically { get; set; } = true;
+
+    /// <summary>Versio josta on jo ilmoitettu — sama versio ilmoitetaan vain kerran.</summary>
+    public string LastNotifiedVersion { get; set; } = "";
+}
+
 /// <summary>
 /// Sovelluksen kaikki asetukset. Laajenee Vaihe 4:ssä raja-arvoilla (specin luku 29).
 /// </summary>
@@ -89,4 +99,7 @@ public sealed class AppSettings
 
     /// <summary>Käyttäjän omat lisätiedot koneesta machine-insights.md:n kokoonpanoon.</summary>
     public string InsightsNotes { get; set; } = "";
+
+    /// <summary>Sovelluksen päivitystarkistus (ainoa verkkoyhteys — voi kytkeä pois).</summary>
+    public UpdateSettings Updates { get; set; } = new();
 }

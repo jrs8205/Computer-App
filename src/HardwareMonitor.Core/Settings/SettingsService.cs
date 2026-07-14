@@ -64,6 +64,8 @@ public sealed class SettingsService
         s.FanLabels ??= new Dictionary<string, string>();
         s.Language ??= "";
         s.InsightsNotes ??= "";
+        s.Updates ??= new UpdateSettings();
+        s.Updates.LastNotifiedVersion ??= "";
 
         var d = new LoggingSettings();
         s.Logging.SensorIntervalSeconds = ClampInt(s.Logging.SensorIntervalSeconds, 1, 60, d.SensorIntervalSeconds);
