@@ -20,6 +20,7 @@ public partial class MainWindow : Window
     private System.Windows.Forms.NotifyIcon? _trayIcon;
     private bool _reallyExiting;
     private bool _monitoringStarted;
+    private Core.Updates.UpdateInfo? _pendingUpdate;
 
     public MainWindow(bool startInTray = false)
     {
@@ -85,6 +86,7 @@ public partial class MainWindow : Window
 
         _monitoringStarted = true;
         _viewModel.NotificationRequested += ShowTrayNotification;
+        _viewModel.UpdateAvailable += OnUpdateAvailable;
         _viewModel.Start();
         _viewModel.OverlaySettingsChanged += ApplyOverlaySettings;
         ApplyOverlaySettings();
@@ -102,6 +104,41 @@ public partial class MainWindow : Window
                 : System.Windows.Forms.ToolTipIcon.Warning);
     }
 
+    /// <summary>Automaattitarkistus löysi uuden version — balloon, klikkaus avaa dialogin.</summary>
+    private void OnUpdateAvailable(Core.Updates.UpdateInfo update) =>
+        Dispatcher.BeginInvoke(() =>
+        {
+            _pendingUpdate = update;
+            _trayIcon?.ShowBalloonTip(
+                10_000,
+                UiStrings.Upd_NotifyTitle,
+                string.Format(UiStrings.Upd_NotifyMessage, update.Version),
+                System.Windows.Forms.ToolTipIcon.Info);
+        });
+
+    /// <summary>Avaa päivitysdialogin, jos ilmoitettu päivitys odottaa.</summary>
+    private void ShowPendingUpdateDialog()
+    {
+        if (_pendingUpdate is null)
+        {
+            return;
+        }
+
+        var dialog = new UpdateDialog(_pendingUpdate, _viewModel.LogUpdate);
+        if (IsVisible)
+        {
+            dialog.Owner = this;
+            dialog.WindowStartupLocation = WindowStartupLocation.CenterOwner;
+        }
+        else
+        {
+            // Tray-tilassa pääikkuna on piilossa — piilotettu Owner estäisi dialogin näkymisen.
+            dialog.WindowStartupLocation = WindowStartupLocation.CenterScreen;
+        }
+
+        dialog.ShowDialog();
+    }
+
     /// <summary>Tray-kuvake valikkoineen: Näytä / Overlay / Lopeta.</summary>
     private void CreateTrayIcon()
     {
@@ -114,6 +151,7 @@ public partial class MainWindow : Window
             Visible = true,
         };
         _trayIcon.DoubleClick += (_, _) => RestoreFromTray();
+        _trayIcon.BalloonTipClicked += (_, _) => Dispatcher.BeginInvoke(ShowPendingUpdateDialog);
 
         var menu = new System.Windows.Forms.ContextMenuStrip();
         menu.Items.Add(UiStrings.Tray_Show, null, (_, _) => RestoreFromTray());

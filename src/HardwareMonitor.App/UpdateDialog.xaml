@@ -1,0 +1,23 @@
+<Window x:Class="HardwareMonitor.App.UpdateDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:loc="clr-namespace:HardwareMonitor.App.Localization"
+        Title="{x:Static loc:UiStrings.Upd_DialogTitle}"
+        Width="520" SizeToContent="Height" MaxHeight="560"
+        Background="#1E1E1E" ResizeMode="NoResize" ShowInTaskbar="False">
+    <StackPanel Margin="16">
+        <TextBlock x:Name="VersionText" Foreground="White" FontSize="15" FontWeight="Bold" />
+        <TextBlock Text="{x:Static loc:UiStrings.Upd_WhatsNew}" Foreground="#4FC3F7"
+                   FontWeight="SemiBold" Margin="0,12,0,4" />
+        <TextBox x:Name="NotesText" IsReadOnly="True" TextWrapping="Wrap"
+                 VerticalScrollBarVisibility="Auto" MaxHeight="260" BorderThickness="1"
+                 Background="#252526" Foreground="#E0E0E0" BorderBrush="#9E9E9E" Padding="8" />
+        <TextBlock x:Name="StatusText" Foreground="#E0E0E0" TextWrapping="Wrap" Margin="0,8,0,0" />
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,12,0,0">
+            <Button x:Name="InstallButton" Content="{x:Static loc:UiStrings.Upd_InstallNow}"
+                    Click="InstallNow_Click" Padding="12,4" />
+            <Button x:Name="LaterButton" Content="{x:Static loc:UiStrings.Upd_Later}"
+                    Click="Later_Click" Padding="12,4" Margin="8,0,0,0" />
+        </StackPanel>
+    </StackPanel>
+</Window>

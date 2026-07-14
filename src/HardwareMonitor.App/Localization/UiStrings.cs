@@ -41,6 +41,20 @@ public static class UiStrings
     public static string Set_UpdateCheck => T(nameof(Set_UpdateCheck));
     public static string Set_UpdateCheckTip => T(nameof(Set_UpdateCheckTip));
 
+    // Päivitysilmoitus ja -dialogi
+    public static string Upd_NotifyTitle => T(nameof(Upd_NotifyTitle));
+    public static string Upd_NotifyMessage => T(nameof(Upd_NotifyMessage));
+    public static string Upd_DialogTitle => T(nameof(Upd_DialogTitle));
+    public static string Upd_VersionLine => T(nameof(Upd_VersionLine));
+    public static string Upd_WhatsNew => T(nameof(Upd_WhatsNew));
+    public static string Upd_NoNotes => T(nameof(Upd_NoNotes));
+    public static string Upd_InstallNow => T(nameof(Upd_InstallNow));
+    public static string Upd_Later => T(nameof(Upd_Later));
+    public static string Upd_Downloading => T(nameof(Upd_Downloading));
+    public static string Upd_DownloadError => T(nameof(Upd_DownloadError));
+    public static string Upd_SignatureError => T(nameof(Upd_SignatureError));
+    public static string Upd_NoAsset => T(nameof(Upd_NoAsset));
+
     // Välilehdet
     public static string Tab_AllSensors => T(nameof(Tab_AllSensors));
     public static string Tab_Settings => T(nameof(Tab_Settings));

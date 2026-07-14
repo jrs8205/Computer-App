@@ -135,4 +135,16 @@
   <data name="SensorType_Timing" xml:space="preserve"><value>Ajoitus</value></data>
   <data name="Set_UpdateCheck" xml:space="preserve"><value>Tarkista päivitykset automaattisesti</value></data>
   <data name="Set_UpdateCheckTip" xml:space="preserve"><value>Hakee uusimman version tiedot GitHubista käynnistyksessä ja kerran vuorokaudessa. Sovelluksen ainoa verkkoyhteys.</value></data>
+  <data name="Upd_NotifyTitle" xml:space="preserve"><value>Päivitys saatavilla</value></data>
+  <data name="Upd_NotifyMessage" xml:space="preserve"><value>Hardware Monitor {0} on julkaistu. Napsauta asentaaksesi.</value></data>
+  <data name="Upd_DialogTitle" xml:space="preserve"><value>Sovelluksen päivitys</value></data>
+  <data name="Upd_VersionLine" xml:space="preserve"><value>Uusi versio {0} (nykyinen {1})</value></data>
+  <data name="Upd_WhatsNew" xml:space="preserve"><value>Mitä uutta</value></data>
+  <data name="Upd_NoNotes" xml:space="preserve"><value>Julkaisulla ei ole muutostekstiä.</value></data>
+  <data name="Upd_InstallNow" xml:space="preserve"><value>Asenna nyt</value></data>
+  <data name="Upd_Later" xml:space="preserve"><value>Myöhemmin</value></data>
+  <data name="Upd_Downloading" xml:space="preserve"><value>Ladataan ja tarkistetaan asennuspakettia…</value></data>
+  <data name="Upd_DownloadError" xml:space="preserve"><value>Lataus epäonnistui: {0}</value></data>
+  <data name="Upd_SignatureError" xml:space="preserve"><value>Ladatun paketin allekirjoitus ei kelpaa — asennusta ei käynnistetty.</value></data>
+  <data name="Upd_NoAsset" xml:space="preserve"><value>Julkaisusta puuttuu asennuspaketti.</value></data>
 </root>

@@ -135,4 +135,16 @@
   <data name="SensorType_Timing" xml:space="preserve"><value>Timing</value></data>
   <data name="Set_UpdateCheck" xml:space="preserve"><value>Check for updates automatically</value></data>
   <data name="Set_UpdateCheckTip" xml:space="preserve"><value>Fetches the latest release info from GitHub at startup and once a day. The app's only network connection.</value></data>
+  <data name="Upd_NotifyTitle" xml:space="preserve"><value>Update available</value></data>
+  <data name="Upd_NotifyMessage" xml:space="preserve"><value>Hardware Monitor {0} has been released. Click to install.</value></data>
+  <data name="Upd_DialogTitle" xml:space="preserve"><value>Application update</value></data>
+  <data name="Upd_VersionLine" xml:space="preserve"><value>New version {0} (current {1})</value></data>
+  <data name="Upd_WhatsNew" xml:space="preserve"><value>What's new</value></data>
+  <data name="Upd_NoNotes" xml:space="preserve"><value>This release has no notes.</value></data>
+  <data name="Upd_InstallNow" xml:space="preserve"><value>Install now</value></data>
+  <data name="Upd_Later" xml:space="preserve"><value>Later</value></data>
+  <data name="Upd_Downloading" xml:space="preserve"><value>Downloading and verifying the installer…</value></data>
+  <data name="Upd_DownloadError" xml:space="preserve"><value>Download failed: {0}</value></data>
+  <data name="Upd_SignatureError" xml:space="preserve"><value>The downloaded package's signature is invalid — installation was not started.</value></data>
+  <data name="Upd_NoAsset" xml:space="preserve"><value>The release has no installer attachment.</value></data>
 </root>
