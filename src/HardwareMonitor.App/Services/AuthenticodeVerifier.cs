@@ -15,11 +15,22 @@ public static class AuthenticodeVerifier
     /// <summary>CN=jrs8205 Hardware Monitor (voimassa 2031, luotettu koneen Rootissa).</summary>
     public const string ExpectedThumbprint = "346D869550F3A7BD54FA947E024341C64F729AF8";
 
+    /// <summary>CERT_E_UNTRUSTEDROOT: allekirjoitus on ehjä, mutta ketjun juurta ei ole luotettu koneella.</summary>
+    private const int CertEUntrustedRoot = unchecked((int)0x800B0109);
+
     public static bool IsValid(string filePath, Action<string> log)
     {
-        if (!VerifyTrust(filePath))
+        // 0 = ketju päättyy luotettuun juureen (julkaisijan oma kone).
+        // CERT_E_UNTRUSTEDROOT = allekirjoitus on kryptografisesti ehjä,
+        // mutta itse allekirjoitettua varmennetta ei ole luotettu tällä
+        // koneella — muiden käyttäjien normaalitilanne. Se riittää, koska
+        // allekirjoittaja pinnataan alla thumbprintillä (tiukempi ehto kuin
+        // ketjuluottamus). Kaikki muu (rikottu tai puuttuva allekirjoitus,
+        // väärä tiiviste) hylätään.
+        int trust = VerifyTrust(filePath);
+        if (trust != 0 && trust != CertEUntrustedRoot)
         {
-            log($"Päivityksen allekirjoitus ei kelpaa: {filePath}");
+            log($"Päivityksen allekirjoitus ei kelpaa (0x{trust:X8}): {filePath}");
             return false;
         }
 
@@ -46,7 +57,8 @@ public static class AuthenticodeVerifier
     private static readonly Guid ActionGenericVerifyV2 =
         new("00AAC56B-CD44-11d0-8CC2-00C04FC295EE");
 
-    private static bool VerifyTrust(string filePath)
+    /// <summary>Palauttaa WinVerifyTrust-tuloksen HRESULT-koodina (0 = luotettu ketju).</summary>
+    private static int VerifyTrust(string filePath)
     {
         IntPtr fileInfoPtr = Marshal.AllocHGlobal(Marshal.SizeOf<WintrustFileInfo>());
         try
@@ -67,7 +79,7 @@ public static class AuthenticodeVerifier
                 pFile = fileInfoPtr,
             };
             Guid action = ActionGenericVerifyV2;
-            return WinVerifyTrust(IntPtr.Zero, ref action, ref data) == 0;
+            return WinVerifyTrust(IntPtr.Zero, ref action, ref data);
         }
         finally
         {

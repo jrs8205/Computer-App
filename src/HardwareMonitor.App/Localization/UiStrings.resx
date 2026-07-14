@@ -147,6 +147,7 @@
   <data name="Upd_DownloadError" xml:space="preserve"><value>Lataus epäonnistui: {0}</value></data>
   <data name="Upd_SignatureError" xml:space="preserve"><value>Ladatun paketin allekirjoitus ei kelpaa — asennusta ei käynnistetty.</value></data>
   <data name="Upd_NoAsset" xml:space="preserve"><value>Julkaisusta puuttuu asennuspaketti.</value></data>
+  <data name="Upd_OpenReleasePage" xml:space="preserve"><value>Avaa julkaisusivu selaimessa</value></data>
   <data name="Tab_Maintenance" xml:space="preserve"><value>Ylläpito</value></data>
   <data name="Maint_Intro" xml:space="preserve"><value>Laitteiden nykyiset versiot ja valmistajien tukisivut. Sovellus ei tarkista laitepäivityksiä automaattisesti — avaa valmistajan sivu ja vertaa versiota siellä näkyvään uusimpaan.</value></data>
   <data name="Maint_Motherboard" xml:space="preserve"><value>Emolevy (BIOS)</value></data>

@@ -44,4 +44,18 @@ public partial class UpdateDialog : Window
     }
 
     private void Later_Click(object sender, RoutedEventArgs e) => Close();
+
+    /// <summary>Manuaalinen reitti: julkaisusivu selaimeen (aina tarjolla).</summary>
+    private void OpenReleasePage_Click(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            System.Diagnostics.Process.Start(
+                new System.Diagnostics.ProcessStartInfo(_update.ReleaseUrl) { UseShellExecute = true });
+        }
+        catch (Exception)
+        {
+            // Selaimen avaus epäonnistui — osoite näkyy myös GitHubissa käsin.
+        }
+    }
 }

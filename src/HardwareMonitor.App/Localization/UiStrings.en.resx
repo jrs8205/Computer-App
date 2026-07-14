@@ -147,6 +147,7 @@
   <data name="Upd_DownloadError" xml:space="preserve"><value>Download failed: {0}</value></data>
   <data name="Upd_SignatureError" xml:space="preserve"><value>The downloaded package's signature is invalid — installation was not started.</value></data>
   <data name="Upd_NoAsset" xml:space="preserve"><value>The release has no installer attachment.</value></data>
+  <data name="Upd_OpenReleasePage" xml:space="preserve"><value>Open the release page in your browser</value></data>
   <data name="Tab_Maintenance" xml:space="preserve"><value>Maintenance</value></data>
   <data name="Maint_Intro" xml:space="preserve"><value>Current device versions and vendor support pages. The app does not check device updates automatically — open the vendor page and compare with the latest version shown there.</value></data>
   <data name="Maint_Motherboard" xml:space="preserve"><value>Motherboard (BIOS)</value></data>

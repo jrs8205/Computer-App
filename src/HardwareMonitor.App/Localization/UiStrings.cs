@@ -54,6 +54,7 @@ public static class UiStrings
     public static string Upd_DownloadError => T(nameof(Upd_DownloadError));
     public static string Upd_SignatureError => T(nameof(Upd_SignatureError));
     public static string Upd_NoAsset => T(nameof(Upd_NoAsset));
+    public static string Upd_OpenReleasePage => T(nameof(Upd_OpenReleasePage));
 
     // Välilehdet
     public static string Tab_AllSensors => T(nameof(Tab_AllSensors));
