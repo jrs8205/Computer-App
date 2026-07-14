@@ -62,7 +62,7 @@ public sealed class MaintenanceViewModel : INotifyPropertyChanged
             Kind = UiStrings.Maint_Motherboard,
             Model = spec.MotherboardName ?? "—",
             VersionText = Format(UiStrings.Maint_BiosFormat, versions.BiosVersion, versions.BiosDate),
-            Url = VendorLinkResolver.Resolve(spec.MotherboardName, language),
+            Url = VendorLinkResolver.Resolve(spec.MotherboardName, language, DeviceKind.Motherboard),
         });
 
         string? marketing = NvidiaDriverVersion.ToMarketingVersion(versions.GpuDriverVersion);
@@ -74,7 +74,7 @@ public sealed class MaintenanceViewModel : INotifyPropertyChanged
             Kind = UiStrings.Maint_Gpu,
             Model = spec.GpuName ?? "—",
             VersionText = Format(UiStrings.Maint_DriverFormat, driverText, versions.GpuDriverDate),
-            Url = VendorLinkResolver.Resolve(spec.GpuName, language),
+            Url = VendorLinkResolver.Resolve(spec.GpuName, language, DeviceKind.Gpu),
         });
 
         // WMI-firmware yhdistetään LHM-levynimeen mallinimellä; samannimiset
@@ -97,7 +97,7 @@ public sealed class MaintenanceViewModel : INotifyPropertyChanged
                 Kind = UiStrings.Maint_Disk,
                 Model = model,
                 VersionText = string.Format(UiStrings.Maint_FirmwareFormat, firmware),
-                Url = VendorLinkResolver.Resolve(model, language),
+                Url = VendorLinkResolver.Resolve(model, language, DeviceKind.Disk),
             });
         }
     }
