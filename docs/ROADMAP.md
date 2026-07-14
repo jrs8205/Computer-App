@@ -191,6 +191,14 @@ vaatimus 9.7.2026: vientien pitää olla selkokielisiä, ei konedataa.
       AI-raportti" ja "Tallenna AI-raportti…" — konetuntemus-loki oli
       aiemmin vain automaattisesti levylle, ei UI:sta saatavissa.
 
+- [x] **Päivitysominaisuudet v1.0.6–v1.0.8** (14.7.2026): automaattinen
+      päivitystarkistus GitHub Releasesista (tray-ilmoitus + dialogi
+      muutostekstillä + yhden klikkauksen asennus allekirjoitus-
+      tarkistuksella, toimii kaikilla koneilla thumbprint-pinnauksella)
+      ja Ylläpito-välilehti (BIOS-, ajuri- ja firmware-versiot WMI:stä +
+      valmistajien tukisivulinkit, ROG-emolevyille suora mallisivu).
+      Spec: docs/superpowers/specs/2026-07-14-update-features-design.md.
+
 ---
 
 ## Tekninen pino (luku 22)

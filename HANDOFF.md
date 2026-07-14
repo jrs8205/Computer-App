@@ -1,15 +1,57 @@
-# HANDOFF — 14.7.2026: overlay vahvistettu toimivaksi, Events siivottu, MSIX hylätty
+# HANDOFF — 14.7.2026 ilta: v1.0.6–v1.0.8 julkaistu (päivitysominaisuudet + Ylläpito-välilehti)
 
 Tämä tiedosto kertoo mihin jäätiin ja miten jatketaan. Lue tämä ensin,
 sitten `docs/review-triage.md` ja `docs/ROADMAP.md`.
 
 ## Tilanne yhdellä lauseella
 
-**Projekti on julkaisukunnossa eikä aktiivista työtä ole kesken**: v1.0.5
-julkaistu GitHubiin (käyttäjän raportoima overlayn katoamisbugi korjattu
-TDD:llä, 226 testiä — käyttäjä vahvisti 14.7.2026 overlayn selviävän
-oikeasta näytön unesta), repo JULKINEN, README kaksikielinen, exet
-allekirjoitettu, lisenssitekstit paketissa ja git-historia puhdistettu.
+**v1.0.8 on uusin release GitHubissa, koneella on asennettuna v1.0.7 —
+huomisen ensimmäinen tehtävä on päivittää se sovelluksen OMALLA
+päivitystoiminnolla (ensimmäinen aito loppukäyttäjätesti)**; 254 testiä
+vihreänä, ei keskeneräistä työtä.
+
+## Uusinta (14.7.2026 ilta): päivitysominaisuudet v1.0.6–v1.0.8
+
+Spec `docs/superpowers/specs/2026-07-14-update-features-design.md`,
+plan `docs/superpowers/plans/2026-07-14-update-features.md`. Kaksi
+ominaisuutta:
+
+**A) Sovelluksen päivitysilmoitus:** `Core/Updates/UpdateChecker`
+(puhdas TDD: JSON-jäsennys, versiovertailu, ilmoituspäätös kerran per
+versio — `LastNotifiedVersion` asetuksissa) + `App/Services/UpdateService`
+(GitHub releases/latest, tarkistus 30 s käynnistyksestä + 24 h välein
+MainViewModelin _tickCount-ajastuksella, timeout 10 s, hiljainen
+epäonnistuminen) + tray-balloon → `UpdateDialog` (muutosteksti =
+releasen body, "Asenna nyt" / "Myöhemmin" + julkaisusivulinkki) +
+`UpdateInstaller` (lataus %TEMP%iin omalla clientillä 10 min timeoutilla,
+Authenticode-tarkistus, installerin käynnistys — Inno sulkee sovelluksen
+Restart Managerilla). Asetus: "Tarkista päivitykset automaattisesti"
+(oletus päällä). Ylläpito-välilehdellä manuaalinen "Tarkista päivitykset"
+(näyttää dialogin suoraan ilman balloonia).
+
+**B) Ylläpito-välilehti:** laiterivit (emolevy/GPU/levyt) nykyversioineen
+(`App/Services/DeviceVersionReader`, WMI: Win32_BIOS/VideoController/
+DiskDrive) + valmistajalinkit (`Core/Maintenance/VendorLinkResolver`,
+TDD) + NVIDIA-ajuriversion muunnos (`Core/Maintenance/NvidiaDriverVersion`,
+"32.0.15.4680" → "546.80") + mallinimen kopiointinappi. Rivit ladataan
+kerran välilehden avauksesta taustasäikeessä (EnsureMaintenanceLoaded).
+
+**Versiohistoria tänään:** v1.0.6 = ominaisuudet (linkkivirheillä, EI
+koskaan asennettu — jää historiaan), v1.0.7 = linkkikorjaukset
+(NVIDIAlla ei fi-fi-sivua → globaali ajurihaku; ASUS ROG -emolevyt →
+rog.asus.comin mallisivu nimestä johdetulla slugilla — käyttäjän
+vahvistama muoto), v1.0.8 = allekirjoitustarkistus hyväksyy
+CERT_E_UNTRUSTEDROOTin thumbprint-pinnauksella → päivitys toimii
+kaikilla koneilla, ei vain julkaisukoneella + julkaisusivulinkki
+dialogiin.
+
+**Todennettu ajossa 14.7.2026** (käyttäjä testasi): automaatti-ilmoitus
+laukesi (LastNotifiedVersion kirjautui), dialogi näytti muutostekstin,
+lataus 55,8 MB + allekirjoitus Valid + installer käynnistyi (peruutettiin
+tarkoituksella), Ylläpito-rivit näyttivät BIOS/ajuri/firmware-versiot
+oikein. debug.log-rivi: "Käynnistetään päivitysasennus 1.0.5."
+HUOM: v1.0.8:n untrusted-root-polkua EI voi todentaa tällä koneella
+(varmenne on luotettu → WinVerifyTrust palauttaa aina 0).
 
 ## Uusinta (14.7.2026): Events siivottu + MSIX arvioitu ja hylätty
 
@@ -99,11 +141,13 @@ Todennettu ajossa: nappi kopioi 3693 merkkiä tuoretta sisältöä + vahvistus.
 - **Repo**: https://github.com/jrs8205/Computer-App — JULKINEN.
   **main = julkaisuhaara** (sama kärki kuin työhaara
   `claude/windows-11-program-setup-rxuyhn`). About-osio + topicit asetettu.
-- **Release**: v1.0.5, liitteenä allekirjoitettu
-  `HardwareMonitor-Setup-1.0.5.exe` (self-contained; sisältää LICENSE.txt
-  + THIRD-PARTY-NOTICES.md). v1.0.0–1.0.4 jäävät historiaan.
-- **Asennettuna koneella**: `C:\Program Files\Hardware Monitor` (v1.0.5,
-  allekirjoitettu; autostart-tehtävä HighestAvailable).
+- **Release**: v1.0.8, liitteenä allekirjoitettu
+  `HardwareMonitor-Setup-1.0.8.exe` (self-contained; sisältää LICENSE.txt
+  + THIRD-PARTY-NOTICES.md). v1.0.0–1.0.7 jäävät historiaan (v1.0.6:ta
+  ei koskaan asennettu).
+- **Asennettuna koneella**: `C:\Program Files\Hardware Monitor` (v1.0.7,
+  allekirjoitettu; autostart-tehtävä HighestAvailable) — **päivitetään
+  v1.0.8:aan sovelluksen omalla päivityksellä huomenna**.
 - **README.md = englanti** (julkinen etusivu), **README.fi.md = suomi**,
   ristiinlinkitetty. About-osiossa EI AI-mainintoja (käyttäjän päätös).
 - **Autostart-turvasääntö v1.0.1**: korotus vain Program Files -juurten
@@ -146,18 +190,26 @@ Todennettu ajossa: nappi kopioi 3693 merkkiä tuoretta sisältöä + vahvistus.
   CloseApplications sulkee ajossa olevan sovelluksen Restart Managerilla
   SIISTISTI (todennettu: CleanShutdown säilyy true).
 
-## Seuraavaksi (ei mitään pakollista kesken — ideoita)
+## Seuraavaksi
 
-**Laajuuspäätös 13.7.2026**: sovellus on henkilökohtainen työkalu — muita
-käyttäjiä ei odoteta. Siksi maksullinen code signing (Azure Trusted
-Signing / Certum; poistaisi SmartScreen-varoituksen vain muilta) ja
-muodollinen lisenssitarkastus "laajaa jakelua varten" POISTETTU
-ideoista — ei ehdoteta ellei käyttäjä itse nosta esiin. Samoin päätetty:
-koodikommentit ja testinimet pysyvät suomeksi.
+**Laajuustarkennus 14.7.2026**: sovellus on KAIKKIEN käytettävissä ja
+ladattavissa GitHubista — vain allekirjoitusratkaisu (itse allekirjoitettu
+varmenne) on henkilökohtainen; muut hyväksyvät SmartScreen-varoituksen
+asentaessaan käsin, mutta sovelluksen sisäinen päivitys toimii kaikilla
+(v1.0.8:n thumbprint-pinnaus). Maksullista code signingia ja muodollista
+lisenssitarkastusta ei silti ehdoteta ellei käyttäjä nosta esiin.
+Kommentit ja testinimet pysyvät suomeksi.
 
-1. ROADMAPin jatkokehitysideat (PresentMon/FPS-mittaus ym.).
+1. **Huomenna ensin**: päivitä asennettu v1.0.7 → v1.0.8 sovelluksen
+   omalla päivityksellä — joko odota automaatti-ilmoitusta (tarkistus
+   30 s käynnistyksestä; ilmoittaa koska 1.0.8 > LastNotifiedVersion
+   1.0.5... HUOM: ilmoitus voi mennä Windowsin ilmoituskeskukseen
+   näkymättä, Win+N) tai Ylläpito → "Tarkista päivitykset" → Asenna nyt.
+   Tämä on ensimmäinen aito päivityskierros loppukäyttäjänä.
+2. ROADMAPin jatkokehitysideat (PresentMon/FPS-mittaus ym.).
 
-(Events-taulun vanhat testihälytykset siivottu 14.7.2026 — kohta valmis.)
+(Events-taulun vanhat testihälytykset siivottu 14.7.2026 — kohta valmis.
+MSIX arvioitu ja hylätty 14.7.2026, ks. alempaa.)
 
 ## Build- ja ajokomennot + sudenkuopat
 
@@ -179,6 +231,14 @@ dotnet test src/HardwareMonitor.Tests/HardwareMonitor.Tests.csproj  # 226 ✓
 - LHM: "Virtual Memory" ohitetaan RAM-laskennassa; nimissä
   häntävälilyöntejä (Trim); NVMe "Temperature #1/#2" -fallback;
   GPU-kentät vain ensisijaisesta GPU:sta.
+- Päivitystarkistus: GitHub API vaatii User-Agent-otsakkeen (ilman → 403);
+  System.Management-paketin versio App-csprojissa on 10.0.2 = LHM:n
+  transitiivinen versio (pienempi → NU1605-virhe); WinVerifyTrust
+  hyväksyy 0:n JA CERT_E_UNTRUSTEDROOTin (0x800B0109) + thumbprint-pinnaus;
+  tray-balloonin klikkaamatta jättäminen vie toastin ilmoituskeskukseen;
+  releasen body-teksti näkyy päivitysdialogissa — kirjoita release-notet
+  aina suomeksi ja huolella; latauksella oma HttpClient (10 min timeout,
+  API-clientin 10 s ei riittäisi 56 MB paketille).
 - Lokalisointi: avain molempiin resx:iin + accessor käsin; events-taulun
   Component-arvot ovat luokitteluavaimia — EI lokalisoida.
 - WCAG AAA (≥ 7:1) UI-teksteihin; reunuksille riittää 3:1.
