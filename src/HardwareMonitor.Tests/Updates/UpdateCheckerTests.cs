@@ -61,4 +61,29 @@ public class UpdateCheckerTests
         Assert.Null(UpdateChecker.ParseLatestRelease("{}"));
         Assert.Null(UpdateChecker.ParseLatestRelease("""{ "tag_name": "v" }"""));
     }
+
+    [Theory]
+    [InlineData("1.0.5", "1.0.6", true)]
+    [InlineData("1.0.5", "1.0.5", false)]
+    [InlineData("1.0.6", "1.0.5", false)]
+    [InlineData("1.0.5", "1.1.0", true)]
+    [InlineData("1.0.5.0", "1.0.6", true)]
+    public void IsNewer_vertaa_versionumeroita(string current, string latest, bool expected) =>
+        Assert.Equal(expected, UpdateChecker.IsNewer(current, latest));
+
+    [Fact]
+    public void IsNewer_jasentymaton_versio_ei_ole_uudempi()
+    {
+        Assert.False(UpdateChecker.IsNewer("1.0.5", "beta"));
+        Assert.False(UpdateChecker.IsNewer("outo", "1.0.6"));
+    }
+
+    [Fact]
+    public void ShouldNotify_uusi_versio_ilmoitetaan_vain_kerran()
+    {
+        Assert.True(UpdateChecker.ShouldNotify("1.0.6", "1.0.5", ""));
+        Assert.False(UpdateChecker.ShouldNotify("1.0.6", "1.0.5", "1.0.6"));
+        Assert.True(UpdateChecker.ShouldNotify("1.0.7", "1.0.5", "1.0.6"));
+        Assert.False(UpdateChecker.ShouldNotify("1.0.5", "1.0.5", ""));
+    }
 }

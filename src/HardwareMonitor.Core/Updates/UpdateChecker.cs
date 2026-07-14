@@ -58,4 +58,18 @@ public static class UpdateChecker
             return null;
         }
     }
+
+    public static bool IsNewer(string currentVersion, string latestVersion) =>
+        Version.TryParse(currentVersion, out Version? current) &&
+        Version.TryParse(latestVersion, out Version? latest) &&
+        latest > current;
+
+    /// <summary>
+    /// Ilmoitetaan vain uudemmasta versiosta ja vain kerran per versio —
+    /// "Myöhemmin"-valinta ei johda jankutukseen joka käynnistyksellä.
+    /// </summary>
+    public static bool ShouldNotify(
+        string latestVersion, string currentVersion, string lastNotifiedVersion) =>
+        IsNewer(currentVersion, latestVersion) &&
+        !string.Equals(latestVersion, lastNotifiedVersion, StringComparison.OrdinalIgnoreCase);
 }
