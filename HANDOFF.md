@@ -1,4 +1,4 @@
-# HANDOFF — 13.7.2026 istunnon päätös: v1.0.5 julkaistu (overlay-korjaus)
+# HANDOFF — 14.7.2026: overlay vahvistettu toimivaksi, Events siivottu, MSIX hylätty
 
 Tämä tiedosto kertoo mihin jäätiin ja miten jatketaan. Lue tämä ensin,
 sitten `docs/review-triage.md` ja `docs/ROADMAP.md`.
@@ -7,8 +7,26 @@ sitten `docs/review-triage.md` ja `docs/ROADMAP.md`.
 
 **Projekti on julkaisukunnossa eikä aktiivista työtä ole kesken**: v1.0.5
 julkaistu GitHubiin (käyttäjän raportoima overlayn katoamisbugi korjattu
-TDD:llä, 226 testiä), repo JULKINEN, README kaksikielinen, exet
+TDD:llä, 226 testiä — käyttäjä vahvisti 14.7.2026 overlayn selviävän
+oikeasta näytön unesta), repo JULKINEN, README kaksikielinen, exet
 allekirjoitettu, lisenssitekstit paketissa ja git-historia puhdistettu.
+
+## Uusinta (14.7.2026): Events siivottu + MSIX arvioitu ja hylätty
+
+- **Events-taulun testihälytykset poistettu**: kolme WARNING-riviä
+  (id 4/6/22, keinotekoinen raja 30 °C, 8.–9.7.) poistettu käyttäjän
+  pyynnöstä pienellä dotnet-konsolilla (Microsoft.Data.Sqlite,
+  ReadWrite-yhteys) sovelluksen ajaessa — WAL salli. Aidot
+  "istunto päättyi yllättäen" -rivit jätettiin paikoilleen.
+- **MSIX/Store-paketointi HYLÄTTY** (käyttäjän päätös "jäädään
+  nykyiseen"): requireAdministrator ei ole tuettu MSIX:ssä (allowElevation
+  on rajoitettu capability), PawnIO-kernel-ajuria ei voi jaella Storesta,
+  autostart-tehtävä + ACL-turvasääntö menisivät uusiksi (WindowsApps-polku
+  vaihtuu versioittain) ja tiedostovirtualisointi siirtäisi
+  %LOCALAPPDATA%-datat (mm. machine-insights.md:n AI-luentapolku).
+  Pysytään Inno Setup + tools/release.ps1 -putkessa — ei ehdoteta
+  uudelleen. Kevyt jatkoidea jos päivitysautomaatio joskus kiinnostaa:
+  "Tarkista päivitykset" -toiminto GitHub Releasesista (ei tilattu).
 
 ## Uusinta (v1.0.5): overlay ei kadonnut — se lakkasi piirtymästä
 
@@ -138,8 +156,8 @@ ideoista — ei ehdoteta ellei käyttäjä itse nosta esiin. Samoin päätetty:
 koodikommentit ja testinimet pysyvät suomeksi.
 
 1. ROADMAPin jatkokehitysideat (PresentMon/FPS-mittaus ym.).
-2. (valinnainen) Events-taulussa on yhä vanhoja testihälytyksiä (raja 30 °C)
-   — dataa, ei bugi; voi siivota käyttäjän pyynnöstä.
+
+(Events-taulun vanhat testihälytykset siivottu 14.7.2026 — kohta valmis.)
 
 ## Build- ja ajokomennot + sudenkuopat
 
